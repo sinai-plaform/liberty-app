@@ -39,6 +39,7 @@ button.cta:disabled{opacity:.45}
 .step{display:flex;align-items:center;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
 .step button{width:32px;height:32px;border:none;background:#f7f5f2;font-size:18px;font-weight:800;color:var(--acc);cursor:pointer}
 .step span{min-width:34px;text-align:center;font-weight:800;font-size:15px}
+.step input.qtyin{width:46px;text-align:center;font-weight:800;font-size:15px;border:none;background:#fff;height:32px;outline:none;border-inline:1px solid var(--line)}
 .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 .chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#24211d;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:700;z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.25)}
@@ -65,6 +66,9 @@ var esc=function(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 var route='home';
 var me=null;         // {id,name,role}
 var imgMap={};       // sku -> data_url
+// tiered commission on monthly commissionable (house) sales, in agorot
+var COMM_TIERS=[{min:8500000,pct:3},{min:7500000,pct:2}]; // 85K->3%, 75K->2%, else 0
+function commRate(s){for(var i=0;i<COMM_TIERS.length;i++){if(s>=COMM_TIERS[i].min)return COMM_TIERS[i].pct}return 0}
 var cart={cust:null,items:[]};
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
 var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
@@ -85,6 +89,13 @@ function wazeUrl(lat,lng){return 'https://waze.com/ul?ll='+lat+','+lng+'&navigat
 // proportional bonus: 20+4 at qty 10 -> 2 free
 function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty*get/buy)}
 function fmtDate(d){return new Date(d).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})}
+// nav history for in-app back
+var _hist=[];
+function goBack(){_hist.pop();var prev=_hist.pop();route=prev||'home';render()}
+function backBtn(){return '<button onclick="goBack()" class="chip" style="padding:6px 12px;font-size:16px;line-height:1">‹</button>'}
+// city coords for geocoding new customers
+var CITY_COORDS={"נהריה":[33.008,35.095],"עכו":[32.928,35.082],"מעלות":[33.016,35.29],"מעלות תרשיחא":[33.016,35.29],"כרמיאל":[32.916,35.295],"ירכא":[32.96,35.19],"מג'ד אל כרום":[32.918,35.24],"בית ג'אן":[32.96,35.38],"סחנין":[32.865,35.3],"סכנין":[32.865,35.3],"פסוטה":[33.05,35.33],"כפר יאסיף":[32.955,35.16],"אעבלין":[32.8,35.19],"מגאר":[32.89,35.41],"ראמה":[32.94,35.36],"ביר אלמכסור":[32.75,35.22],"פקיעין":[32.98,35.33],"כפר נחף":[32.93,35.31],"דיר אל אסד":[32.925,35.27],"כפר מנדא":[32.81,35.24],"אבו סנאן":[32.95,35.17],"כאבול":[32.87,35.21],"זרזיר":[32.74,35.2],"חיפה":[32.794,34.989],"שפרעם":[32.805,35.17],"עוספיא":[32.71,35.06],"נשר":[32.77,35.04],"קרית ביאליק":[32.83,35.08],"קרית ים":[32.848,35.07],"דלית אל כרמל":[32.696,35.05],"קרית מוצקין":[32.84,35.08],"אלונים":[32.71,35.13],"קרית טבעון":[32.72,35.12],"יוקנעם":[32.66,35.11],"קרית אתא":[32.81,35.1],"יגור":[32.74,35.07],"טמרה":[32.85,35.2],"דיר חנא":[32.86,35.36],"כפר עראבה":[32.85,35.34],"פרדיס":[32.6,34.95],"זכרון יעקב":[32.57,34.95],"אור עקיבא":[32.51,34.92],"עתלית":[32.7,34.94],"אום אל פחם":[32.52,35.15],"נצרת":[32.7,35.3],"נוף הגליל":[32.7,35.31],"כפר קרע":[32.51,35.05],"באקה אל גרביה":[32.42,35.04],"ערערה":[32.48,35.1],"כנא":[32.75,35.34],"גבעת עדה":[32.55,35.02],"בנימינה":[32.51,34.95],"עפולה":[32.61,35.29],"אכסאל":[32.68,35.32],"דבוריה":[32.7,35.37],"צפת":[32.96,35.5],"ראש פינה":[32.97,35.54],"קרית שמונה":[33.21,35.57],"ג'ש":[33.02,35.45],"טובא זנגריא":[32.9,35.55],"פרדס חנה":[32.47,34.97],"טבריה":[32.79,35.53],"מגדל העמק":[32.68,35.24]};
+function geocodeCity(city){if(!city)return[null,null];if(CITY_COORDS[city])return CITY_COORDS[city];var k=Object.keys(CITY_COORDS);for(var i=0;i<k.length;i++){if(city.indexOf(k[i])>-1||k[i].indexOf(city)>-1)return CITY_COORDS[k[i]]}return[null,null]}
 
 function loginView(){
  $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><div style="width:72px;height:72px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(10,79,86,.35)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f6b74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg></div><div style="color:#fff;font-size:26px;font-weight:800">ליברטי</div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
@@ -131,7 +142,8 @@ function addToCartBySku(sku){
 // ---------- customers ----------
 var LC={active:['פעיל','b-good'],potential:['פוטנציאלי','b-warn'],disqualified:['לא רלוונטי','b-mut'],new:['חדש','b-good'],inactive:['לא פעיל','b-mut']};
 function customersView(){
- shell('<div class="hdr"><div class="h1">לקוחות</div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם או עיר…"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="h1" style="margin:0">לקוחות</div><button id="newc" class="cta" style="width:auto;height:38px;padding:0 14px;font-size:13.5px">+ לקוח חדש</button></div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם או עיר…"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ $('newc').onclick=function(){_hist.push(route);route='newcust';render()};
  function run(){var q=$('q').value.trim();var query=sb.from('liberty_customers').select('id,name,city,chain,lifecycle,potential_level,debt_agorot,area_code').neq('lifecycle','disqualified').order('debt_agorot',{ascending:false}).limit(300);if(q)query=query.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var c=d[i];var lc=LC[c.lifecycle]||LC.potential;h+='<div class="card custrow" data-id="'+c.id+'" style="cursor:pointer;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+esc(c.chain):'')+'</div></div><span class="badge '+lc[1]+'">'+lc[0]+(c.potential_level==='high'?' · גבוה':'')+'</span>'+(c.debt_agorot>0?'<span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'}$('res').innerHTML=h;var cd=document.querySelectorAll('.custrow');for(var j=0;j<cd.length;j++){cd[j].onclick=function(){openCustomer(this.getAttribute('data-id'))}}})}
  $('q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
@@ -139,8 +151,7 @@ function customersView(){
 var curCust=null, custTab='info';
 function openCustomer(id){curCust=id;custTab='info';route='customer';render()}
 function customerView(){
- shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px"><button id="cback" class="chip" style="padding:6px 11px">›</button><div class="h1" id="cname" style="margin:0;flex:1">…</div></div><div id="ctabs" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div class="list" id="cbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- $('cback').onclick=function(){route='customers';render()};
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px">'+backBtn()+'<div class="h1" id="cname" style="margin:0;flex:1">…</div></div><div id="ctabs" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div class="list" id="cbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  sb.from('liberty_customers').select('*').eq('id',curCust).single().then(function(r){
   var c=r.data;if(!c){$('cbody').innerHTML='לא נמצא';return}
   window.__cc=c;$('cname').textContent=c.name;
@@ -175,11 +186,14 @@ function renderCustTab(){
    '<button id="ccontacts" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">אנשי קשר</button>'+
    (loc?'<a href="'+loc+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:var(--accs);color:var(--accd);display:flex;align-items:center;justify-content:center;text-decoration:none">🗺️ Google Maps</a>':'')+
    (waze?'<a href="'+waze+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:#33ccff;color:#003a4d;display:flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">🚗 ניווט ב-Waze</a>':'')+
+   '<button id="cedit" class="cta" style="height:44px;background:#efece7;color:var(--ink);grid-column:1/-1">✏️ עריכת פרטים והערה</button>'+
    '</div>';
-  b.innerHTML=head+acts+'<div id="cxtra"></div>';
+  b.innerHTML=head+'<div id="cact"></div>'+acts+'<div id="cxtra"></div>';
   $('cord').onclick=function(){cart.cust={id:c.id,name:c.name};route='orders';render()};
   $('cvis').onclick=function(){visitTarget={id:c.id,name:c.name};route='visits';render()};
   $('ccontacts').onclick=function(){loadContacts(c)};
+  $('cedit').onclick=function(){editCustomer(c)};
+  loadCustActivity(c);
  } else if(custTab==='orders'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
   sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(50).then(function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13.5px;font-weight:700">'+dt+'</div><div style="font-size:11.5px;color:var(--mut)">מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});b.innerHTML=(d.length?'<div class="card" style="background:var(--accs);display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--accd)">'+d.length+' הזמנות · סה״כ</span><b style="color:var(--accd)">'+ils(sum)+'</b></div>':'')+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין הזמנות ללקוח זה עדיין.</div>')})
@@ -191,13 +205,38 @@ function renderCustTab(){
    buildRecos(c,owned);
   })
  } else if(custTab==='return'){
-  b.innerHTML='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סיבת ההחזרה</div><input id="rreason" class="field" placeholder="פגום / פג תוקף / עודף מלאי…"><div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סכום זיכוי מבוקש (₪)</div><input id="rcredit" class="field" inputmode="decimal" placeholder="0"></div><div style="font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5">ההחזרה תירשם כ״ממתינה לאישור מנהל״. הזיכוי ייכנס לאחר אישור.</div></div><button class="cta" id="rsave">רישום החזרה</button><div style="margin-top:6px"><div class="h1" style="font-size:15px">החזרות אחרונות</div><div id="rhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
-  $('rsave').onclick=function(){if(!me)return;var reason=$('rreason').value.trim();var cr=Math.round((parseFloat($('rcredit').value)||0)*100);if(!reason){toast('נא למלא סיבה');return}$('rsave').disabled=true;$('rsave').textContent='שומר…';sb.from('returns').insert({customer_id:c.id,agent_id:me.id,return_date:new Date().toISOString().slice(0,10),reason:reason,status:'pending',credit_agorot:cr}).then(function(rr){if(rr.error){toast('שגיאה');$('rsave').disabled=false;$('rsave').textContent='רישום החזרה'}else{toast('ההחזרה נרשמה ✓');renderCustTab()}})};
-  sb.from('liberty_my_returns').select('reason,status,credit_agorot,return_date').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(20).then(function(r){var d=r.data||[],h='';d.forEach(function(x){var st=x.status==='approved'?'<span class="badge b-good">אושר</span>':x.status==='rejected'?'<span class="badge b-bad">נדחה</span>':'<span class="badge b-warn">ממתין</span>';h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:700">'+esc(x.reason||'')+'</div><div style="font-size:11px;color:var(--mut)">'+(x.return_date||'')+'</div></div><div style="text-align:left">'+st+(x.credit_agorot?'<div style="font-size:13px;font-weight:700;margin-top:3px">'+ils(x.credit_agorot)+'</div>':'')+'</div></div>'});$('rhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין החזרות.</div>'})
+  b.innerHTML='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סיבת ההחזרה</div><input id="rreason" class="field" placeholder="פגום / פג תוקף / עודף מלאי…"><div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סכום זיכוי מבוקש (₪)</div><input id="rcredit" class="field" inputmode="decimal" placeholder="0"></div><div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">📷 תמונות המוצר (לא חובה)</div><input id="rphotos" type="file" accept="image/*" multiple capture="environment" style="font-size:12.5px;width:100%"><div id="rprev" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div><div style="font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5">ההחזרה תירשם כ״ממתינה לאישור מנהל״. הזיכוי ייכנס לאחר אישור.</div></div><button class="cta" id="rsave">רישום החזרה</button><div style="margin-top:6px"><div class="h1" style="font-size:15px">החזרות אחרונות</div><div id="rhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
+  $('rphotos').onchange=function(){var pv=$('rprev');pv.innerHTML='';var fs=this.files;for(var i=0;i<fs.length;i++){var u=URL.createObjectURL(fs[i]);pv.innerHTML+='<img src="'+u+'" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">'}};
+  $('rsave').onclick=function(){if(!me)return;var reason=$('rreason').value.trim();var cr=Math.round((parseFloat($('rcredit').value)||0)*100);if(!reason){toast('נא למלא סיבה');return}$('rsave').disabled=true;$('rsave').textContent='שומר…';
+   var files=($('rphotos').files)||[];var urls=[];var ups=[];
+   for(var fi=0;fi<files.length;fi++){(function(f){var ext=(f.name.split('.').pop()||'jpg').toLowerCase();var path=me.id+'/'+c.id+'/'+Date.now()+'_'+Math.round(Math.random()*99999)+'.'+ext;ups.push(sb.storage.from('return-photos').upload(path,f,{contentType:f.type||'image/jpeg'}).then(function(u){if(!u.error){var pub=sb.storage.from('return-photos').getPublicUrl(path);urls.push(pub.data.publicUrl)}}))})(files[fi])}
+   Promise.all(ups).then(function(){
+    sb.from('returns').insert({customer_id:c.id,agent_id:me.id,return_date:new Date().toISOString().slice(0,10),reason:reason,status:'pending',credit_agorot:cr,photos:urls}).then(function(rr){if(rr.error){toast('שגיאה');$('rsave').disabled=false;$('rsave').textContent='רישום החזרה'}else{toast('ההחזרה נרשמה ✓'+(urls.length?' · '+urls.length+' תמונות':''));renderCustTab()}})
+   })};
+  sb.from('liberty_my_returns').select('reason,status,credit_agorot,return_date,photos').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(20).then(function(r){var d=r.data||[],h='';d.forEach(function(x){var st=x.status==='approved'?'<span class="badge b-good">אושר</span>':x.status==='rejected'?'<span class="badge b-bad">נדחה</span>':'<span class="badge b-warn">ממתין</span>';var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>'});ph+='</div>'}h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:700">'+esc(x.reason||'')+'</div><div style="font-size:11px;color:var(--mut)">'+(x.return_date||'')+'</div></div><div style="text-align:left">'+st+(x.credit_agorot?'<div style="font-size:13px;font-weight:700;margin-top:3px">'+ils(x.credit_agorot)+'</div>':'')+'</div></div>'+ph+'</div>'});$('rhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין החזרות.</div>'})
  }
 }
 function loadContacts(c){
- sb.from('liberty_contacts').select('name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).then(function(r){var d=r.data||[];var ov=document.createElement('div');ov.className='ovl';var rows=d.length?d.map(function(x){var wa=waLink(x.phone,'שלום '+(x.name||'')+', מדברת יסמין מליברטי.');return '<div class="card" style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="font-size:14px;font-weight:700">'+esc(x.name||'—')+(x.is_primary_whatsapp?' <span class="badge b-good">WhatsApp</span>':'')+'</div><div style="font-size:12px;color:var(--mut)">'+esc(x.role||'')+(x.phone?' · '+esc(x.phone):'')+'</div></div>'+(x.phone?'<a href="tel:'+esc(x.phone)+'" class="chip">חיוג</a>':'')+(wa?'<a href="'+wa+'" target="_blank" rel="noopener" class="chip" style="background:#25d366;color:#fff;border-color:#25d366">💬</a>':'')+'</div>'}).join(''):'<div class="card" style="color:var(--mut);text-align:center;padding:18px">אין אנשי קשר רשומים.</div>';ov.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">אנשי קשר · '+esc(c.name)+'</b><span id="ccx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+rows+'</div></div>';document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ccx').onclick=function(){ov.remove()}})
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">אנשי קשר · '+esc(c.name)+'</b><span id="ccx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div id="cclist" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ccx').onclick=function(){ov.remove()};
+ function load(){
+  sb.from('customer_contacts').select('id,name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).order('is_primary_whatsapp',{ascending:false}).then(function(r){
+   var d=r.data||[];var h='';
+   d.forEach(function(x){var wa=waLink(x.phone,'שלום '+(x.name||'')+', מדברת יסמין מליברטי.');
+    h+='<div class="card ccitem" data-id="'+x.id+'"><div style="display:flex;gap:7px"><input class="field cc_name" value="'+esc(x.name||'')+'" placeholder="שם" style="flex:1"><input class="field cc_role" value="'+esc(x.role||'')+'" placeholder="תפקיד" style="width:104px"></div><div style="display:flex;gap:7px;margin-top:7px"><input class="field cc_phone" value="'+esc(x.phone||'')+'" placeholder="טלפון" inputmode="tel" style="flex:1">'+(x.phone?'<a href="tel:'+esc(x.phone)+'" class="chip" style="display:flex;align-items:center">📞</a>':'')+(wa?'<a href="'+wa+'" target="_blank" rel="noopener" class="chip" style="background:#25d366;color:#fff;border-color:#25d366;display:flex;align-items:center">💬</a>':'')+'</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px"><label style="font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="cc_wa"'+(x.is_primary_whatsapp?' checked':'')+'> WhatsApp ראשי</label><div style="display:flex;gap:7px"><button class="chip cc_del" style="color:var(--bad)">מחיקה</button><button class="chip cc_save" style="background:var(--acc);color:#fff;border-color:var(--acc)">שמירה</button></div></div></div>';
+   });
+   h+='<div class="card" style="background:var(--accs)"><div style="font-size:12.5px;font-weight:700;color:var(--accd);margin-bottom:7px">+ איש קשר חדש</div><div style="display:flex;gap:7px"><input id="ncc_name" class="field" placeholder="שם" style="flex:1"><input id="ncc_role" class="field" placeholder="תפקיד" style="width:104px"></div><input id="ncc_phone" class="field" placeholder="טלפון" inputmode="tel" style="margin-top:7px"><button class="cta" id="ncc_add" style="height:40px;margin-top:8px">הוספה</button></div>';
+   $('cclist').innerHTML=h;
+   var items=document.querySelectorAll('.ccitem');
+   for(var i=0;i<items.length;i++){(function(el){var id=el.getAttribute('data-id');
+    el.querySelector('.cc_save').onclick=function(){var rec={name:el.querySelector('.cc_name').value.trim()||null,role:el.querySelector('.cc_role').value.trim()||null,phone:el.querySelector('.cc_phone').value.trim()||null,is_primary_whatsapp:el.querySelector('.cc_wa').checked};sb.from('customer_contacts').update(rec).eq('id',id).then(function(rr){if(rr.error){toast('שגיאה: '+rr.error.message)}else{toast('נשמר ✓')}})};
+    var del=el.querySelector('.cc_del');var armed=false;del.onclick=function(){if(!armed){armed=true;del.textContent='בטוח? מחק';setTimeout(function(){armed=false;del.textContent='מחיקה'},2500);return}sb.from('customer_contacts').delete().eq('id',id).then(function(rr){if(rr.error){toast('שגיאה: '+rr.error.message)}else{toast('נמחק ✓');load()}})};
+   })(items[i])}
+   $('ncc_add').onclick=function(){var nm=$('ncc_name').value.trim();var ph=$('ncc_phone').value.trim();if(!nm&&!ph){toast('נא למלא שם או טלפון');return}$('ncc_add').disabled=true;sb.from('customer_contacts').insert({customer_id:c.id,name:nm||null,role:$('ncc_role').value.trim()||null,phone:ph||null,is_primary_whatsapp:d.length===0}).then(function(rr){if(rr.error){toast('שגיאה: '+rr.error.message);$('ncc_add').disabled=false}else{toast('נוסף ✓');load()}})};
+  })
+ }
+ load();
 }
 function buildRecos(c,owned){
  var recos=[],seen={};
@@ -217,6 +256,92 @@ function buildRecos(c,owned){
   })
  })
 }
+function loadCustActivity(c){
+ var el=$('cact');if(!el)return;
+ Promise.all([
+  sb.from('liberty_my_orders').select('total_agorot,created_at').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(1),
+  sb.from('liberty_my_visits').select('arrived_at,outcome').eq('customer_id',c.id).order('arrived_at',{ascending:false}).limit(1)
+ ]).then(function(res){
+  var el2=$('cact');if(!el2)return;
+  var o=(res[0].data||[])[0];var v=(res[1].data||[])[0];
+  function days(d){return Math.floor((Date.now()-new Date(d).getTime())/86400000)}
+  var cells='';
+  cells+=o?'<div style="flex:1"><div style="font-size:10.5px;color:var(--mut);font-weight:700">הזמנה אחרונה</div><div style="font-size:15px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div><div style="font-size:10.5px;color:var(--mut)">לפני '+days(o.created_at)+' ימים</div></div>':'<div style="flex:1"><div style="font-size:10.5px;color:var(--mut);font-weight:700">הזמנה אחרונה</div><div style="font-size:13.5px;font-weight:700;color:var(--mut);margin-top:3px">— אין —</div></div>';
+  cells+=v?'<div style="flex:1"><div style="font-size:10.5px;color:var(--mut);font-weight:700">ביקור אחרון</div><div style="font-size:15px;font-weight:800">לפני '+days(v.arrived_at)+' ימים</div><div style="font-size:10.5px;color:var(--mut)">'+esc(v.outcome||'')+'</div></div>':'<div style="flex:1"><div style="font-size:10.5px;color:var(--mut);font-weight:700">ביקור אחרון</div><div style="font-size:13.5px;font-weight:700;color:var(--mut);margin-top:3px">— אין —</div></div>';
+  el2.innerHTML='<div class="card" style="display:flex;gap:12px;background:#fbfaf8;margin-bottom:0">'+cells+'</div>';
+ });
+}
+function editCustomer(c){
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">עריכת לקוח</b><span id="ecx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  '<div class="card"><label style="display:block"><span style="font-size:12px;color:var(--mut);font-weight:600">שם העסק</span><input id="ec_name" class="field" style="margin-top:5px"></label>'+
+  '<div style="display:flex;gap:9px;margin-top:11px"><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">עיר</span><input id="ec_city" class="field" style="margin-top:5px"></label><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">אזור</span><select id="ec_area" class="field" style="margin-top:5px"></select></label></div>'+
+  '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">כתובת</span><input id="ec_addr" class="field" style="margin-top:5px"></label>'+
+  '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">ע.מ / ח.פ</span><input id="ec_legal" class="field" style="margin-top:5px" inputmode="numeric"></label>'+
+  '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">סטטוס</span><div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap"><button class="chip eclc" data-v="active">פעיל</button><button class="chip eclc" data-v="potential">פוטנציאלי</button><button class="chip eclc" data-v="inactive">לא פעיל</button></div></div>'+
+  '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">📝 הערה</span><textarea id="ec_notes" class="field" style="margin-top:5px;min-height:74px" placeholder="שעות פתיחה, איש קשר, מה סוכם…"></textarea></label></div>'+
+  '<button class="cta" id="ec_save">שמירת שינויים</button></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ecx').onclick=function(){ov.remove()};
+ $('ec_name').value=c.name||'';$('ec_city').value=c.city||'';$('ec_addr').value=c.address||'';$('ec_legal').value=c.legal_id||'';$('ec_notes').value=c.notes||'';
+ var lc=c.lifecycle||'active';var opts=document.querySelectorAll('.eclc');for(var i=0;i<opts.length;i++){if(opts[i].getAttribute('data-v')===lc)opts[i].classList.add('on');opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
+ sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'"'+(a.code===c.area_code?' selected':'')+'>אזור '+a.code+'</option>'});$('ec_area').innerHTML=h});
+ $('ec_save').onclick=function(){var name=$('ec_name').value.trim();if(!name){toast('נא למלא שם');return}$('ec_save').disabled=true;$('ec_save').textContent='שומר…';
+  var city=$('ec_city').value.trim();
+  var rec={name:name,city:city||null,address:$('ec_addr').value.trim()||null,legal_id:$('ec_legal').value.trim()||null,lifecycle:lc,area_id:$('ec_area').value||null,notes:$('ec_notes').value.trim()||null};
+  if(city&&city!==(c.city||'')){var g=geocodeCity(city);if(g[0]!=null){rec.lat=g[0];rec.lng=g[1]}}
+  sb.from('customers').update(rec).eq('id',c.id).then(function(res){if(res.error){toast('שגיאה: '+res.error.message);$('ec_save').disabled=false;$('ec_save').textContent='שמירת שינויים';return}toast('נשמר ✓');ov.remove();openCustomer(c.id)})};
+}
+
+// ---------- AREAS MANAGEMENT ----------
+function areasView(){
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px">'+backBtn()+'<div class="h1" style="margin:0;flex:1">ניהול אזורים</div><button id="addarea" class="cta" style="width:auto;height:38px;padding:0 13px;font-size:13.5px">+ אזור</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ $('addarea').onclick=function(){addAreaSheet()};
+ loadAreas();
+}
+function loadAreas(){
+ Promise.all([
+  sb.from('areas').select('id,code,name').order('code'),
+  sb.from('liberty_customers').select('area_code').neq('lifecycle','disqualified').limit(1000)
+ ]).then(function(res){
+  var areas=res[0].data||[];var cnt={};(res[1].data||[]).forEach(function(x){if(x.area_code!=null)cnt[x.area_code]=(cnt[x.area_code]||0)+1});
+  window.__areas=areas;window.__arealist=areas.map(function(a){return {code:a.code,name:a.name}});
+  var h='';
+  areas.forEach(function(a){
+   h+='<div class="card"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">'+a.code+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:1.3">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11.5px;color:var(--mut)">'+(cnt[a.code]||0)+' לקוחות</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button class="chip aren" data-id="'+a.id+'" data-code="'+a.code+'" data-name="'+esc(a.name||'')+'">✏️ שם</button><button class="chip acust" data-code="'+a.code+'" data-name="'+esc(a.name||('אזור '+a.code))+'">👥 לקוחות</button></div></div>';
+  });
+  $('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין אזורים.</div>';
+  var rn=document.querySelectorAll('.aren');for(var i=0;i<rn.length;i++){rn[i].onclick=function(){renameAreaSheet({id:this.getAttribute('data-id'),code:this.getAttribute('data-code'),name:this.getAttribute('data-name')})}}
+  var cu=document.querySelectorAll('.acust');for(var j=0;j<cu.length;j++){cu[j].onclick=function(){areaCustomers({code:+this.getAttribute('data-code'),name:this.getAttribute('data-name')})}}
+ });
+}
+function renameAreaSheet(a){
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">שם אזור '+a.code+'</b><span id="rax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list"><div class="card"><input id="ra_name" class="field" placeholder="שם האזור"></div><button class="cta" id="ra_save">שמירה</button></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('rax').onclick=function(){ov.remove()};
+ $('ra_name').value=a.name||'';
+ $('ra_save').onclick=function(){var nm=$('ra_name').value.trim();if(!nm){toast('נא למלא שם');return}$('ra_save').disabled=true;sb.from('areas').update({name:nm}).eq('id',a.id).then(function(r){if(r.error){toast('שגיאה: '+r.error.message);$('ra_save').disabled=false;return}toast('נשמר ✓');ov.remove();loadAreas()})};
+}
+function addAreaSheet(){
+ var areas=window.__areas||[];var maxc=0;areas.forEach(function(a){if(a.code>maxc)maxc=a.code});var next=maxc+1;
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">אזור חדש</b><span id="aax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list"><div class="card"><div style="display:flex;gap:9px"><label style="width:88px"><span style="font-size:12px;color:var(--mut);font-weight:600">מספר</span><input id="aa_code" class="field" style="margin-top:5px" inputmode="numeric" value="'+next+'"></label><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">שם</span><input id="aa_name" class="field" style="margin-top:5px" placeholder="ערים באזור"></label></div></div><button class="cta" id="aa_save">הוספת אזור</button></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('aax').onclick=function(){ov.remove()};
+ $('aa_save').onclick=function(){var code=parseInt($('aa_code').value,10);var nm=$('aa_name').value.trim();if(isNaN(code)){toast('מספר לא תקין');return}$('aa_save').disabled=true;sb.from('areas').insert({code:code,name:nm||('אזור '+code)}).then(function(r){if(r.error){toast('שגיאה: '+r.error.message);$('aa_save').disabled=false;return}toast('האזור נוסף ✓');ov.remove();loadAreas()})};
+}
+function areaCustomers(area){
+ var areas=window.__areas||[];
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:15.5px;flex:1;min-width:0">'+esc(area.name)+'</b><span id="acx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div style="padding:0 16px 8px;font-size:11.5px;color:var(--mut)">בחרי אזור חדש בתפריט כדי להעביר לקוח</div><div id="acl" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
+ document.body.appendChild(ov);var changed=false;
+ ov.onclick=function(e){if(e.target===ov){ov.remove();if(changed)loadAreas()}};document.getElementById('acx').onclick=function(){ov.remove();if(changed)loadAreas()};
+ function optsFor(code){var s='';areas.forEach(function(a){s+='<option value="'+a.id+'"'+(a.code===code?' selected':'')+'>אזור '+a.code+'</option>'});return s}
+ sb.from('liberty_customers').select('id,name,city,area_code').eq('area_code',area.code).order('name').limit(300).then(function(r){
+  var d=r.data||[],h='';
+  d.forEach(function(c){h+='<div class="card" style="display:flex;align-items:center;gap:9px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(c.city||'')+'</div></div><select class="field acmv" data-id="'+c.id+'" style="width:auto;padding:6px 8px;font-size:12.5px">'+optsFor(c.area_code)+'</select></div>'});
+  $('acl').innerHTML=h||'<div class="card" style="color:var(--mut);text-align:center;padding:18px">אין לקוחות באזור זה.</div>';
+  var mv=document.querySelectorAll('.acmv');for(var i=0;i<mv.length;i++){mv[i].onchange=function(){var id=this.getAttribute('data-id');var aid=this.value;var sel=this;sel.disabled=true;sb.from('customers').update({area_id:aid}).eq('id',id).then(function(rr){sel.disabled=false;if(rr.error){toast('שגיאה: '+rr.error.message)}else{changed=true;toast('הלקוח הועבר ✓');sel.closest('.card').style.opacity='0.5'}})}}
+ });
+}
 
 // ---------- collections ----------
 function collectionsView(){
@@ -234,7 +359,7 @@ function ordersView(){
   var strip='';
   if(it.bonus_buy&&it.bonus_get){var free=freeUnits(it.qty,it.bonus_buy,it.bonus_get);
    strip='<div style="margin-top:8px;background:var(--warn-s);border-radius:9px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:var(--warn)">🎁 בונוס '+it.bonus_buy+'+'+it.bonus_get+'</span>'+(free>0?'<span style="font-size:12.5px;font-weight:800;color:var(--warn)">מקבלת '+free+' יח׳ חינם</span>':'<span style="font-size:11.5px;color:var(--warn)">הזמיני '+it.bonus_buy+' ל-'+it.bonus_get+' חינם</span>')+'</div>';}
-  lines+='<div class="card" style="display:flex;flex-direction:column;gap:0"><div style="display:flex;align-items:center;gap:10px">'+thumb(it.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(it.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(it.sku)+' · '+ils(it.price)+(it.comm?' · <span style="color:var(--good);font-weight:700">עמלה</span>':'')+'</div></div><div style="text-align:left"><div class="step"><button data-i="'+i+'" data-d="1">+</button><span>'+it.qty+'</span><button data-i="'+i+'" data-d="-1">−</button></div><div style="font-size:14px;font-weight:800;margin-top:4px">'+ils(it.price*it.qty)+'</div></div></div>'+strip+'</div>'}
+  lines+='<div class="card" style="display:flex;flex-direction:column;gap:0"><div style="display:flex;align-items:center;gap:10px">'+thumb(it.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(it.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(it.sku)+' · '+ils(it.price)+(it.comm?' · <span style="color:var(--good);font-weight:700">עמלה</span>':'')+'</div></div><div style="text-align:left"><div class="step"><button data-i="'+i+'" data-d="1">+</button><input class="qtyin" data-i="'+i+'" inputmode="numeric" value="'+it.qty+'"><button data-i="'+i+'" data-d="-1">−</button></div><div style="font-size:14px;font-weight:800;margin-top:4px">'+ils(it.price*it.qty)+'</div></div></div>'+strip+'</div>'}
  if(!cart.items.length)lines='<div class="card" style="color:var(--mut);font-size:13px;text-align:center;padding:22px">אין פריטים. הוסיפי מוצרים מהקטלוג או בחיפוש למטה.</div>';
  shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div class="h1" style="margin:0">הזמנה חדשה</div><a href="#" id="myord" style="font-size:13px;font-weight:700">ההזמנות שלי »</a></div></div>'+
   '<div class="list">'+
@@ -250,6 +375,7 @@ function ordersView(){
  if($('chgcust'))$('chgcust').onclick=openCustPicker;
  if($('saveord'))$('saveord').onclick=saveOrder;
  var steps=document.querySelectorAll('.step button');for(var s=0;s<steps.length;s++){steps[s].onclick=function(){var i=+this.getAttribute('data-i'),d=+this.getAttribute('data-d');cart.items[i].qty+=d;if(cart.items[i].qty<=0)cart.items.splice(i,1);render()}}
+ var qis=document.querySelectorAll('.qtyin');for(var qq=0;qq<qis.length;qq++){qis[qq].onclick=function(e){e.stopPropagation();this.select()};qis[qq].onchange=function(){var i=+this.getAttribute('data-i');var v=parseInt(this.value,10);if(isNaN(v)||v<=0){cart.items.splice(i,1)}else{cart.items[i].qty=v}render()}}
  var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}sb.from('liberty_products').select('sku,name,price_agorot').or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%').order('sku').limit(8).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
 }
 function openCustPicker(){
@@ -268,32 +394,76 @@ function saveOrder(){
  });
 }
 function myOrdersView(){
- shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div class="h1" style="margin:0">ההזמנות שלי</div><a href="#" id="newo" style="font-size:13px;font-weight:700">+ הזמנה חדשה</a></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="display:flex;align-items:center;gap:8px">'+backBtn()+'<div class="h1" style="margin:0">ההזמנות שלי</div></div><a href="#" id="newo" style="font-size:13px;font-weight:700">+ הזמנה חדשה</a></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  $('newo').onclick=function(e){e.preventDefault();route='orders';render()};
  sb.from('liberty_my_orders').select('id,customer_name,total_agorot,commissionable_agorot,created_at,status').order('created_at',{ascending:false}).limit(60).then(function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});h+='<div class="card" style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(o.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+dt+' · מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});var head='<div class="card" style="background:var(--accs);display:flex;justify-content:space-between;align-items:center"><div style="font-size:12.5px;color:var(--accd);font-weight:700">'+d.length+' הזמנות · סה״כ</div><div style="font-size:18px;font-weight:800;color:var(--accd)">'+ils(sum)+'</div></div>';$('res').innerHTML=head+(h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:20px">עדיין אין הזמנות. צרי הזמנה ראשונה!</div>')});
 }
 
+// ---------- NEW CUSTOMER ----------
+function newCustomerView(){
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px">'+backBtn()+'<div class="h1" style="margin:0">לקוח חדש</div></div></div><div class="list">'+
+  '<div class="card"><label style="display:block"><span style="font-size:12px;color:var(--mut);font-weight:600">שם העסק *</span><input id="nc_name" class="field" style="margin-top:5px"></label>'+
+  '<div style="display:flex;gap:9px;margin-top:11px"><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">עיר</span><input id="nc_city" class="field" style="margin-top:5px" placeholder="לגיאוקוד המסלול"></label><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">אזור</span><select id="nc_area" class="field" style="margin-top:5px"></select></label></div>'+
+  '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">כתובת</span><input id="nc_addr" class="field" style="margin-top:5px"></label>'+
+  '<div style="display:flex;gap:9px;margin-top:11px"><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">ע.מ / ח.פ</span><input id="nc_legal" class="field" style="margin-top:5px" inputmode="numeric"></label><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">טלפון</span><input id="nc_phone" class="field" style="margin-top:5px" inputmode="tel"></label></div>'+
+  '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">סטטוס</span><div id="nc_lc" style="display:flex;gap:8px;margin-top:5px"><button class="chip lcopt on" data-v="active">פעיל</button><button class="chip lcopt" data-v="potential">פוטנציאלי</button></div></div>'+
+  '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">הערות</span><textarea id="nc_notes" class="field" style="margin-top:5px" placeholder="שעות, איש קשר, פוטנציאל…"></textarea></label></div>'+
+  '<button class="cta" id="nc_save">שמירת לקוח</button></div>');
+ var lc='active';var opts=document.querySelectorAll('.lcopt');for(var i=0;i<opts.length;i++){opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
+ sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'">אזור '+a.code+'</option>'});$('nc_area').innerHTML=h});
+ $('nc_save').onclick=function(){var name=$('nc_name').value.trim();if(!name){toast('נא למלא שם');return}$('nc_save').disabled=true;$('nc_save').textContent='שומר…';
+  var city=$('nc_city').value.trim();var g=geocodeCity(city);
+  var rec={name:name,city:city||null,address:$('nc_addr').value.trim()||null,legal_id:$('nc_legal').value.trim()||null,customer_type:'pharmacy',lifecycle:lc,area_id:$('nc_area').value||null,lat:g[0],lng:g[1],agent_id:me.id,notes:$('nc_notes').value.trim()||null};
+  sb.from('customers').insert(rec).select('id').single().then(function(res){if(res.error){toast('שגיאה: '+res.error.message);$('nc_save').disabled=false;$('nc_save').textContent='שמירת לקוח';return}
+   var cid=res.data.id;var ph=$('nc_phone').value.trim();
+   var after=function(){toast('הלקוח נוסף ✓');_hist.push('newcust');route='customer';curCust=cid;custTab='info';render()};
+   if(ph){sb.from('customer_contacts').insert({customer_id:cid,name:name,phone:ph,is_primary_whatsapp:true}).then(after)}else after();
+  });
+ };
+}
 // ---------- ROUTE ----------
 var routeArea=null;
+var routeDays=1;
 function routeView(){
  var o=getOrigin();
- var chips='<div style="display:flex;gap:8px;overflow:auto;padding:2px 0">';for(var i=1;i<=6;i++){chips+='<button class="chip areac'+(routeArea===i?' on':'')+'" data-a="'+i+'">אזור '+i+'</button>'}chips+='</div>';
+ var alist=window.__arealist;
+ var chips='<div style="display:flex;gap:8px;overflow:auto;padding:2px 0">';
+ if(alist){alist.forEach(function(a){chips+='<button class="chip areac'+(routeArea===a.code?' on':'')+'" data-a="'+a.code+'">אזור '+a.code+'</button>'})}
+ else{for(var i=1;i<=6;i++){chips+='<button class="chip areac'+(routeArea===i?' on':'')+'" data-a="'+i+'">אזור '+i+'</button>'}}
+ chips+='<button id="mgareas" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">⚙︎ אזורים</button></div>';
  var originBar='<div style="display:flex;align-items:center;gap:8px;background:var(--accs);border-radius:12px;padding:9px 12px;margin-bottom:10px"><span style="font-size:16px">📍</span><div style="flex:1"><div style="font-size:11px;color:var(--accd);font-weight:700">נקודת מוצא</div><div style="font-size:14px;font-weight:800;color:var(--accd)">'+esc(o.name)+'</div></div><button id="chgorigin" class="chip" style="background:#fff">שינוי</button></div>';
  shell('<div class="hdr"><div class="h1">מסלול נסיעה יומי</div>'+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — המערכת תסדר את הלקוחות למסלול נסיעה יעיל לפי הקירבה, החל מנקודת המוצא שלך.')+'</div></div>');
- var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');render()}}
+ var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeDays=1;render()}}
  $('chgorigin').onclick=openOriginPicker;
+ $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
+ if(!window.__arealist){sb.from('areas').select('code,name').order('code').then(function(r){window.__arealist=(r.data||[]);if(route==='route')render()})}
  if(!routeArea)return;
  sb.from('liberty_customers').select('id,name,city,lifecycle,potential_level,debt_agorot,lat,lng').eq('area_code',routeArea).neq('lifecycle','disqualified').limit(300).then(function(r){
   var d=r.data||[];
   var ordered=nnOrder(d,o);
   var debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
-  // total drive distance estimate
   var tot=0,cur=o;ordered.forEach(function(c){if(c.lat!=null){tot+=hav(cur,c);cur=c}});
   var h='';
-  h+='<a href="'+mapsUrl(o,ordered)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--acc);color:#fff;font-weight:800;font-size:15px;padding:14px;border-radius:14px;text-decoration:none;margin-bottom:4px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4m0 0L9 7"/></svg>נווט במסלול · Google Maps</a>';
+  // day-split control
+  var dopts='';for(var dd=1;dd<=4;dd++){dopts+='<button class="chip dsplit'+(routeDays===dd?' on':'')+'" data-d="'+dd+'">'+(dd===1?'יום 1':dd+' ימים')+'</button>'}
+  h+='<div class="card" style="padding:10px 12px"><div style="font-size:11.5px;color:var(--mut);font-weight:700;margin-bottom:7px">חלוקה לימי עבודה</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+dopts+'</div></div>';
   h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:800">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:800;color:var(--bad)">'+debtCust+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:800;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
-  ordered.forEach(function(c,idx){var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});
+  // split ordered into routeDays contiguous segments
+  var withGeo=ordered.filter(function(c){return c.lat!=null});
+  var n=withGeo.length;var per=Math.ceil(n/routeDays);
+  var globalIdx=0;
+  for(var day=0;day<routeDays;day++){
+   var seg=routeDays===1?ordered:withGeo.slice(day*per,(day+1)*per);
+   if(!seg.length)continue;
+   if(routeDays>1){h+='<div style="display:flex;align-items:center;gap:8px;margin:10px 2px 4px"><div style="font-size:13.5px;font-weight:800;color:var(--acc)">📅 יום '+(day+1)+'</div><div style="font-size:11.5px;color:var(--mut)">'+seg.length+' עצירות</div></div>'}
+   h+='<a href="'+mapsUrl(o,seg)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--acc);color:#fff;font-weight:800;font-size:14.5px;padding:13px;border-radius:14px;text-decoration:none;margin-bottom:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4m0 0L9 7"/></svg>נווט'+(routeDays>1?' · יום '+(day+1):' במסלול · Google Maps')+'</a>';
+   seg.forEach(function(c){globalIdx++;var idx=globalIdx;var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+idx+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});
+  }
+  // no-geo customers (can't be routed)
+  var noGeo=ordered.filter(function(c){return c.lat==null});
+  if(noGeo.length){h+='<div class="card" style="background:var(--warn-s);font-size:11.5px;color:var(--warn);font-weight:700;margin-top:8px">⚠︎ '+noGeo.length+' לקוחות ללא מיקום — לא משובצים במסלול</div>';noGeo.forEach(function(c){h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:.75"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+'</div></div></div>'})}
   $('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין לקוחות באזור זה.</div>';
+  var ds=document.querySelectorAll('.dsplit');for(var q=0;q<ds.length;q++){ds[q].onclick=function(){routeDays=+this.getAttribute('data-d');render()}}
   var rs=document.querySelectorAll('.rstop');for(var k=0;k<rs.length;k++){rs[k].onclick=function(){openCustomer(this.getAttribute('data-id'))}}
  });
 }
@@ -333,19 +503,27 @@ function openVisitPicker(){
 function targetsView(){
  shell('<div class="hdr"><div class="h1">יעדים ועמלות</div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
- Promise.all([
-  sb.from('liberty_my_target').select('target_agorot,commission_pct').limit(1),
-  sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart)
- ]).then(function(res){
-  var tg=(res[0].data||[])[0];var orders=res[1].data||[];
+ sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart).then(function(res){
+  var orders=res.data||[];
   var achieved=0,sales=0;orders.forEach(function(o){achieved+=o.commissionable_agorot||0;sales+=o.total_agorot||0});
-  var target=tg?tg.target_agorot:0;var pct=tg?tg.commission_pct:0;
-  var prog=target>0?Math.min(100,Math.round(achieved/target*100)):0;
-  var commission=Math.round(achieved*pct/100);
-  var remain=Math.max(0,target-achieved);
-  var h='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">יעד חודשי (מוצרי בית)</div><div style="font-size:15px;font-weight:800;margin:2px 0 10px">'+ils(achieved)+' <span style="color:var(--mut);font-weight:600">מתוך '+ils(target)+'</span></div><div class="bar"><div style="width:'+prog+'%"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><b style="color:var(--acc)">'+prog+'%</b><span style="color:var(--mut)">נותרו '+ils(remain)+'</span></div></div>'+
-   '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">עמלה צפויה</div><div style="font-size:22px;font-weight:800;color:var(--good)">'+ils(commission)+'</div><div style="font-size:11px;color:var(--mut)">'+pct+'% ממוצרי הבית</div></div><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">סה״כ מכירות החודש</div><div style="font-size:22px;font-weight:800;color:var(--acc)">'+ils(sales)+'</div><div style="font-size:11px;color:var(--mut)">'+orders.length+' הזמנות</div></div></div>'+
-   '<div class="card" style="background:var(--accs);font-size:12.5px;color:var(--accd);line-height:1.5">העמלה מחושבת ממוצרי הבית בלבד (פראש גאם, MO, ווטס וכו׳) — לא מוצרי שוורץ/דורקס. היעד ניתן לעדכון ע״י המשרד.</div>';
+  var T2=7500000,T3=8500000; // 75K -> 2%, 85K -> 3%
+  var rate=commRate(achieved);
+  var commission=Math.round(achieved*rate/100);
+  // progress toward the two milestones
+  var prog2=Math.min(100,Math.round(achieved/T2*100));
+  var prog3=Math.min(100,Math.round(achieved/T3*100));
+  var nextLabel,nextRemain,nextRate;
+  if(achieved<T2){nextLabel='לעמלת 2%';nextRemain=T2-achieved;nextRate=2}
+  else if(achieved<T3){nextLabel='לעמלת 3%';nextRemain=T3-achieved;nextRate=3}
+  else{nextLabel=null;nextRemain=0;nextRate=3}
+  var rateBadge=rate>0?'<span class="badge b-good">עמלה פעילה '+rate+'%</span>':'<span class="badge b-warn">טרם הופעלה עמלה</span>';
+  function milestone(label,amt,prog,active,earnedNote){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">'+label+'</div>'+(active?'<span class="badge b-good">✓ הושג</span>':'<span class="badge b-mut">'+prog+'%</span>')+'</div><div class="bar"><div style="width:'+prog+'%;'+(active?'background:var(--good)':'')+'"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><span style="color:var(--mut)">'+ils(achieved)+' / '+ils(amt)+'</span><span style="color:var(--mut)">'+earnedNote+'</span></div></div>'}
+  var h='<div class="card" style="background:var(--acc);color:#fff"><div style="font-size:12px;color:#bfe0e3;font-weight:700">מכירות מזכות החודש (מוצרי בית)</div><div style="font-size:28px;font-weight:800;margin:3px 0">'+ils(achieved)+'</div>'+rateBadge+'</div>'+
+   '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">עמלה צפויה כרגע</div><div style="font-size:22px;font-weight:800;color:var(--good)">'+ils(commission)+'</div><div style="font-size:11px;color:var(--mut)">'+(rate>0?rate+'% ממוצרי הבית':'עדיין 0%')+'</div></div><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">סה״כ מכירות החודש</div><div style="font-size:22px;font-weight:800;color:var(--acc)">'+ils(sales)+'</div><div style="font-size:11px;color:var(--mut)">'+orders.length+' הזמנות</div></div></div>'+
+   (nextLabel?'<div class="card" style="background:var(--warn-s)"><div style="font-size:12.5px;color:var(--warn);font-weight:800">🎯 עוד '+ils(nextRemain)+' '+nextLabel+'</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">כשתעברי, כל המכירות המזכות יזכו ב-'+nextRate+'% = '+ils(Math.round(achieved*nextRate/100))+' (על הבסיס הנוכחי)</div></div>':'<div class="card" style="background:var(--good-s)"><div style="font-size:12.5px;color:var(--good);font-weight:800">🏆 עברת את יעד ה-3%! עמלה מלאה על כל המכירות המזכות.</div></div>')+
+   milestone('יעד ראשון · 75,000 ₪ (2%)',T2,prog2,achieved>=T2,achieved>=T2?'עמלה: '+ils(Math.round(achieved*0.02)):'2% על הכל')+
+   milestone('יעד שני · 85,000 ₪ (3%)',T3,prog3,achieved>=T3,achieved>=T3?'עמלה: '+ils(Math.round(achieved*0.03)):'3% על הכל')+
+   '<div class="card" style="background:var(--accs);font-size:12.5px;color:var(--accd);line-height:1.5">מדרגות העמלה: מתחת ל-75,000 ₪ אין עמלה · מ-75,000 ₪ → 2% · מעל 85,000 ₪ → 3%. העמלה מחושבת ממוצרי הבית בלבד (פראש גאם, MO, ווטס וכו׳) — לא שוורץ/דורקס.</div>';
   $('res').innerHTML=h;
  });
 }
@@ -355,7 +533,7 @@ function reportsView(){
  var now=new Date();var y=now.getFullYear(),m=now.getMonth();
  var from=window.__rfrom||(new Date(y,m,1).toISOString().slice(0,10));
  var to=window.__rto||now.toISOString().slice(0,10);
- shell('<div class="hdr"><div class="h1">דוח עבודה</div><div style="display:flex;gap:8px;align-items:end"><label style="flex:1"><span style="font-size:11px;color:var(--mut);font-weight:600">מתאריך</span><input id="rf" type="date" class="field" value="'+from+'"></label><label style="flex:1"><span style="font-size:11px;color:var(--mut);font-weight:600">עד</span><input id="rt" type="date" class="field" value="'+to+'"></label><button id="rgen" class="cta" style="width:auto;height:48px;padding:0 16px">הפק</button></div></div><div class="list" id="rbody"><div style="color:var(--mut);font-size:13px">בחרי טווח תאריכים ולחצי "הפק".</div></div>');
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+backBtn()+'<div class="h1" style="margin:0">דוח עבודה</div></div><div style="display:flex;gap:8px;align-items:end"><label style="flex:1"><span style="font-size:11px;color:var(--mut);font-weight:600">מתאריך</span><input id="rf" type="date" class="field" value="'+from+'"></label><label style="flex:1"><span style="font-size:11px;color:var(--mut);font-weight:600">עד</span><input id="rt" type="date" class="field" value="'+to+'"></label><button id="rgen" class="cta" style="width:auto;height:48px;padding:0 16px">הפק</button></div></div><div class="list" id="rbody"><div style="color:var(--mut);font-size:13px">בחרי טווח תאריכים ולחצי "הפק".</div></div>');
  $('rgen').onclick=function(){window.__rfrom=$('rf').value;window.__rto=$('rt').value;genReport()};
  genReport();
 }
@@ -388,6 +566,7 @@ function genReport(){
  });
 }
 function render(){sb.auth.getSession().then(function(r){if(!r.data.session){loginView();return}if(!me){boot();return}
+ if(_hist[_hist.length-1]!==route)_hist.push(route);
  if(route==='catalog')catalogView();
  else if(route==='customers')customersView();
  else if(route==='collections')collectionsView();
@@ -398,6 +577,8 @@ function render(){sb.auth.getSession().then(function(r){if(!r.data.session){logi
  else if(route==='targets')targetsView();
  else if(route==='customer')customerView();
  else if(route==='reports')reportsView();
+ else if(route==='newcust')newCustomerView();
+ else if(route==='areas')areasView();
  else homeView();
 })}
 render();
