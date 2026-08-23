@@ -126,7 +126,7 @@ function orderSentModal(custName,items,t,isUpdate,done){
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
 var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
 function nav(){var h='';for(var i=0;i<TABS.length;i++){var t=TABS[i];h+='<button data-r="'+t[0]+'" class="'+(route===t[0]?'on':'')+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS[t[2]]+'</svg><span>'+t[1]+'</span></button>'}return '<nav id="nav">'+h+'</nav>'}
-function shell(inner){$('app').innerHTML='<div id="view">'+inner+'</div>'+nav();var b=document.querySelectorAll('#nav button');for(var i=0;i<b.length;i++){b[i].onclick=function(){route=this.getAttribute('data-r');render()}}}
+function shell(inner){var bb=document.getElementById('buildbar');if(bb)bb.remove();$('app').innerHTML='<div id="view">'+inner+'</div>'+nav();var b=document.querySelectorAll('#nav button');for(var i=0;i<b.length;i++){b[i].onclick=function(){route=this.getAttribute('data-r');render()}}}
 function bindGo(){var gb=document.querySelectorAll('[data-go]');for(var i=0;i<gb.length;i++){gb[i].onclick=function(){route=this.getAttribute('data-go');render()}}}
 function toast(t){var e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(function(){e.remove()},2200)}
 function thumb(sku){var u=imgMap[sku];if(u)return '<img class="thumb" src="'+u+'" onerror="this.style.visibility=\'hidden\'">';return '<div class="thumbph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="9" r="1.4"/></svg></div>'}
@@ -141,6 +141,18 @@ function waLink(phone,text){if(!phone)return null;var p=(''+phone).replace(/[^0-
 function wazeUrl(lat,lng){return 'https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes'}
 // proportional bonus: 20+4 at qty 10 -> 2 free
 function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty*get/buy)}
+// group-aware bonus: products sharing a bonus_group pool their qty (mix-and-match)
+function bonusInfo(items){
+ var byG={},gB={},gG={},total=0,perLine=[],shown={};
+ for(var i=0;i<items.length;i++){var it=items[i];if(it.bonus_group){byG[it.bonus_group]=(byG[it.bonus_group]||0)+it.qty;gB[it.bonus_group]=it.bonus_buy;gG[it.bonus_group]=it.bonus_get}}
+ var gFree={};for(var g in byG){gFree[g]=freeUnits(byG[g],gB[g],gG[g]);total+=gFree[g]}
+ for(var i=0;i<items.length;i++){var it=items[i];var f=0;
+  if(it.bonus_group){if(!shown[it.bonus_group]){f=gFree[it.bonus_group];shown[it.bonus_group]=1}}
+  else{f=freeUnits(it.qty,it.bonus_buy,it.bonus_get);total+=f}
+  perLine.push(f)}
+ return {total:total,perLine:perLine,gFree:gFree,byG:byG,gB:gB,gG:gG};
+}
+function groupLabel(g){return g==='shower_cover'?'כיסויי מקלחת':g==='migraine_strap'?'רצועות מיגרנה':g==='dan_soap'?'אל-סבון דן':''}
 function fmtDate(d){return new Date(d).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})}
 // nav history for in-app back
 var _hist=[];
@@ -149,6 +161,10 @@ function backBtn(){return '<button onclick="goBack()" class="chip" style="paddin
 // city coords for geocoding new customers
 var CITY_COORDS={"נהריה":[33.008,35.095],"עכו":[32.928,35.082],"מעלות":[33.016,35.29],"מעלות תרשיחא":[33.016,35.29],"כרמיאל":[32.916,35.295],"ירכא":[32.96,35.19],"מג'ד אל כרום":[32.918,35.24],"בית ג'אן":[32.96,35.38],"סחנין":[32.865,35.3],"סכנין":[32.865,35.3],"פסוטה":[33.05,35.33],"כפר יאסיף":[32.955,35.16],"אעבלין":[32.8,35.19],"מגאר":[32.89,35.41],"ראמה":[32.94,35.36],"ביר אלמכסור":[32.75,35.22],"פקיעין":[32.98,35.33],"כפר נחף":[32.93,35.31],"דיר אל אסד":[32.925,35.27],"כפר מנדא":[32.81,35.24],"אבו סנאן":[32.95,35.17],"כאבול":[32.87,35.21],"זרזיר":[32.74,35.2],"חיפה":[32.794,34.989],"שפרעם":[32.805,35.17],"עוספיא":[32.71,35.06],"נשר":[32.77,35.04],"קרית ביאליק":[32.83,35.08],"קרית ים":[32.848,35.07],"דלית אל כרמל":[32.696,35.05],"קרית מוצקין":[32.84,35.08],"אלונים":[32.71,35.13],"קרית טבעון":[32.72,35.12],"יוקנעם":[32.66,35.11],"קרית אתא":[32.81,35.1],"יגור":[32.74,35.07],"טמרה":[32.85,35.2],"דיר חנא":[32.86,35.36],"כפר עראבה":[32.85,35.34],"פרדיס":[32.6,34.95],"זכרון יעקב":[32.57,34.95],"אור עקיבא":[32.51,34.92],"עתלית":[32.7,34.94],"אום אל פחם":[32.52,35.15],"נצרת":[32.7,35.3],"נוף הגליל":[32.7,35.31],"כפר קרע":[32.51,35.05],"באקה אל גרביה":[32.42,35.04],"ערערה":[32.48,35.1],"כנא":[32.75,35.34],"גבעת עדה":[32.55,35.02],"בנימינה":[32.51,34.95],"עפולה":[32.61,35.29],"אכסאל":[32.68,35.32],"דבוריה":[32.7,35.37],"צפת":[32.96,35.5],"ראש פינה":[32.97,35.54],"קרית שמונה":[33.21,35.57],"ג'ש":[33.02,35.45],"טובא זנגריא":[32.9,35.55],"פרדס חנה":[32.47,34.97],"טבריה":[32.79,35.53],"מגדל העמק":[32.68,35.24]};
 function geocodeCity(city){if(!city)return[null,null];if(CITY_COORDS[city])return CITY_COORDS[city];var k=Object.keys(CITY_COORDS);for(var i=0;i<k.length;i++){if(city.indexOf(k[i])>-1||k[i].indexOf(city)>-1)return CITY_COORDS[k[i]]}return[null,null]}
+// auto area assignment by nearest existing-customer centroid
+var __areaPts=null,__areaById=null;
+function loadAreaPts(cb){if(__areaPts){cb();return}sb.from('areas').select('id,code').then(function(ar){__areaById={};(ar.data||[]).forEach(function(a){__areaById[a.code]=a.id});sb.from('liberty_customers').select('lat,lng,area_code').not('lat','is',null).limit(600).then(function(r){var byA={};(r.data||[]).forEach(function(c){if(c.area_code==null)return;(byA[c.area_code]=byA[c.area_code]||[]).push([c.lat,c.lng])});__areaPts={};for(var k in byA){var p=byA[k],la=0,lo=0;p.forEach(function(x){la+=x[0];lo+=x[1]});__areaPts[k]=[la/p.length,lo/p.length]}cb()})})}
+function nearestArea(lat,lng){if(!__areaPts||lat==null)return null;var best=null,bd=1e18;for(var k in __areaPts){var d=Math.pow(lat-__areaPts[k][0],2)+Math.pow(lng-__areaPts[k][1],2);if(d<bd){bd=d;best=k}}return best?{code:+best,id:__areaById[best]}:null}
 
 function loginView(){
  $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><div style="width:72px;height:72px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(10,79,86,.35)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f6b74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg></div><div style="color:#fff;font-size:26px;font-weight:800">ליברטי</div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
@@ -171,20 +187,20 @@ function homeView(){
 
 var tmr=null;
 var catCat='all';
-var CATS=[['all','הכל','🗂️'],['pharmacy','בתי מרקחת','💊'],['orthopedic','אורתופדיה','🦴'],['dental','מרפאות שיניים','🦷']];
-function catLabel(c){return c==='pharmacy'?'בתי מרקחת':c==='orthopedic'?'אורתופדיה':c==='dental'?'מרפאות שיניים':''}
+var CATS=[['all','הכל','🗂️'],['pharmacy','בתי מרקחת','💊'],['orthopedic','אורתופדיה','🦴'],['dental','מרפאות שיניים','🦷'],['pleasure','אינטימי','💕']];
+function catLabel(c){return c==='pharmacy'?'בתי מרקחת':c==='orthopedic'?'אורתופדיה':c==='dental'?'מרפאות שיניים':c==='pleasure'?'אינטימי':''}
 function catalogView(){
  var chips='<div class="catchips">'+CATS.map(function(c){return '<button class="chip catc'+(catCat===c[0]?' on':'')+'" data-c="'+c[0]+'">'+c[2]+' '+c[1]+'</button>'}).join('')+'</div>';
  shell('<div class="hdr"><div class="h1">קטלוג</div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם מוצר או מק״ט…"></div>'+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var cc=document.querySelectorAll('.catc');for(var x=0;x<cc.length;x++){cc[x].onclick=function(){catCat=this.getAttribute('data-c');for(var y=0;y<cc.length;y++)cc[y].classList.toggle('on',cc[y].getAttribute('data-c')===catCat);run()}}
- function run(){var q=$('q').value.trim();var query=sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,price_agorot,bonus_buy,bonus_get,category').order('sku').limit(320);if(catCat!=='all')query=query.eq('category',catCat);if(q)query=query.or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%,barcode.ilike.%'+q+'%');query.then(function(r){var d=r.data||[];
+ function run(){var q=$('q').value.trim();var query=sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,price_agorot,bonus_buy,bonus_get,category,catalog_order,bonus_group').eq('in_catalog',true).order('catalog_order',{ascending:true,nullsFirst:false}).limit(320);if(catCat!=='all')query=query.eq('category',catCat);if(q)query=query.or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%,barcode.ilike.%'+q+'%');query.then(function(r){var d=r.data||[];
   var h='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' מוצרים</div><div class="catgrid">';
   for(var i=0;i<d.length;i++){var p=d[i];
    var u=imgMap[p.sku];
    var imgpart=u?('<img src="'+u+'" loading="lazy" onerror="this.style.display=\'none\'">'):('<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#c9c3b8" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="9" r="1.4"/></svg>');
    var tags='';
    if(p.is_teaser)tags+='<span class="badge b-acc">בקרוב</span>';
-   if(p.bonus_buy!=null&&p.bonus_get>0)tags+='<span class="badge b-warn">🎁 '+p.bonus_buy+'+'+p.bonus_get+'</span>';
+   if(p.bonus_buy!=null&&p.bonus_get>0)tags+='<span class="badge b-warn">🎁 '+p.bonus_buy+'+'+p.bonus_get+(p.bonus_group?' מעורב':'')+'</span>';
    if(p.is_commissionable===true)tags+='<span class="badge b-good">עמלה</span>';
    var meta=esc(p.sku)+(p.brand?' · '+esc(p.brand):'')+(p.pack_size?' · '+esc(''+p.pack_size):'');
    h+='<div class="pcard prodcard" data-sku="'+esc(p.sku)+'"><div class="pimg">'+imgpart+'<div class="ptags">'+tags+'</div></div><div class="pbody"><div class="pmeta">'+meta+'</div><div class="pname">'+esc(p.name)+'</div><div class="pfoot"><div class="pprice">'+ils(p.price_agorot)+'</div><button class="addp" data-sku="'+esc(p.sku)+'" aria-label="הוספה להזמנה">+</button></div></div></div>';
@@ -210,7 +226,7 @@ function productSheet(sku){
 }
 
 function addToCartBySku(sku){
- sb.from('liberty_products').select('id,sku,name,price_agorot,is_commissionable,bonus_buy,bonus_get').eq('sku',sku).single().then(function(r){var p=r.data;if(!p)return;var ex=null;for(var i=0;i<cart.items.length;i++){if(cart.items[i].id===p.id)ex=cart.items[i]}if(ex){ex.qty++}else{cart.items.push({id:p.id,sku:p.sku,name:p.name,price:p.price_agorot||0,comm:p.is_commissionable===true,bonus_buy:p.bonus_buy,bonus_get:p.bonus_get,qty:1})}toast('נוסף להזמנה: '+p.name);route='orders';render()});
+ sb.from('liberty_products').select('id,sku,name,price_agorot,is_commissionable,bonus_buy,bonus_get,bonus_group').eq('sku',sku).single().then(function(r){var p=r.data;if(!p)return;var ex=null;for(var i=0;i<cart.items.length;i++){if(cart.items[i].id===p.id)ex=cart.items[i]}if(ex){ex.qty++}else{cart.items.push({id:p.id,sku:p.sku,name:p.name,price:p.price_agorot||0,comm:p.is_commissionable===true,bonus_buy:p.bonus_buy,bonus_get:p.bonus_get,bonus_group:p.bonus_group,qty:1})}toast('נוסף להזמנה: '+p.name);route='orders';render()});
 }
 
 // ---------- customers ----------
@@ -389,18 +405,24 @@ function editCustomer(c){
   '<div class="card"><label style="display:block"><span style="font-size:12px;color:var(--mut);font-weight:600">שם העסק</span><input id="ec_name" class="field" style="margin-top:5px"></label>'+
   '<div style="display:flex;gap:9px;margin-top:11px"><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">עיר</span><input id="ec_city" class="field" style="margin-top:5px"></label><label style="flex:1"><span style="font-size:12px;color:var(--mut);font-weight:600">אזור</span><select id="ec_area" class="field" style="margin-top:5px"></select></label></div>'+
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">כתובת</span><input id="ec_addr" class="field" style="margin-top:5px"></label>'+
+  '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">📍 מיקום GPS (לכפרים ללא כתובת)</span><div style="display:flex;gap:8px;align-items:center;margin-top:5px"><button type="button" id="ec_gps" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">📍 קבע לפי המיקום שלי</button><span id="ec_loc" style="font-size:12px;color:var(--mut);flex:1"></span></div></div>'+
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">ע.מ / ח.פ</span><input id="ec_legal" class="field" style="margin-top:5px" inputmode="numeric"></label>'+
   '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">סטטוס</span><div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap"><button class="chip eclc" data-v="active">פעיל</button><button class="chip eclc" data-v="potential">פוטנציאלי</button><button class="chip eclc" data-v="inactive">לא פעיל</button></div></div>'+
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">📝 הערה</span><textarea id="ec_notes" class="field" style="margin-top:5px;min-height:74px" placeholder="שעות פתיחה, איש קשר, מה סוכם…"></textarea></label></div>'+
   '<button class="cta" id="ec_save">שמירת שינויים</button></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ecx').onclick=function(){ov.remove()};
  $('ec_name').value=c.name||'';$('ec_city').value=c.city||'';$('ec_addr').value=c.address||'';$('ec_legal').value=c.legal_id||'';$('ec_notes').value=c.notes||'';
+ var ecLoc=(c.lat!=null?{lat:c.lat,lng:c.lng}:null);
+ function ecLocShow(){$('ec_loc').innerHTML=ecLoc?('<span style="color:var(--good);font-weight:700">✓ '+ecLoc.lat.toFixed(5)+', '+ecLoc.lng.toFixed(5)+'</span>'):'טרם נקבע מיקום מדויק';}
+ ecLocShow();
+ $('ec_gps').onclick=function(){if(!navigator.geolocation){toast('אין גישה למיקום');return}var b=$('ec_gps');b.textContent='מאתר…';b.disabled=true;navigator.geolocation.getCurrentPosition(function(pos){ecLoc={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6)};ecLocShow();b.textContent='📍 עדכני מיקום';b.disabled=false;toast('המיקום נלכד ✓ — לחצי שמירה');},function(err){b.textContent='📍 קבע לפי המיקום שלי';b.disabled=false;toast('לא ניתן לאתר מיקום')},{enableHighAccuracy:true,timeout:12000})};
  var lc=c.lifecycle||'active';var opts=document.querySelectorAll('.eclc');for(var i=0;i<opts.length;i++){if(opts[i].getAttribute('data-v')===lc)opts[i].classList.add('on');opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
  sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'"'+(a.code===c.area_code?' selected':'')+'>אזור '+a.code+'</option>'});$('ec_area').innerHTML=h});
  $('ec_save').onclick=function(){var name=$('ec_name').value.trim();if(!name){toast('נא למלא שם');return}$('ec_save').disabled=true;$('ec_save').textContent='שומר…';
   var city=$('ec_city').value.trim();
   var rec={name:name,city:city||null,address:$('ec_addr').value.trim()||null,legal_id:$('ec_legal').value.trim()||null,lifecycle:lc,area_id:$('ec_area').value||null,notes:$('ec_notes').value.trim()||null};
   if(city&&city!==(c.city||'')){var g=geocodeCity(city);if(g[0]!=null){rec.lat=g[0];rec.lng=g[1]}}
+  if(ecLoc){rec.lat=ecLoc.lat;rec.lng=ecLoc.lng}
   sb.from('customers').update(rec).eq('id',c.id).then(function(res){if(res.error){toast('שגיאה: '+res.error.message);$('ec_save').disabled=false;$('ec_save').textContent='שמירת שינויים';return}toast('נשמר ✓');ov.remove();openCustomer(c.id)})};
 }
 
@@ -488,15 +510,19 @@ function collectionsView(){
 }
 
 // ---------- ORDER BUILDER ----------
-function cartTotals(){var sub=0,comm=0,freeq=0;for(var i=0;i<cart.items.length;i++){var it=cart.items[i];var lt=it.price*it.qty;sub+=lt;if(it.comm)comm+=lt;freeq+=freeUnits(it.qty,it.bonus_buy,it.bonus_get)}var vat=Math.round(sub*VAT);return {sub:sub,vat:vat,total:sub+vat,comm:comm,freeq:freeq}}
+function cartTotals(){var sub=0,comm=0;for(var i=0;i<cart.items.length;i++){var it=cart.items[i];var lt=it.price*it.qty;sub+=lt;if(it.comm)comm+=lt}var bi=bonusInfo(cart.items);var vat=Math.round(sub*VAT);return {sub:sub,vat:vat,total:sub+vat,comm:comm,freeq:bi.total,bi:bi}}
 function ordersView(){
  var t=cartTotals();
  var custBtn=cart.cust?('<div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח</div><div style="font-size:15.5px;font-weight:800">'+esc(cart.cust.name)+'</div></div><button id="chgcust" class="chip">שינוי</button></div>'):('<button id="pickcust" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">בחירת לקוח להזמנה</button>');
  var lines='';
  for(var i=0;i<cart.items.length;i++){var it=cart.items[i];
   var strip='';
-  if(it.bonus_buy&&it.bonus_get){var free=freeUnits(it.qty,it.bonus_buy,it.bonus_get);
-   strip='<div style="margin-top:8px;background:var(--warn-s);border-radius:9px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:var(--warn)">🎁 בונוס '+it.bonus_buy+'+'+it.bonus_get+'</span>'+(free>0?'<span style="font-size:12.5px;font-weight:800;color:var(--warn)">מקבלת '+free+' יח׳ חינם</span>':'<span style="font-size:11.5px;color:var(--warn)">הזמיני '+it.bonus_buy+' ל-'+it.bonus_get+' חינם</span>')+'</div>';}
+  if(it.bonus_buy&&it.bonus_get){
+   if(it.bonus_group){var gq=t.bi.byG[it.bonus_group]||0;var gf=t.bi.gFree[it.bonus_group]||0;
+    strip='<div style="margin-top:8px;background:var(--warn-s);border-radius:9px;padding:7px 10px"><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:var(--warn)">🎁 בונוס מעורב '+it.bonus_buy+'+'+it.bonus_get+' · '+groupLabel(it.bonus_group)+'</span>'+(gf>0?'<span style="font-size:12.5px;font-weight:800;color:var(--warn)">'+gf+' יח׳ חינם</span>':'')+'</div><div style="font-size:10.5px;color:var(--warn);margin-top:3px">סה״כ '+gq+' יח׳ בקבוצה — ניתן לערבב דגמים לבונוס משותף</div></div>';
+   } else {var free=t.bi.perLine[i];
+    strip='<div style="margin-top:8px;background:var(--warn-s);border-radius:9px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:var(--warn)">🎁 בונוס '+it.bonus_buy+'+'+it.bonus_get+'</span>'+(free>0?'<span style="font-size:12.5px;font-weight:800;color:var(--warn)">מקבלת '+free+' יח׳ חינם</span>':'<span style="font-size:11.5px;color:var(--warn)">הזמיני '+it.bonus_buy+' ל-'+it.bonus_get+' חינם</span>')+'</div>';}
+  }
   lines+='<div class="card" style="display:flex;flex-direction:column;gap:0"><div style="display:flex;align-items:center;gap:10px">'+thumb(it.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(it.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(it.sku)+' · '+ils(it.price)+(it.comm?' · <span style="color:var(--good);font-weight:700">עמלה</span>':'')+'</div></div><div style="text-align:left"><div class="step"><button data-i="'+i+'" data-d="1">+</button><input class="qtyin" data-i="'+i+'" inputmode="numeric" value="'+it.qty+'"><button data-i="'+i+'" data-d="-1">−</button></div><div style="font-size:14px;font-weight:800;margin-top:4px">'+ils(it.price*it.qty)+'</div></div></div>'+strip+'</div>'}
  if(!cart.items.length)lines='<div class="card" style="color:var(--mut);font-size:13px;text-align:center;padding:22px">אין פריטים. הוסיפי מוצרים מהקטלוג או בחיפוש למטה.</div>';
  shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div class="h1" style="margin:0">'+(editingOrderId?'עריכת הזמנה':'הזמנה חדשה')+'</div><a href="#" id="myord" style="font-size:13px;font-weight:700">'+(editingOrderId?'« ביטול עריכה':'ההזמנות שלי »')+'</a></div></div>'+
@@ -587,10 +613,13 @@ function newCustomerView(){
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">הערות</span><textarea id="nc_notes" class="field" style="margin-top:5px" placeholder="שעות, איש קשר, פוטנציאל…"></textarea></label></div>'+
   '<button class="cta" id="nc_save">שמירת לקוח</button></div>');
  var lc='active';var opts=document.querySelectorAll('.lcopt');for(var i=0;i<opts.length;i++){opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
- sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'">אזור '+a.code+'</option>'});$('nc_area').innerHTML=h});
+ loadAreaPts(function(){});
+ sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— אוטומטי לפי מיקום —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'">אזור '+a.code+'</option>'});$('nc_area').innerHTML=h});
  $('nc_save').onclick=function(){var name=$('nc_name').value.trim();if(!name){toast('נא למלא שם');return}$('nc_save').disabled=true;$('nc_save').textContent='שומר…';
   var city=$('nc_city').value.trim();var g=geocodeCity(city);
-  var rec={name:name,city:city||null,address:$('nc_addr').value.trim()||null,legal_id:$('nc_legal').value.trim()||null,customer_type:'pharmacy',lifecycle:lc,area_id:$('nc_area').value||null,lat:g[0],lng:g[1],agent_id:me.id,notes:$('nc_notes').value.trim()||null};
+  var chosenArea=$('nc_area').value||null;var areaId=chosenArea;
+  if(!areaId&&g[0]!=null){var na=nearestArea(g[0],g[1]);if(na){areaId=na.id;toast('שויך אוטומטית לאזור '+na.code)}}
+  var rec={name:name,city:city||null,address:$('nc_addr').value.trim()||null,legal_id:$('nc_legal').value.trim()||null,customer_type:'pharmacy',lifecycle:lc,area_id:areaId,lat:g[0],lng:g[1],agent_id:me.id,notes:$('nc_notes').value.trim()||null};
   sb.from('customers').insert(rec).select('id').single().then(function(res){if(res.error){toast('שגיאה: '+res.error.message);$('nc_save').disabled=false;$('nc_save').textContent='שמירת לקוח';return}
    var cid=res.data.id;var ph=$('nc_phone').value.trim();
    var after=function(){toast('הלקוח נוסף ✓');_hist.push('newcust');route='customer';curCust=cid;custTab='info';render()};
@@ -600,7 +629,8 @@ function newCustomerView(){
 }
 // ---------- ROUTE ----------
 var routeArea=null;
-var routeDays=1;
+var routeSel={};
+var routeBuilt=false;
 function routeView(){
  var o=getOrigin();
  var alist=window.__arealist;
@@ -609,39 +639,57 @@ function routeView(){
  else{for(var i=1;i<=6;i++){chips+='<button class="chip areac'+(routeArea===i?' on':'')+'" data-a="'+i+'">אזור '+i+'</button>'}}
  chips+='<button id="mgareas" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">⚙︎ אזורים</button></div>';
  var originBar='<div style="display:flex;align-items:center;gap:8px;background:var(--accs);border-radius:12px;padding:9px 12px;margin-bottom:10px"><span style="font-size:16px">📍</span><div style="flex:1"><div style="font-size:11px;color:var(--accd);font-weight:700">נקודת מוצא</div><div style="font-size:14px;font-weight:800;color:var(--accd)">'+esc(o.name)+'</div></div><button id="chgorigin" class="chip" style="background:#fff">שינוי</button></div>';
- shell('<div class="hdr"><div class="h1">מסלול נסיעה יומי</div>'+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — המערכת תסדר את הלקוחות למסלול נסיעה יעיל לפי הקירבה, החל מנקודת המוצא שלך.')+'</div></div>');
- var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeDays=1;render()}}
+ shell('<div class="hdr"><div class="h1">מסלול נסיעה יומי</div>'+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם היום, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
+ var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeSel={};routeBuilt=false;render()}}
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
  if(!window.__arealist){sb.from('areas').select('code,name').order('code').then(function(r){window.__arealist=(r.data||[]);if(route==='route')render()})}
  if(!routeArea)return;
  sb.from('liberty_customers').select('id,name,city,lifecycle,potential_level,debt_agorot,lat,lng').eq('area_code',routeArea).neq('lifecycle','disqualified').limit(300).then(function(r){
   var d=r.data||[];
-  var ordered=nnOrder(d,o);
   var debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
-  var tot=0,cur=o;ordered.forEach(function(c){if(c.lat!=null){tot+=hav(cur,c);cur=c}});
-  var h='';
-  // day-split control
-  var dopts='';for(var dd=1;dd<=4;dd++){dopts+='<button class="chip dsplit'+(routeDays===dd?' on':'')+'" data-d="'+dd+'">'+(dd===1?'יום 1':dd+' ימים')+'</button>'}
-  h+='<div class="card" style="padding:10px 12px"><div style="font-size:11.5px;color:var(--mut);font-weight:700;margin-bottom:7px">חלוקה לימי עבודה</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+dopts+'</div></div>';
-  h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:800">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:800;color:var(--bad)">'+debtCust+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:800;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
-  // split ordered into routeDays contiguous segments
-  var withGeo=ordered.filter(function(c){return c.lat!=null});
-  var n=withGeo.length;var per=Math.ceil(n/routeDays);
-  var globalIdx=0;
-  for(var day=0;day<routeDays;day++){
-   var seg=routeDays===1?ordered:withGeo.slice(day*per,(day+1)*per);
-   if(!seg.length)continue;
-   if(routeDays>1){h+='<div style="display:flex;align-items:center;gap:8px;margin:10px 2px 4px"><div style="font-size:13.5px;font-weight:800;color:var(--acc)">📅 יום '+(day+1)+'</div><div style="font-size:11.5px;color:var(--mut)">'+seg.length+' עצירות</div></div>'}
-   h+='<a href="'+mapsUrl(o,seg)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--acc);color:#fff;font-weight:800;font-size:14.5px;padding:13px;border-radius:14px;text-decoration:none;margin-bottom:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4m0 0L9 7"/></svg>נווט'+(routeDays>1?' · יום '+(day+1):' במסלול · Google Maps')+'</a>';
-   seg.forEach(function(c){globalIdx++;var idx=globalIdx;var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+idx+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});
+  var rstopBind=function(){var rs=document.querySelectorAll('.rstop');for(var k=0;k<rs.length;k++){rs[k].onclick=function(){openCustomer(this.getAttribute('data-id'))}}};
+
+  if(routeBuilt){
+   // ---- BUILT DAILY ROUTE (from selection) ----
+   var sel=d.filter(function(c){return routeSel[c.id]});
+   var ordered=nnOrder(sel,o);
+   var withGeo=ordered.filter(function(c){return c.lat!=null});
+   var noGeo=ordered.filter(function(c){return c.lat==null});
+   var tot=0,cur=o;withGeo.forEach(function(c){tot+=hav(cur,c);cur=c});
+   var selDebt=sel.filter(function(c){return c.debt_agorot>0}).length;
+   var h='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button></div>';
+   h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות היום</div><div style="font-size:20px;font-weight:800">'+sel.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:800;color:var(--bad)">'+selDebt+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:800;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
+   if(withGeo.length)h+='<a href="'+mapsUrl(o,withGeo)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--acc);color:#fff;font-weight:800;font-size:14.5px;padding:13px;border-radius:14px;text-decoration:none;margin-bottom:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3m0 13l6-3m-6 3V7m6 10l6 3V7l-6-3m0 13V4m0 0L9 7"/></svg>נווט במסלול · Google Maps</a>';
+   var idx=0;withGeo.forEach(function(c){idx++;var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+idx+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});
+   if(noGeo.length){h+='<div class="card" style="background:var(--warn-s);font-size:11.5px;color:var(--warn);font-weight:700;margin-top:8px">⚠︎ '+noGeo.length+' לקוחות נבחרו ללא מיקום — לא משובצים בניווט (עדכני מיקום GPS בכרטיס)</div>';noGeo.forEach(function(c){h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:.8"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+'</div></div></div>'})}
+   $('res').innerHTML=h;
+   $('editsel').onclick=function(){routeBuilt=false;render()};
+   rstopBind();
+   return;
   }
-  // no-geo customers (can't be routed)
-  var noGeo=ordered.filter(function(c){return c.lat==null});
-  if(noGeo.length){h+='<div class="card" style="background:var(--warn-s);font-size:11.5px;color:var(--warn);font-weight:700;margin-top:8px">⚠︎ '+noGeo.length+' לקוחות ללא מיקום — לא משובצים במסלול</div>';noGeo.forEach(function(c){h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:.75"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+'</div></div></div>'})}
-  $('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין לקוחות באזור זה.</div>';
-  var ds=document.querySelectorAll('.dsplit');for(var q=0;q<ds.length;q++){ds[q].onclick=function(){routeDays=+this.getAttribute('data-d');render()}}
-  var rs=document.querySelectorAll('.rstop');for(var k=0;k<rs.length;k++){rs[k].onclick=function(){openCustomer(this.getAttribute('data-id'))}}
+
+  // ---- SELECTION MODE ----
+  var selCount=function(){return d.filter(function(c){return routeSel[c.id]}).length};
+  var h='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לקוחות באזור</div><div style="font-size:20px;font-weight:800">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">נבחרו</div><div id="selc" style="font-size:20px;font-weight:800;color:var(--acc)">'+selCount()+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:800;color:var(--bad)">'+debtCust+'</div></div></div>';
+  h+='<div style="display:flex;gap:7px;flex-wrap:wrap;margin:2px 0"><button id="selall" class="chip">בחר הכל</button><button id="selnone" class="chip">נקה בחירה</button><button id="seldebt" class="chip">רק לגבייה</button></div>';
+  h+='<div style="font-size:12.5px;color:var(--mut);padding:0 2px 6px;line-height:1.5">סמני את הלקוחות שתגיעי אליהם היום, ואז לחצי <b>בנה מסלול</b> — המערכת תסדר אותם למסלול נסיעה יעיל מנקודת המוצא.</div>';
+  d.forEach(function(c){var on=!!routeSel[c.id];var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';
+   h+='<div class="card rsel" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;'+(on?'border:2px solid var(--acc);background:var(--accs)':'')+'"><div class="rselbox" style="width:24px;height:24px;border-radius:7px;border:2px solid '+(on?'var(--acc)':'#ccc')+';background:'+(on?'var(--acc)':'#fff')+';color:#fff;display:flex;align-items:center;justify-content:center;flex:none;font-size:14px;font-weight:800">'+(on?'✓':'')+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+(c.lat==null?' <span class="badge b-mut">ללא מיקום</span>':'')+'</div></div></div>'});
+  $('res').innerHTML=h+'<div style="height:78px"></div>';
+  // floating build bar
+  var oldbar=document.getElementById('buildbar');if(oldbar)oldbar.remove();
+  var bar=document.createElement('div');bar.id='buildbar';bar.style.cssText='position:fixed;left:0;right:0;bottom:64px;max-width:520px;margin:0 auto;padding:8px 12px;z-index:40';
+  bar.innerHTML='<button id="buildbtn" class="cta" style="box-shadow:0 6px 20px rgba(10,79,86,.35)">🚗 בנה מסלול יומי (<span id="bcnt">'+selCount()+'</span>)</button>';
+  document.body.appendChild(bar);
+  var refreshCnt=function(){var n=selCount();if($('selc'))$('selc').textContent=n;if(document.getElementById('bcnt'))document.getElementById('bcnt').textContent=n;var bb=document.getElementById('buildbtn');if(bb)bb.disabled=(n===0)};
+  refreshCnt();
+  var toggle=function(el){var id=el.getAttribute('data-id');routeSel[id]=!routeSel[id];var on=!!routeSel[id];el.style.border=on?'2px solid var(--acc)':'';el.style.background=on?'var(--accs)':'';var box=el.querySelector('.rselbox');box.style.border='2px solid '+(on?'var(--acc)':'#ccc');box.style.background=on?'var(--acc)':'#fff';box.textContent=on?'✓':'';refreshCnt()};
+  var rc=document.querySelectorAll('.rsel');for(var k=0;k<rc.length;k++){rc[k].onclick=function(){toggle(this)}}
+  $('selall').onclick=function(){d.forEach(function(c){routeSel[c.id]=true});render()};
+  $('selnone').onclick=function(){routeSel={};render()};
+  $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});render()};
+  document.getElementById('buildbtn').onclick=function(){if(selCount()===0){toast('בחרי לפחות לקוח אחד');return}routeBuilt=true;render()};
  });
 }
 function openOriginPicker(){
