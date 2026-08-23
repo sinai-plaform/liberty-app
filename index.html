@@ -96,6 +96,33 @@ function confirmModal(msg,onYes,yesLabel){
  document.getElementById('cm_no').onclick=function(){ov.remove()};
  document.getElementById('cm_yes').onclick=function(){ov.remove();onYes()};
 }
+// ---------- order notifications (one-tap from agent's own email/WhatsApp) ----------
+var ORDER_EMAILS='libertyrezovation@gmail.com,sales3@libertyisrael.co.il';
+var ORDER_WA='972545030607';
+var cartPaidOnSpot=true;
+function buildOrderText(custName,items,t,isUpdate){
+ var s=(isUpdate?'*עדכון הזמנה* ⚠️\n':'*הזמנה חדשה* 🧾\n')+'לקוח: '+custName+'\nתאריך: '+new Date().toLocaleDateString('he-IL')+'\n\n';
+ items.forEach(function(it){var f=freeUnits(it.qty,it.bonus_buy,it.bonus_get);s+='• '+it.name+' ('+it.sku+') — '+it.qty+' × '+ils(it.price)+' = '+ils(it.price*it.qty)+(f>0?' (+'+f+' חינם)':'')+'\n'});
+ s+='\nסכום ביניים: '+ils(t.sub)+'\nמע״מ 18%: '+ils(t.vat)+'\nסה״כ לתשלום: '+ils(t.total);
+ s+='\nתשלום: '+(cartPaidOnSpot?'שולם במקום':'לתשלום / חוב');
+ return s;
+}
+function orderSentModal(custName,items,t,isUpdate,done){
+ var text=buildOrderText(custName,items,t,isUpdate);
+ var subj=(isUpdate?'עדכון הזמנה — ':'הזמנה חדשה — ')+custName;
+ var mailto='mailto:'+ORDER_EMAILS+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(text);
+ var wa='https://wa.me/'+ORDER_WA+'?text='+encodeURIComponent(text);
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(isUpdate?'ההזמנה עודכנה ✓':'ההזמנה נשמרה ✓')+'</b><span id="osx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  '<div class="card" style="background:var(--accs)"><div style="font-size:12.5px;color:var(--accd);font-weight:700;line-height:1.6">שליחת סיכום ההזמנה'+(isUpdate?' המעודכן':'')+' — לחצי לשליחה מהחשבון שלך:</div></div>'+
+  '<a href="'+mailto+'" class="cta" style="height:48px;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none">📧 שליחת מייל (2 נמענים)</a>'+
+  '<a href="'+wa+'" target="_blank" rel="noopener" class="cta" style="height:48px;background:#25d366;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none">💬 שליחת וואטסאפ</a>'+
+  '<div class="card" style="white-space:pre-wrap;font-size:12.5px;color:#5b564e;line-height:1.6;background:#fbfaf8">'+esc(text)+'</div>'+
+  '<button class="cta" id="osdone" style="background:#efece7;color:var(--ink)">סיום</button></div></div>';
+ document.body.appendChild(ov);
+ function fin(){ov.remove();if(done)done()}
+ ov.onclick=function(e){if(e.target===ov)fin()};document.getElementById('osx').onclick=fin;document.getElementById('osdone').onclick=fin;
+}
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
 var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
 function nav(){var h='';for(var i=0;i<TABS.length;i++){var t=TABS[i];h+='<button data-r="'+t[0]+'" class="'+(route===t[0]?'on':'')+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS[t[2]]+'</svg><span>'+t[1]+'</span></button>'}return '<nav id="nav">'+h+'</nav>'}
@@ -136,7 +163,7 @@ function boot(){
 }
 
 function homeView(){
- shell('<div style="background:var(--acc);padding:18px 20px 44px"><div style="color:#bfe0e3;font-size:13px">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div><div id="hi" style="color:#fff;font-size:20px;font-weight:800">שלום'+(me?', '+esc(me.name):'…')+'</div><button data-go="catalog" style="margin-top:14px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button></div><div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="card" data-go="customers" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוחות פעילים</div><div id="s1" style="font-size:26px;font-weight:800;color:var(--acc)">…</div><div id="s2" style="font-size:12px;color:var(--mut)"></div></button><button class="card" data-go="collections" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">חוב פתוח</div><div id="s3" style="font-size:22px;font-weight:800;color:var(--bad)">…</div><div id="s4" style="font-size:12px;color:var(--mut)"></div></button></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px"><button class="card qa" data-go="route" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🚚</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">מסלול</div></button><button class="card qa" data-go="visits" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📍</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">ביקורים</div></button><button class="card qa" data-go="reports" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📊</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">דוחות</div></button><button class="card qa" data-go="targets" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🎯</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">יעדים</div></button></div><div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים. בונה הזמנות, מסלול, ביקורים ויעדים.</div><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
+ shell('<div style="background:var(--acc);padding:18px 20px 44px"><div style="color:#bfe0e3;font-size:13px">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div><div id="hi" style="color:#fff;font-size:20px;font-weight:800">שלום'+(me?', '+esc(me.name):'…')+'</div><button data-go="catalog" style="margin-top:14px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button></div><div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="card" data-go="customers" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוחות פעילים</div><div id="s1" style="font-size:26px;font-weight:800;color:var(--acc)">…</div><div id="s2" style="font-size:12px;color:var(--mut)"></div></button><button class="card" data-go="collections" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">חוב פתוח</div><div id="s3" style="font-size:22px;font-weight:800;color:var(--bad)">…</div><div id="s4" style="font-size:12px;color:var(--mut)"></div></button></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px"><button class="card qa" data-go="route" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🚚</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">מסלול</div></button><button class="card qa" data-go="visits" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📍</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">ביקורים</div></button><button class="card qa" data-go="reports" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📊</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">דוחות</div></button><button class="card qa" data-go="targets" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🎯</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">יעדים</div></button></div><button class="card" data-go="broadcast" style="border:none;cursor:pointer;color:inherit;display:flex;align-items:center;gap:11px;box-shadow:0 6px 18px rgba(36,33,29,.06);padding:14px 16px"><div style="font-size:23px">📣</div><div style="text-align:right"><div style="font-size:14.5px;font-weight:800">תפוצה ללקוחות</div><div style="font-size:11.5px;color:var(--mut)">משלוחים · פרסומים · קטלוגים</div></div></button><div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים. הזמנות, גבייה, מסלול, ביקורים, תפוצה ויעדים.</div><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
  bindGo();
  $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render()})};
  sb.from('liberty_customers').select('lifecycle,debt_agorot').then(function(r){var d=r.data||[],act=0,pot=0,debt=0,dbt=0;for(var i=0;i<d.length;i++){if(d[i].lifecycle==='active')act++;if(d[i].lifecycle==='potential')pot++;if(d[i].debt_agorot>0){dbt++;debt+=d[i].debt_agorot}}if($('s1')){$('s1').textContent=act;$('s2').textContent='+ '+pot+' פוטנציאליים';$('s3').textContent=ils(debt);$('s4').textContent=dbt+' לקוחות'}});
@@ -233,13 +260,17 @@ function renderCustTab(){
    '<button id="ccontacts" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">אנשי קשר</button>'+
    (loc?'<a href="'+loc+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:var(--accs);color:var(--accd);display:flex;align-items:center;justify-content:center;text-decoration:none">🗺️ Google Maps</a>':'')+
    (waze?'<a href="'+waze+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:#33ccff;color:#003a4d;display:flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">🚗 ניווט ב-Waze</a>':'')+
-   '<button id="cedit" class="cta" style="height:44px;background:#efece7;color:var(--ink);grid-column:1/-1">✏️ עריכת פרטים והערה</button>'+
+   (c.debt_agorot>0?'<button id="cpay" class="cta" style="height:46px;background:var(--bad-s);color:var(--bad);grid-column:1/-1">💰 סימון תשלום · חוב '+ils(c.debt_agorot)+'</button>':'')+
+   '<button id="cgps" class="cta" style="height:44px;background:#efece7;color:var(--ink)">📍 מיקום נוכחי</button>'+
+   '<button id="cedit" class="cta" style="height:44px;background:#efece7;color:var(--ink)">✏️ עריכת פרטים</button>'+
    '</div>';
   b.innerHTML=head+'<div id="cact"></div>'+acts+'<div id="cxtra"></div>';
   $('cord').onclick=function(){cart.cust={id:c.id,name:c.name};route='orders';render()};
   $('cvis').onclick=function(){visitTarget={id:c.id,name:c.name};route='visits';render()};
   $('ccontacts').onclick=function(){loadContacts(c)};
   $('cedit').onclick=function(){editCustomer(c)};
+  $('cgps').onclick=function(){updateLocation(c)};
+  if($('cpay'))$('cpay').onclick=function(){openPaymentSheet(c)};
   loadCustActivity(c);
  } else if(custTab==='orders'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
@@ -318,6 +349,40 @@ function loadCustActivity(c){
   el2.innerHTML='<div class="card" style="display:flex;gap:12px;background:#fbfaf8;margin-bottom:0">'+cells+'</div>';
  });
 }
+function updateLocation(c){
+ if(!navigator.geolocation){toast('אין גישה למיקום במכשיר');return}
+ toast('מאתר מיקום…');
+ navigator.geolocation.getCurrentPosition(function(pos){
+  var lat=+pos.coords.latitude.toFixed(6),lng=+pos.coords.longitude.toFixed(6);
+  sb.from('customers').update({lat:lat,lng:lng}).eq('id',c.id).then(function(r){
+   if(r.error){toast('שגיאה: '+r.error.message)}else{toast('המיקום עודכן ✓ ('+lat+', '+lng+')');openCustomer(c.id)}
+  });
+ },function(err){toast('לא ניתן לאתר מיקום: '+(err.message||''))},{enableHighAccuracy:true,timeout:12000});
+}
+function openPaymentSheet(c){
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">סימון תשלום · '+esc(c.name)+'</b><span id="pyx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  '<div class="card" style="background:var(--bad-s)"><div style="font-size:12.5px;color:var(--bad);font-weight:700">חוב פתוח נוכחי: '+ils(c.debt_agorot)+'</div></div>'+
+  '<div class="card"><label style="display:block"><span style="font-size:12px;color:var(--mut);font-weight:600">סכום ששולם (₪)</span><input id="py_amt" class="field" style="margin-top:5px" inputmode="decimal"></label>'+
+  '<div style="margin-top:12px"><span style="font-size:12px;color:var(--mut);font-weight:600">אמצעי תשלום</span><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><button class="chip pym on" data-m="transfer">🏦 העברה בנקאית</button><button class="chip pym" data-m="check">🧾 צ׳ק</button><button class="chip pym" data-m="credit_card">💳 כרטיס אשראי</button><button class="chip pym" data-m="cash">💵 מזומן</button></div></div>'+
+  '<label style="display:block;margin-top:12px"><span style="font-size:12px;color:var(--mut);font-weight:600">אסמכתא / מס׳ צ׳ק (לא חובה)</span><input id="py_ref" class="field" style="margin-top:5px"></label>'+
+  '<div style="margin-top:12px"><span style="font-size:12px;color:var(--mut);font-weight:600">📷 תמונת תיעוד התשלום (לא חובה)</span><input id="py_photo" type="file" accept="image/*" capture="environment" style="font-size:12.5px;width:100%;margin-top:6px"><div id="py_prev" style="margin-top:8px"></div></div></div>'+
+  '<button class="cta" id="py_save">רישום תשלום</button></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('pyx').onclick=function(){ov.remove()};
+ $('py_amt').value=(c.debt_agorot/100).toFixed(2);
+ var method='transfer';var ms=document.querySelectorAll('.pym');for(var i=0;i<ms.length;i++){ms[i].onclick=function(){for(var j=0;j<ms.length;j++)ms[j].classList.remove('on');this.classList.add('on');method=this.getAttribute('data-m')}}
+ $('py_photo').onchange=function(){var f=this.files&&this.files[0];$('py_prev').innerHTML=f?'<img src="'+URL.createObjectURL(f)+'" style="width:70px;height:70px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">':''};
+ $('py_save').onclick=function(){var amt=Math.round((parseFloat($('py_amt').value)||0)*100);if(amt<=0){toast('נא למלא סכום');return}$('py_save').disabled=true;$('py_save').textContent='שומר…';
+  var f=$('py_photo').files&&$('py_photo').files[0];var urls=[];
+  var path=me.id+'/'+c.id+'/'+Date.now()+'.jpg';
+  var doUp=f?sb.storage.from('payment-photos').upload(path,f,{contentType:f.type||'image/jpeg'}).then(function(u){if(!u.error)urls=[sb.storage.from('payment-photos').getPublicUrl(path).data.publicUrl]}):Promise.resolve();
+  doUp.then(function(){
+   sb.from('payments').insert({customer_id:c.id,amount_agorot:amt,method:method,reference:$('py_ref').value.trim()||null,collected_by:me.id,photos:urls}).then(function(r){
+    if(r.error){toast('שגיאה: '+r.error.message);$('py_save').disabled=false;$('py_save').textContent='רישום תשלום'}else{toast('התשלום נרשם ✓');ov.remove();openCustomer(c.id)}
+   })
+  });
+ };
+}
 function editCustomer(c){
  var ov=document.createElement('div');ov.className='ovl';
  ov.innerHTML='<div class="sheet" style="max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">עריכת לקוח</b><span id="ecx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
@@ -390,6 +455,32 @@ function areaCustomers(area){
  });
 }
 
+// ---------- BROADCAST ----------
+var bcArea='all';
+function broadcastView(){
+ var areaOpts='<option value="all">כל האזורים</option>';for(var i=1;i<=6;i++)areaOpts+='<option value="'+i+'"'+(bcArea==(''+i)?' selected':'')+'>אזור '+i+'</option>';
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+backBtn()+'<div class="h1" style="margin:0">תפוצה ללקוחות</div></div>'+
+  '<textarea id="bc_msg" class="field" style="min-height:80px" placeholder="הודעה ללקוחות — משלוח הגיע / מבצע / קטלוג חדש…"></textarea>'+
+  '<input id="bc_link" class="field" style="margin-top:8px" placeholder="קישור (קטלוג/מבצע) — לא חובה" inputmode="url">'+
+  '<div style="display:flex;gap:8px;margin-top:9px"><select id="bc_area" class="field" style="flex:none;width:auto">'+areaOpts+'</select><div class="search" style="flex:1;margin:0"><input id="bc_q" placeholder="סינון לפי שם/עיר…"></div></div></div>'+
+  '<div class="list" id="bclist"><div style="color:var(--mut);font-size:13px">טוען לקוחות…</div></div>');
+ $('bc_area').onchange=function(){bcArea=this.value;renderBc()};
+ $('bc_q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(renderBc,150)});
+ if(window.__bcAll){renderBc()}
+ else{sb.from('liberty_customer_phones').select('customer_id,name,city,area_code,phone').order('name').limit(1000).then(function(r){window.__bcAll=r.data||[];renderBc()})}
+}
+function renderBc(){
+ var el=$('bclist');if(!el)return;var all=window.__bcAll||[];
+ var q=($('bc_q')?$('bc_q').value.trim():'');
+ var list=all.filter(function(c){if(bcArea!=='all'&&(''+c.area_code)!==bcArea)return false;if(q&&(esc(c.name||'').indexOf(q)<0&&(c.city||'').indexOf(q)<0))return false;return true});
+ var withP=list.filter(function(c){return c.phone});var noP=list.length-withP.length;
+ function msg(){var m=($('bc_msg')?$('bc_msg').value:'')||'';var l=($('bc_link')?$('bc_link').value.trim():'');return m+(l?('\n'+l):'')}
+ var h='<div class="card" style="background:var(--accs);display:flex;justify-content:space-between;align-items:center"><div style="font-size:12.5px;color:var(--accd);font-weight:700">'+withP.length+' לקוחות עם טלפון'+(noP?' · '+noP+' ללא':'')+'</div><div style="font-size:11px;color:var(--accd)">לחצי 💬 לכל לקוח לשליחה</div></div>';
+ withP.forEach(function(c){h+='<div class="card bcrow" style="display:flex;align-items:center;gap:9px" data-id="'+c.customer_id+'"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+'</div></div><button class="bcwa" data-phone="'+esc(c.phone)+'" style="border:none;background:#25d366;color:#fff;font-weight:800;font-size:15px;border-radius:10px;padding:8px 15px;cursor:pointer">💬 שלח</button></div>'});
+ el.innerHTML=h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:20px">אין לקוחות תואמים.</div>';
+ var wa=el.querySelectorAll('.bcwa');for(var i=0;i<wa.length;i++){wa[i].onclick=function(){var m=msg();if(!m.trim()){toast('כתבי הודעה קודם');return}var link=waLink(this.getAttribute('data-phone'),m);if(link){window.open(link,'_blank');var row=this.closest('.bcrow');if(row){row.style.opacity='0.5';this.textContent='✓ נשלח'}}}}
+}
+
 // ---------- collections ----------
 function collectionsView(){
  shell('<div class="hdr"><div class="h1">גבייה · גיול אוגוסט</div><div id="tot" style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -415,8 +506,10 @@ function ordersView(){
   '<div id="presults"></div>'+
   lines+
   '<div class="card" style="background:#fbfaf8"><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">סכום ביניים</span><b>'+ils(t.sub)+'</b></div><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(t.vat)+'</b></div><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--good)"><span>מזכה בעמלה</span><b>'+ils(t.comm)+'</b></div>'+(t.freeq>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--warn)"><span>🎁 יח׳ בונוס חינם</span><b>'+t.freeq+' יח׳</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:17px;padding:8px 0 2px;border-top:1px solid var(--line);margin-top:4px"><span style="font-weight:800">סה״כ לתשלום</span><b style="color:var(--acc)">'+ils(t.total)+'</b></div></div>'+
+  '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">תשלום</div><div style="display:flex;gap:8px"><button class="chip pos'+(cartPaidOnSpot?' on':'')+'" data-p="1" style="flex:1">✅ שולם במקום</button><button class="chip pos'+(cartPaidOnSpot?'':' on')+'" data-p="0" style="flex:1">🧾 לחיוב / חוב</button></div>'+(cartPaidOnSpot?'':'<div style="font-size:11.5px;color:var(--warn);margin-top:7px;font-weight:600">ההזמנה תירשם כחוב על הלקוח</div>')+'</div>'+
   '<button class="cta" id="saveord"'+((!cart.cust||!cart.items.length)?' disabled':'')+'>'+(editingOrderId?'עדכון הזמנה · ':'שמירת הזמנה · ')+ils(t.total)+'</button>'+
   '</div>');
+ var pos=document.querySelectorAll('.pos');for(var pi=0;pi<pos.length;pi++){pos[pi].onclick=function(){cartPaidOnSpot=this.getAttribute('data-p')==='1';render()}}
  $('myord').onclick=function(e){e.preventDefault();if(editingOrderId){editingOrderId=null;cart={cust:null,items:[]}}route='myorders';render()};
  if($('pickcust'))$('pickcust').onclick=openCustPicker;
  if($('chgcust'))$('chgcust').onclick=openCustPicker;
@@ -434,20 +527,22 @@ function openCustPicker(){
 function saveOrder(){
  if(!cart.cust||!cart.items.length||!me)return;$('saveord').disabled=true;$('saveord').textContent='שומר…';
  var t=cartTotals();
+ var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
+ var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;route='myorders';render()};
  if(editingOrderId){
   var oid=editingOrderId;
-  sb.from('orders').update({customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm}).eq('id',oid).then(function(ru){
+  sb.from('orders').update({customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot}).eq('id',oid).then(function(ru){
    if(ru.error){toast('שגיאה בעדכון: '+ru.error.message);$('saveord').disabled=false;$('saveord').textContent='עדכון הזמנה';return}
    sb.from('order_items').delete().eq('order_id',oid).then(function(){
-    sb.from('order_items').insert(itemsFor(oid)).then(function(r2){if(r2.error){toast('עודכן, שגיאה בפריטים')}else{toast('ההזמנה עודכנה ✓')}cart={cust:null,items:[]};editingOrderId=null;route='myorders';render()})
+    sb.from('order_items').insert(itemsFor(oid)).then(function(r2){if(r2.error){toast('עודכן, שגיאה בפריטים')}orderSentModal(snapName,snapItems,t,true,finishOrder)})
    })
   });
   return;
  }
- sb.from('orders').insert({customer_id:cart.cust.id,agent_id:me.id,status:'submitted',subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,submitted_at:new Date().toISOString()}).select('id').single().then(function(r){
+ sb.from('orders').insert({customer_id:cart.cust.id,agent_id:me.id,status:'submitted',subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,submitted_at:new Date().toISOString()}).select('id').single().then(function(r){
   if(r.error){toast('שגיאה בשמירה: '+r.error.message);$('saveord').disabled=false;return}
-  sb.from('order_items').insert(itemsFor(r.data.id)).then(function(r2){if(r2.error){toast('ההזמנה נשמרה, שגיאה בפריטים')}else{toast('ההזמנה נשמרה ✓')}cart={cust:null,items:[]};route='myorders';render()});
+  sb.from('order_items').insert(itemsFor(r.data.id)).then(function(r2){if(r2.error){toast('ההזמנה נשמרה, שגיאה בפריטים')}orderSentModal(snapName,snapItems,t,false,finishOrder)});
  });
 }
 function openOrderDetail(id){
@@ -661,6 +756,7 @@ function render(){sb.auth.getSession().then(function(r){if(!r.data.session){logi
  else if(route==='reports')reportsView();
  else if(route==='newcust')newCustomerView();
  else if(route==='areas')areasView();
+ else if(route==='broadcast')broadcastView();
  else homeView();
 })}
 render();
