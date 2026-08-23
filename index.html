@@ -12,12 +12,12 @@
 :root{--bg:#f7f5f2;--sur:#fff;--ink:#24211d;--mut:#857f76;--line:#e8e4dd;--acc:#0f6b74;--accd:#0a4f56;--accs:#e3eff0;--good:#2f7d46;--goods:#e5f2e8;--warn:#a86514;--warns:#f7ecd9;--bad:#b3372e;--bads:#f9e7e4}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:'Heebo',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
-input,button{font-family:inherit}input{outline:none}
+input,button,select,textarea{font-family:inherit}input,textarea{outline:none}
 .card{background:var(--sur);border-radius:15px;padding:12px 14px}
 .badge{font-size:11px;font-weight:700;border-radius:7px;padding:3px 8px;display:inline-block}
 .b-good{background:var(--goods);color:var(--good)}.b-warn{background:var(--warns);color:var(--warn)}
 .b-bad{background:var(--bads);color:var(--bad)}.b-mut{background:#efece7;color:var(--mut)}.b-acc{background:var(--acc);color:#fff}
-#nav{position:fixed;bottom:0;right:0;left:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(10px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto}
+#nav{position:fixed;bottom:0;right:0;left:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(10px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;z-index:20}
 #nav button{background:none;border:none;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--mut);font-weight:500;cursor:pointer}
 #nav button.on{color:var(--acc);font-weight:700}
 #nav svg{stroke:#a39b90}#nav button.on svg{stroke:var(--acc)}
@@ -29,6 +29,22 @@ input,button{font-family:inherit}input{outline:none}
 .list{padding:12px 16px;display:flex;flex-direction:column;gap:9px}
 .stat{border-radius:12px;padding:10px 12px}
 button.cta{height:52px;background:var(--acc);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;width:100%}
+button.cta:disabled{opacity:.45}
+.thumb{width:48px;height:48px;border-radius:10px;object-fit:cover;background:#f2efe9;flex:none}
+.thumbph{width:48px;height:48px;border-radius:10px;background:#f2efe9;flex:none;display:flex;align-items:center;justify-content:center}
+.step{display:flex;align-items:center;gap:0;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.step button{width:32px;height:32px;border:none;background:#f7f5f2;font-size:18px;font-weight:800;color:var(--acc);cursor:pointer}
+.step span{min-width:34px;text-align:center;font-weight:800;font-size:15px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#24211d;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:700;z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.field{width:100%;height:48px;border:1.5px solid var(--line);border-radius:12px;padding:0 13px;font-size:15px;font-weight:600;background:#fff}
+textarea.field{height:auto;min-height:80px;padding:11px 13px;resize:vertical}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>div{height:100%;background:var(--acc)}
+.ovl{position:fixed;inset:0;background:rgba(36,33,29,.4);z-index:30;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet{background:#fff;border-radius:20px 20px 0 0;max-width:520px;margin:0 auto;width:100%;max-height:82vh;display:flex;flex-direction:column}
+a{color:var(--acc)}
 </style>
 </head>
 <body>
@@ -39,43 +55,190 @@ var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
 var $=function(id){return document.getElementById(id)};
+var VAT=0.18;
 var ils=function(a){return a==null?'—':'₪'+(a/100).toLocaleString('he-IL',{maximumFractionDigits:2})};
 var esc=function(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
 var route='home';
+var me=null;         // {id,name,role}
+var imgMap={};       // sku -> data_url
+var cart={cust:null,items:[]};
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
 var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
 function nav(){var h='';for(var i=0;i<TABS.length;i++){var t=TABS[i];h+='<button data-r="'+t[0]+'" class="'+(route===t[0]?'on':'')+'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS[t[2]]+'</svg><span>'+t[1]+'</span></button>'}return '<nav id="nav">'+h+'</nav>'}
 function shell(inner){$('app').innerHTML='<div id="view">'+inner+'</div>'+nav();var b=document.querySelectorAll('#nav button');for(var i=0;i<b.length;i++){b[i].onclick=function(){route=this.getAttribute('data-r');render()}}}
+function bindGo(){var gb=document.querySelectorAll('[data-go]');for(var i=0;i<gb.length;i++){gb[i].onclick=function(){route=this.getAttribute('data-go');render()}}}
+function toast(t){var e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(function(){e.remove()},2200)}
+function thumb(sku){var u=imgMap[sku];if(u)return '<img class="thumb" src="'+u+'" onerror="this.style.visibility=\'hidden\'">';return '<div class="thumbph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="9" cy="9" r="1.4"/></svg></div>'}
+
 function loginView(){
  $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><div style="width:72px;height:72px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(10,79,86,.35)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f6b74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg></div><div style="color:#fff;font-size:26px;font-weight:800">ליברטי</div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
- var go=function(){var code=$('code').value.trim(),pin=$('pin').value.trim();if(!code||!pin)return;$('go').textContent='רק רגע…';sb.auth.signInWithPassword({email:'u'+code+'@liberty.app',password:pin}).then(function(r){if(r.error){$('err').textContent='קוד עובד או קוד אישי שגויים';$('go').textContent='כניסה'}else{route='home';render()}})};
+ var go=function(){var code=$('code').value.trim(),pin=$('pin').value.trim();if(!code||!pin)return;$('go').textContent='רק רגע…';sb.auth.signInWithPassword({email:'u'+code+'@liberty.app',password:pin}).then(function(r){if(r.error){$('err').textContent='קוד עובד או קוד אישי שגויים';$('go').textContent='כניסה'}else{boot()}})};
  $('go').onclick=go;$('pin').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
 }
+
+function boot(){
+ // load me + image map, then render
+ sb.from('liberty_me').select('id,name,role').single().then(function(r){me=r.data;});
+ sb.from('liberty_product_images').select('sku,data_url').then(function(r){imgMap={};(r.data||[]).forEach(function(x){imgMap[x.sku]=x.data_url});route='home';render()});
+}
+
 function homeView(){
- shell('<div style="background:var(--acc);padding:18px 20px 44px"><div style="color:#bfe0e3;font-size:13px">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div><div id="hi" style="color:#fff;font-size:20px;font-weight:800">שלום…</div><button data-go="catalog" style="margin-top:14px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button></div><div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="card" data-go="customers" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוחות פעילים</div><div id="s1" style="font-size:26px;font-weight:800;color:var(--acc)">…</div><div id="s2" style="font-size:12px;color:var(--mut)"></div></button><button class="card" data-go="collections" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">חוב פתוח</div><div id="s3" style="font-size:22px;font-weight:800;color:var(--bad)">…</div><div id="s4" style="font-size:12px;color:var(--mut)"></div></button></div><div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה (פאזה 0) — מחוברת חי לבסיס הנתונים. הזמנות, מסלולים ויעדים בדרך.</div><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
- var gb=document.querySelectorAll('[data-go]');for(var i=0;i<gb.length;i++){gb[i].onclick=function(){route=this.getAttribute('data-go');render()}}
- $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){route='home';render()})};
- sb.from('liberty_me').select('name').single().then(function(r){if(r.data)$('hi').textContent='שלום, '+r.data.name});
+ shell('<div style="background:var(--acc);padding:18px 20px 44px"><div style="color:#bfe0e3;font-size:13px">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div><div id="hi" style="color:#fff;font-size:20px;font-weight:800">שלום'+(me?', '+esc(me.name):'…')+'</div><button data-go="catalog" style="margin-top:14px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button></div><div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="card" data-go="customers" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוחות פעילים</div><div id="s1" style="font-size:26px;font-weight:800;color:var(--acc)">…</div><div id="s2" style="font-size:12px;color:var(--mut)"></div></button><button class="card" data-go="collections" style="text-align:right;border:none;box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--mut);font-weight:600">חוב פתוח</div><div id="s3" style="font-size:22px;font-weight:800;color:var(--bad)">…</div><div id="s4" style="font-size:12px;color:var(--mut)"></div></button></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><button class="card qa" data-go="route" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 6px"><div style="font-size:22px">🚚</div><div style="font-size:12.5px;font-weight:700;margin-top:4px">מסלול היום</div></button><button class="card qa" data-go="visits" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 6px"><div style="font-size:22px">📍</div><div style="font-size:12.5px;font-weight:700;margin-top:4px">ביקורים</div></button><button class="card qa" data-go="targets" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 6px"><div style="font-size:22px">🎯</div><div style="font-size:12.5px;font-weight:700;margin-top:4px">יעדים</div></button></div><div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים. בונה הזמנות, מסלול, ביקורים ויעדים.</div><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
+ bindGo();
+ $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render()})};
  sb.from('liberty_customers').select('lifecycle,debt_agorot').then(function(r){var d=r.data||[],act=0,pot=0,debt=0,dbt=0;for(var i=0;i<d.length;i++){if(d[i].lifecycle==='active')act++;if(d[i].lifecycle==='potential')pot++;if(d[i].debt_agorot>0){dbt++;debt+=d[i].debt_agorot}}if($('s1')){$('s1').textContent=act;$('s2').textContent='+ '+pot+' פוטנציאליים';$('s3').textContent=ils(debt);$('s4').textContent=dbt+' לקוחות'}});
 }
+
 var tmr=null;
 function catalogView(){
  shell('<div class="hdr"><div class="h1">קטלוג</div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם מוצר או מק״ט…" autofocus></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- function run(){var q=$('q').value.trim();var query=sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,price_agorot,bonus_buy,bonus_get').order('sku').limit(60);if(q)query=query.or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%,barcode.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var p=d[i];var b='';if(p.is_teaser)b+='<span class="badge b-acc">בקרוב</span> ';if(p.bonus_buy!=null&&p.bonus_get>0)b+='<span class="badge b-warn">בונוס '+p.bonus_buy+'+'+p.bonus_get+'</span> ';if(p.is_commissionable===true)b+='<span class="badge b-good">מזכה בעמלה</span>';if(p.is_commissionable===false)b+='<span class="badge b-mut">ללא עמלה</span>';h+='<div class="card" style="display:flex;align-items:center;gap:12px"><div style="flex:1;min-width:0"><div style="font-size:11.5px;color:var(--mut);font-weight:700">'+esc(p.sku)+(p.brand?' · '+esc(p.brand):'')+(p.pack_size?' · אריזה '+p.pack_size:'')+'</div><div style="font-size:14.5px;font-weight:700;line-height:1.3">'+esc(p.name)+'</div><div style="margin-top:5px">'+b+'</div></div><div style="font-size:18px;font-weight:800;color:var(--acc);white-space:nowrap">'+ils(p.price_agorot)+'</div></div>'}$('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">לא נמצאו מוצרים</div>'})}
+ function run(){var q=$('q').value.trim();var query=sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,price_agorot,bonus_buy,bonus_get').order('sku').limit(80);if(q)query=query.or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%,barcode.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var p=d[i];var b='';if(p.is_teaser)b+='<span class="badge b-acc">בקרוב</span> ';if(p.bonus_buy!=null&&p.bonus_get>0)b+='<span class="badge b-warn">בונוס '+p.bonus_buy+'+'+p.bonus_get+'</span> ';if(p.is_commissionable===true)b+='<span class="badge b-good">מזכה בעמלה</span>';if(p.is_commissionable===false)b+='<span class="badge b-mut">ללא עמלה</span>';h+='<div class="card" style="display:flex;align-items:center;gap:11px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:11.5px;color:var(--mut);font-weight:700">'+esc(p.sku)+(p.brand?' · '+esc(p.brand):'')+(p.pack_size?' · אריזה '+p.pack_size:'')+'</div><div style="font-size:14px;font-weight:700;line-height:1.3">'+esc(p.name)+'</div><div style="margin-top:5px">'+b+'</div></div><div style="text-align:left"><div style="font-size:17px;font-weight:800;color:var(--acc);white-space:nowrap">'+ils(p.price_agorot)+'</div><button class="addp" data-sku="'+esc(p.sku)+'" style="margin-top:6px;border:none;background:var(--accs);color:var(--accd);font-weight:800;font-size:13px;border-radius:9px;padding:5px 12px;cursor:pointer">+ הזמנה</button></div></div>'}$('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">לא נמצאו מוצרים</div>';var ap=document.querySelectorAll('.addp');for(var j=0;j<ap.length;j++){ap[j].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})}
  $('q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
+
+function addToCartBySku(sku){
+ sb.from('liberty_products').select('id,sku,name,price_agorot,is_commissionable,bonus_buy,bonus_get').eq('sku',sku).single().then(function(r){var p=r.data;if(!p)return;var ex=null;for(var i=0;i<cart.items.length;i++){if(cart.items[i].id===p.id)ex=cart.items[i]}if(ex){ex.qty++}else{cart.items.push({id:p.id,sku:p.sku,name:p.name,price:p.price_agorot||0,comm:p.is_commissionable===true,bonus_buy:p.bonus_buy,bonus_get:p.bonus_get,qty:1})}toast('נוסף להזמנה: '+p.name);route='orders';render()});
+}
+
+// ---------- customers ----------
 function customersView(){
  var LC={active:['פעיל','b-good'],potential:['פוטנציאלי','b-warn'],disqualified:['לא רלוונטי','b-mut']};
  shell('<div class="hdr"><div class="h1">לקוחות</div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם או עיר…"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- function run(){var q=$('q').value.trim();var query=sb.from('liberty_customers').select('name,city,chain,lifecycle,potential_level,debt_agorot,area_code,notes').neq('lifecycle','disqualified').order('debt_agorot',{ascending:false}).limit(250);if(q)query=query.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var c=d[i];var lc=LC[c.lifecycle]||LC.potential;h+='<div class="card cust" style="cursor:pointer"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+esc(c.chain):'')+'</div></div><span class="badge '+lc[1]+'">'+lc[0]+(c.potential_level==='high'?' · גבוה':'')+'</span>'+(c.debt_agorot>0?'<span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div><div class="more" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut);line-height:1.5">'+esc(c.notes||'אין הערות')+'</div></div>'}$('res').innerHTML=h;var cd=document.querySelectorAll('.cust');for(var j=0;j<cd.length;j++){cd[j].onclick=function(){var m=this.querySelector('.more');m.style.display=m.style.display==='none'?'block':'none'}}})}
+ function run(){var q=$('q').value.trim();var query=sb.from('liberty_customers').select('id,name,city,chain,lifecycle,potential_level,debt_agorot,area_code,area_name,notes,address').neq('lifecycle','disqualified').order('debt_agorot',{ascending:false}).limit(300);if(q)query=query.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var c=d[i];var lc=LC[c.lifecycle]||LC.potential;h+='<div class="card cust" style="cursor:pointer"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+esc(c.chain):'')+'</div></div><span class="badge '+lc[1]+'">'+lc[0]+(c.potential_level==='high'?' · גבוה':'')+'</span>'+(c.debt_agorot>0?'<span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div><div class="more" style="display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px;color:#6b655c;line-height:1.5">'+(c.address?'<div>📍 '+esc(c.address)+'</div>':'')+'<div style="margin-top:4px">'+esc(c.notes||'אין הערות')+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="mkord" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="border:none;background:var(--accs);color:var(--accd);font-weight:800;font-size:12.5px;border-radius:9px;padding:6px 12px;cursor:pointer">הזמנה חדשה</button><button class="mkvis" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="border:none;background:#efece7;color:var(--ink);font-weight:800;font-size:12.5px;border-radius:9px;padding:6px 12px;cursor:pointer">רישום ביקור</button></div></div></div>'}$('res').innerHTML=h;var cd=document.querySelectorAll('.cust');for(var j=0;j<cd.length;j++){cd[j].onclick=function(e){if(e.target.closest('button'))return;var m=this.querySelector('.more');m.style.display=m.style.display==='none'?'block':'none'}}
+ var mo=document.querySelectorAll('.mkord');for(var k=0;k<mo.length;k++){mo[k].onclick=function(){cart.cust={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};route='orders';render()}}
+ var mv=document.querySelectorAll('.mkvis');for(var k2=0;k2<mv.length;k2++){mv[k2].onclick=function(){visitTarget={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};route='visits';render()}}})}
  $('q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
+
+// ---------- collections ----------
 function collectionsView(){
  shell('<div class="hdr"><div class="h1">גבייה · גיול אוגוסט</div><div id="tot" style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  sb.from('liberty_customers').select('name,city,debt_agorot,oldest_invoice').gt('debt_agorot',0).order('debt_agorot',{ascending:false}).then(function(r){var d=r.data||[],total=0,o30=0,h='',now=Date.now();for(var i=0;i<d.length;i++){total+=d[i].debt_agorot;var days=d[i].oldest_invoice?Math.floor((now-new Date(d[i].oldest_invoice).getTime())/86400000):null;if(days!=null&&days>30)o30++;var sev=days==null?'var(--line)':days>60?'var(--bad)':days>30?'var(--warn)':'var(--good)';h+='<div class="card" style="border-inline-start:4px solid '+sev+';display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800">'+esc(d[i].name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(d[i].city||'')+(days!=null?' · הוותיקה: לפני '+days+' יום':'')+'</div></div><div style="font-size:16px;font-weight:800;color:var(--bad);white-space:nowrap">'+ils(d[i].debt_agorot)+'</div></div>'}$('tot').innerHTML='<div class="stat" style="background:var(--bads)"><div style="font-size:11px;font-weight:700;color:var(--bad)">חוב כולל</div><div style="font-size:17px;font-weight:800">'+ils(total)+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;font-weight:700;color:var(--warn)">מעל 30 יום</div><div style="font-size:17px;font-weight:800">'+o30+' לקוחות</div></div>';$('res').innerHTML=h});
 }
-function ordersView(){shell('<div style="padding:16px"><div class="h1">הזמנה</div><div class="card" style="color:var(--mut);font-size:13.5px;line-height:1.6">זרימת ההזמנה — עגלה מהקטלוג + הזמנה מהירה במצב מק״ט — נבנית בפאזה 1. בינתיים: חיפוש מחיר בקטלוג תוך שניות</div></div>')}
-function render(){sb.auth.getSession().then(function(r){if(!r.data.session){loginView();return}if(route==='catalog')catalogView();else if(route==='customers')customersView();else if(route==='collections')collectionsView();else if(route==='orders')ordersView();else homeView()})}
+
+// ---------- ORDER BUILDER ----------
+function cartTotals(){var sub=0,comm=0;for(var i=0;i<cart.items.length;i++){var it=cart.items[i];var lt=it.price*it.qty;sub+=lt;if(it.comm)comm+=lt}var vat=Math.round(sub*VAT);return {sub:sub,vat:vat,total:sub+vat,comm:comm}}
+function ordersView(){
+ var t=cartTotals();
+ var custBtn=cart.cust?('<div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח</div><div style="font-size:15.5px;font-weight:800">'+esc(cart.cust.name)+'</div></div><button id="chgcust" class="chip">שינוי</button></div>'):('<button id="pickcust" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">בחירת לקוח להזמנה</button>');
+ var lines='';
+ for(var i=0;i<cart.items.length;i++){var it=cart.items[i];var bonus=(it.bonus_buy&&it.bonus_get&&it.qty>=it.bonus_buy)?('<span class="badge b-warn" style="margin-top:3px">זכאי ל-'+(Math.floor(it.qty/it.bonus_buy)*it.bonus_get)+' חינם</span>'):'';
+  lines+='<div class="card" style="display:flex;align-items:center;gap:10px">'+thumb(it.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(it.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(it.sku)+' · '+ils(it.price)+(it.comm?' · <span style="color:var(--good);font-weight:700">עמלה</span>':'')+'</div>'+bonus+'</div><div style="text-align:left"><div class="step"><button data-i="'+i+'" data-d="1">+</button><span>'+it.qty+'</span><button data-i="'+i+'" data-d="-1">−</button></div><div style="font-size:14px;font-weight:800;margin-top:4px">'+ils(it.price*it.qty)+'</div></div></div>'}
+ if(!cart.items.length)lines='<div class="card" style="color:var(--mut);font-size:13px;text-align:center;padding:22px">אין פריטים. הוסיפי מוצרים מהקטלוג או בחיפוש למטה.</div>';
+ shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div class="h1" style="margin:0">הזמנה חדשה</div><a href="#" id="myord" style="font-size:13px;font-weight:700">ההזמנות שלי »</a></div></div>'+
+  '<div class="list">'+
+  '<div class="card">'+custBtn+'</div>'+
+  '<div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="pq" placeholder="הוספת מוצר — שם או מק״ט…"></div>'+
+  '<div id="presults"></div>'+
+  lines+
+  '<div class="card" style="background:#fbfaf8"><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">סכום ביניים</span><b>'+ils(t.sub)+'</b></div><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(t.vat)+'</b></div><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--good)"><span>מזכה בעמלה</span><b>'+ils(t.comm)+'</b></div><div style="display:flex;justify-content:space-between;font-size:17px;padding:8px 0 2px;border-top:1px solid var(--line);margin-top:4px"><span style="font-weight:800">סה״כ לתשלום</span><b style="color:var(--acc)">'+ils(t.total)+'</b></div></div>'+
+  '<button class="cta" id="saveord"'+((!cart.cust||!cart.items.length)?' disabled':'')+'>שמירת הזמנה · '+ils(t.total)+'</button>'+
+  '</div>');
+ $('myord').onclick=function(e){e.preventDefault();route='myorders';render()};
+ if($('pickcust'))$('pickcust').onclick=openCustPicker;
+ if($('chgcust'))$('chgcust').onclick=openCustPicker;
+ if($('saveord'))$('saveord').onclick=saveOrder;
+ var steps=document.querySelectorAll('.step button');for(var s=0;s<steps.length;s++){steps[s].onclick=function(){var i=+this.getAttribute('data-i'),d=+this.getAttribute('data-d');cart.items[i].qty+=d;if(cart.items[i].qty<=0)cart.items.splice(i,1);render()}}
+ var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}sb.from('liberty_products').select('sku,name,price_agorot').or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%').order('sku').limit(8).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
+}
+function openCustPicker(){
+ var o=document.createElement('div');o.className='ovl';o.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">בחירת לקוח</b><span id="cpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="cpq" placeholder="שם או עיר…" autofocus></div></div><div id="cpl" class="list" style="overflow:auto"></div></div>';document.body.appendChild(o);
+ o.onclick=function(e){if(e.target===o)o.remove()};$('cpx').onclick=function(){o.remove()};
+ function run(){var q=$('cpq').value.trim();var qu=sb.from('liberty_customers').select('id,name,city').neq('lifecycle','disqualified').order('name').limit(60);if(q)qu=qu.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card cpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('cpl').innerHTML=h;var ci=document.querySelectorAll('.cpi');for(var i=0;i<ci.length;i++){ci[i].onclick=function(){cart.cust={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
+ $('cpq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
+}
+function saveOrder(){
+ if(!cart.cust||!cart.items.length||!me)return;$('saveord').disabled=true;$('saveord').textContent='שומר…';
+ var t=cartTotals();
+ sb.from('orders').insert({customer_id:cart.cust.id,agent_id:me.id,status:'submitted',subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,submitted_at:new Date().toISOString()}).select('id').single().then(function(r){
+  if(r.error){toast('שגיאה בשמירה');$('saveord').disabled=false;return}
+  var oid=r.data.id;var items=cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}});
+  sb.from('order_items').insert(items).then(function(r2){if(r2.error){toast('ההזמנה נשמרה, שגיאה בפריטים')}else{toast('ההזמנה נשמרה ✓')}cart={cust:null,items:[]};route='myorders';render()});
+ });
+}
+function myOrdersView(){
+ shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center"><div class="h1" style="margin:0">ההזמנות שלי</div><a href="#" id="newo" style="font-size:13px;font-weight:700">+ הזמנה חדשה</a></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ $('newo').onclick=function(e){e.preventDefault();route='orders';render()};
+ sb.from('liberty_my_orders').select('id,customer_name,total_agorot,commissionable_agorot,created_at,status').order('created_at',{ascending:false}).limit(60).then(function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});h+='<div class="card" style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(o.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+dt+' · מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});var head='<div class="card" style="background:var(--accs);display:flex;justify-content:space-between;align-items:center"><div style="font-size:12.5px;color:var(--accd);font-weight:700">'+d.length+' הזמנות · סה״כ</div><div style="font-size:18px;font-weight:800;color:var(--accd)">'+ils(sum)+'</div></div>';$('res').innerHTML=head+(h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:20px">עדיין אין הזמנות. צרי הזמנה ראשונה!</div>')});
+}
+
+// ---------- ROUTE ----------
+var routeArea=null;
+function routeView(){
+ var AREAS=[[1,'כרמיאל · עכו · נהריה · מעלות'],[2,'חיפה · קריות · שפרעם'],[3,'סחנין · טמרה · זכרון'],[4,'אום אל פחם · כפר קרע · נצרת מ׳'],[5,'נצרת · נוף הגליל · עפולה'],[6,'צפת · קרית שמונה · ראש פינה']];
+ var chips='<div style="display:flex;gap:8px;overflow:auto;padding:2px 0">';for(var i=0;i<AREAS.length;i++){chips+='<button class="chip areac'+(routeArea===AREAS[i][0]?' on':'')+'" data-a="'+AREAS[i][0]+'">אזור '+AREAS[i][0]+'</button>'}chips+='</div>';
+ shell('<div class="hdr"><div class="h1">מסלול לפי אזור</div>'+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור לתכנון היום — הלקוחות הפעילים והפוטנציאליים במסלול, לפי חוב וצורך בביקור.')+'</div></div>');
+ var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');render()}}
+ if(!routeArea)return;
+ sb.from('liberty_customers').select('id,name,city,lifecycle,potential_level,debt_agorot,visit_frequency_days,address').eq('area_code',routeArea).neq('lifecycle','disqualified').limit(300).then(function(r){
+  var d=r.data||[];
+  // sort: debt first, then active, then potential
+  d.sort(function(a,b){var ra=(a.debt_agorot>0?2:0)+(a.lifecycle==='active'?1:0);var rb=(b.debt_agorot>0?2:0)+(b.lifecycle==='active'?1:0);if(rb!==ra)return rb-ra;return (b.debt_agorot||0)-(a.debt_agorot||0)});
+  var h='',debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
+  h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:800">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:800;color:var(--bad)">'+debtCust+'</div></div></div>';
+  d.forEach(function(c,idx){var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card" style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><button class="rvis" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="border:none;background:#efece7;font-weight:800;font-size:12px;border-radius:9px;padding:7px 10px;cursor:pointer">ביקור</button></div>'});
+  $('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין לקוחות באזור זה.</div>';
+  var rv=document.querySelectorAll('.rvis');for(var k=0;k<rv.length;k++){rv[k].onclick=function(){visitTarget={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};route='visits';render()}}
+ });
+}
+
+// ---------- VISITS ----------
+var visitTarget=null;
+function visitsView(){
+ var cust=visitTarget?('<div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח</div><div style="font-size:15px;font-weight:800">'+esc(visitTarget.name)+'</div></div><button id="vchg" class="chip">שינוי</button></div>'):('<button id="vpick" class="cta" style="height:44px;background:var(--accs);color:var(--accd)">בחירת לקוח לביקור</button>');
+ shell('<div class="hdr"><div class="h1">רישום ביקור</div></div><div class="list">'+
+  '<div class="card">'+cust+'</div>'+
+  '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">תוצאת הביקור</div><div id="outc" style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip oc on" data-v="הזמנה">הזמנה</button><button class="chip oc" data-v="ללא הזמנה">ללא הזמנה</button><button class="chip oc" data-v="לא נכח">לא נכח</button><button class="chip oc" data-v="פוטנציאלי">סיור/פוטנציאלי</button></div>'+
+  '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סיכום ביקור</div><textarea id="vsum" class="field" placeholder="מה סוכם, מה להביא בפעם הבאה…"></textarea></div>'+
+  '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">ביקור הבא (לא חובה)</div><input id="vnext" type="date" class="field"></div></div>'+
+  '<button class="cta" id="savevis"'+(visitTarget?'':' disabled')+'>שמירת ביקור</button>'+
+  '<div style="margin-top:6px"><div class="h1" style="font-size:15px">ביקורים אחרונים</div><div id="vhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>'+
+  '</div>');
+ var outcome='הזמנה';var oc=document.querySelectorAll('.oc');for(var i=0;i<oc.length;i++){oc[i].onclick=function(){for(var j=0;j<oc.length;j++)oc[j].classList.remove('on');this.classList.add('on');outcome=this.getAttribute('data-v')}}
+ if($('vpick'))$('vpick').onclick=openVisitPicker;
+ if($('vchg'))$('vchg').onclick=openVisitPicker;
+ $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;sb.from('visits').insert(rec).then(function(r){if(r.error){toast('שגיאה בשמירה');$('savevis').disabled=false;$('savevis').textContent='שמירת ביקור'}else{toast('הביקור נשמר ✓');visitTarget=null;render()}})};
+ sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30).then(function(r){var d=r.data||[],h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
+}
+function openVisitPicker(){
+ var o=document.createElement('div');o.className='ovl';o.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">בחירת לקוח</b><span id="vpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="vpq" placeholder="שם או עיר…" autofocus></div></div><div id="vpl" class="list" style="overflow:auto"></div></div>';document.body.appendChild(o);
+ o.onclick=function(e){if(e.target===o)o.remove()};$('vpx').onclick=function(){o.remove()};
+ function run(){var q=$('vpq').value.trim();var qu=sb.from('liberty_customers').select('id,name,city').order('name').limit(60);if(q)qu=qu.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card vpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('vpl').innerHTML=h;var vi=document.querySelectorAll('.vpi');for(var i=0;i<vi.length;i++){vi[i].onclick=function(){visitTarget={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
+ $('vpq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
+}
+
+// ---------- TARGETS ----------
+function targetsView(){
+ shell('<div class="hdr"><div class="h1">יעדים ועמלות</div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
+ Promise.all([
+  sb.from('liberty_my_target').select('target_agorot,commission_pct').limit(1),
+  sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart)
+ ]).then(function(res){
+  var tg=(res[0].data||[])[0];var orders=res[1].data||[];
+  var achieved=0,sales=0;orders.forEach(function(o){achieved+=o.commissionable_agorot||0;sales+=o.total_agorot||0});
+  var target=tg?tg.target_agorot:0;var pct=tg?tg.commission_pct:0;
+  var prog=target>0?Math.min(100,Math.round(achieved/target*100)):0;
+  var commission=Math.round(achieved*pct/100);
+  var remain=Math.max(0,target-achieved);
+  var h='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">יעד חודשי (מוצרי בית)</div><div style="font-size:15px;font-weight:800;margin:2px 0 10px">'+ils(achieved)+' <span style="color:var(--mut);font-weight:600">מתוך '+ils(target)+'</span></div><div class="bar"><div style="width:'+prog+'%"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><b style="color:var(--acc)">'+prog+'%</b><span style="color:var(--mut)">נותרו '+ils(remain)+'</span></div></div>'+
+   '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">עמלה צפויה</div><div style="font-size:22px;font-weight:800;color:var(--good)">'+ils(commission)+'</div><div style="font-size:11px;color:var(--mut)">'+pct+'% ממוצרי הבית</div></div><div class="card"><div style="font-size:12px;color:var(--mut);font-weight:700">סה״כ מכירות החודש</div><div style="font-size:22px;font-weight:800;color:var(--acc)">'+ils(sales)+'</div><div style="font-size:11px;color:var(--mut)">'+orders.length+' הזמנות</div></div></div>'+
+   '<div class="card" style="background:var(--accs);font-size:12.5px;color:var(--accd);line-height:1.5">העמלה מחושבת ממוצרי הבית בלבד (פראש גאם, MO, ווטס וכו׳) — לא מוצרי שוורץ/דורקס. היעד ניתן לעדכון ע״י המשרד.</div>';
+  $('res').innerHTML=h;
+ });
+}
+
+function render(){sb.auth.getSession().then(function(r){if(!r.data.session){loginView();return}if(!me){boot();return}
+ if(route==='catalog')catalogView();
+ else if(route==='customers')customersView();
+ else if(route==='collections')collectionsView();
+ else if(route==='orders')ordersView();
+ else if(route==='myorders')myOrdersView();
+ else if(route==='route')routeView();
+ else if(route==='visits')visitsView();
+ else if(route==='targets')targetsView();
+ else homeView();
+})}
 render();
 </script>
 </body>
