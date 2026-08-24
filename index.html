@@ -85,13 +85,21 @@ a{color:var(--acc)}
  .ovl{justify-content:center;align-items:center;padding-inline-start:76px}
  .sheet{border-radius:18px;max-height:90vh;max-width:600px}
 }
+#syncbar{position:fixed;bottom:calc(78px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700;box-shadow:0 6px 18px rgba(36,33,29,.18);cursor:pointer;max-width:92vw;white-space:nowrap}
+#syncbar .sbdot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none}
+#syncbar .sbbtn{background:rgba(255,255,255,.8);border-radius:8px;padding:3px 9px;margin-inline-start:3px}
+#syncbar.sb-off{background:#f7ecd9;color:#a86514}
+#syncbar.sb-wait{background:#e3eff0;color:#0a4f56}
+#syncbar.sb-sync{background:#e5f2e8;color:#2f7d46}
+.pendbadge{background:#f7ecd9;color:#a86514}
+@media (orientation:landscape) and (min-width:700px){#syncbar{bottom:16px;left:auto;right:96px;transform:none}}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-24-6';
+var APP_VERSION='2026-08-24-7';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -163,8 +171,13 @@ function localDate(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.ge
 var __drSaveTmr=null;
 function saveDailyRoute(){
  if(!me||!routeArea)return;
+ routeLocalSave();
  var ids=Object.keys(routeSel).filter(function(k){return routeSel[k]});
- sb.from('daily_routes').upsert({agent_id:me.id,route_date:todayStr(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()},{onConflict:'agent_id,route_date'}).then(function(){});
+ var row={agent_id:me.id,route_date:todayStr(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()};
+ if(navigator.onLine===false){_drDirty=row;return}
+ sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){
+  if(r&&r.error){netMark(false,r.error);_drDirty=row}else{netMark(true);_drDirty=null}
+ },function(e){netMark(false,e);_drDirty=row});
 }
 function saveDailyRouteDeb(){clearTimeout(__drSaveTmr);__drSaveTmr=setTimeout(saveDailyRoute,500)}
 function archiveStaleRoutes(cb){
@@ -193,12 +206,15 @@ function archiveStaleRoutes(cb){
 }
 function restoreDailyRoute(){
  if(!me)return;
+ var lr=routeLocalLoad();
+ if(lr&&lr.area){routeArea=lr.area;routeSel=lr.sel||{};routeBuilt=!!lr.built;if(lr.origin&&lr.origin.lat!=null)setOrigin(lr.origin);if(route==='route')render()}
+ if(navigator.onLine===false)return;
  archiveStaleRoutes(function(){
   sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',todayStr()).eq('status','active').limit(1).then(function(r){
-   var row=(r.data||[])[0];
-   if(row){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin)}
+   var row=(r&&r.data)?r.data[0]:null;
+   if(row&&!lr){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routeLocalSave()}
    if(route==='route')render();
-  });
+  },function(e){netMark(false,e)});
  });
 }
 // proportional bonus: 20+4 at qty 10 -> 2 free
@@ -230,17 +246,295 @@ function nearestArea(lat,lng){if(!__areaPts||lat==null)return null;var best=null
 
 function loginView(){
  $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><div style="width:72px;height:72px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(10,79,86,.35)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f6b74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg></div><div style="color:#fff;font-size:26px;font-weight:800">ליברטי</div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
- var go=function(){var code=$('code').value.trim(),pin=$('pin').value.trim();if(!code||!pin)return;$('go').textContent='רק רגע…';sb.auth.signInWithPassword({email:'u'+code+'@liberty.app',password:pin}).then(function(r){if(r.error){$('err').textContent='קוד עובד או קוד אישי שגויים';$('go').textContent='כניסה'}else{boot()}})};
+ var go=function(){var code=$('code').value.trim(),pin=$('pin').value.trim();if(!code||!pin)return;$('go').textContent='רק רגע…';sb.auth.signInWithPassword({email:'u'+code+'@liberty.app',password:pin}).then(function(r){if(r.error){$('err').textContent=(navigator.onLine===false?'אין חיבור לאינטרנט — נסי שוב כשתהיה קליטה':'קוד עובד או קוד אישי שגויים');$('go').textContent='כניסה'}else{try{localStorage.removeItem('lib_me');localStorage.removeItem('lib_route')}catch(e){}boot()}})};
  $('go').onclick=go;$('pin').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
 }
 
-// Remove any stale service worker + caches from a previous PWA build so the live version + auto-update work cleanly
-try{if(navigator.serviceWorker){navigator.serviceWorker.getRegistrations().then(function(rs){for(var i=0;i<rs.length;i++)rs[i].unregister();}).catch(function(){});}if(window.caches){caches.keys().then(function(ks){for(var j=0;j<ks.length;j++)caches.delete(ks[j]);}).catch(function(){});}}catch(e){}
+/* ================= OFFLINE CORE ================= */
+var OFF={online:(navigator.onLine!==false),pending:0,syncing:false,lastSync:0,lastErr:null,q:[]};
+function uuid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID()}catch(e){}
+ var h='0123456789abcdef',s='';for(var i=0;i<36;i++){s+=(i===8||i===13||i===18||i===23)?'-':(i===14?'4':(i===19?h[Math.floor(Math.random()*4)+8]:h[Math.floor(Math.random()*16)]))}return s}
+function isNetErr(e){if(!e)return false;if(navigator.onLine===false)return true;var m=((e.message||'')+' '+(e.details||'')+' '+(e.name||'')).toLowerCase();return m.indexOf('fetch')>-1||m.indexOf('network')>-1||m.indexOf('timeout')>-1||m.indexOf('typeerror')>-1||e.code==='ECONNRESET'}
+function netMark(ok,err){var was=OFF.online;if(ok){OFF.online=(navigator.onLine!==false);OFF.lastErr=null}else if(isNetErr(err)){OFF.online=false}if(was!==OFF.online)updateSync()}
+/* ---- IndexedDB ---- */
+var _db=null,_dbq=null;
+function idb(cb){
+ if(_db!==null){cb(_db||null);return}
+ if(_dbq){_dbq.push(cb);return}
+ _dbq=[cb];
+ var done=function(db){_db=db||false;var q=_dbq;_dbq=null;for(var i=0;i<q.length;i++)q[i](db||null)};
+ try{
+  var rq=indexedDB.open('liberty',1);
+  rq.onupgradeneeded=function(e){var db=e.target.result;if(!db.objectStoreNames.contains('kv'))db.createObjectStore('kv');if(!db.objectStoreNames.contains('outbox'))db.createObjectStore('outbox',{keyPath:'id'})};
+  rq.onsuccess=function(){done(rq.result)};
+  rq.onerror=function(){done(null)};
+  rq.onblocked=function(){done(null)};
+ }catch(e){done(null)}
+}
+function kvGet(k,cb){idb(function(db){if(!db){cb(null);return}try{var r=db.transaction('kv','readonly').objectStore('kv').get(k);r.onsuccess=function(){cb(r.result===undefined?null:r.result)};r.onerror=function(){cb(null)}}catch(e){cb(null)}})}
+function kvPut(k,v,cb){idb(function(db){if(!db){if(cb)cb();return}try{var t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=function(){if(cb)cb()};t.onerror=function(){if(cb)cb()};t.onabort=function(){if(cb)cb()}}catch(e){if(cb)cb()}})}
+function obPut(rec,cb){idb(function(db){if(!db){if(cb)cb(false);return}try{var t=db.transaction('outbox','readwrite');t.objectStore('outbox').put(rec);t.oncomplete=function(){if(cb)cb(true)};t.onerror=function(){if(cb)cb(false)};t.onabort=function(){if(cb)cb(false)}}catch(e){if(cb)cb(false)}})}
+function obDel(id,cb){OFF.q=(OFF.q||[]).filter(function(o){return o.id!==id});idb(function(db){if(!db){if(cb)cb();return}try{var t=db.transaction('outbox','readwrite');t.objectStore('outbox').delete(id);t.oncomplete=function(){if(cb)cb()};t.onerror=function(){if(cb)cb()}}catch(e){if(cb)cb()}})}
+function obAll(cb){idb(function(db){if(!db){cb((OFF.q||[]).slice());return}try{var r=db.transaction('outbox','readonly').objectStore('outbox').getAll();r.onsuccess=function(){var l=r.result||[];l.sort(function(a,b){return a.ts-b.ts});cb(l)};r.onerror=function(){cb([])}}catch(e){cb([])}})}
+function obCount(cb){obAll(function(l){OFF.q=l;OFF.pending=l.length;updateSync();if(cb)cb(l)})}
+/* ---- cached query: serves cache instantly, refreshes from network ---- */
+function SQ(builder,key,cb,opt){
+ opt=opt||{};var served=false,netdone=false;
+ var give=function(d,cached,err){served=true;cb({data:d,cached:cached,error:err||null})};
+ if(key)kvGet('q:'+key,function(v){if(served||netdone||v==null)return;give(opt.filter?v.filter(opt.filter):v,true)});
+ var fail=function(err){netdone=true;netMark(false,err);
+  if(served)return;
+  if(key){kvGet('q:'+key,function(v){if(served)return;give(v==null?(opt.one?null:[]):(opt.filter?v.filter(opt.filter):v),true,err)})}
+  else give(opt.one?null:[],false,err)};
+ try{
+  builder.then(function(r){
+   if(r&&r.error){fail(r.error);return}
+   netdone=true;netMark(true);
+   var d=r?r.data:null;if(!opt.one&&!d)d=[];
+   if(key&&!opt.filter&&d!=null)kvPut('q:'+key,d);
+   give(d,false);
+  },function(e){fail(e)});
+ }catch(e){fail(e)}
+}
+/* ---- local snapshot (products / customers / phones / areas) ---- */
+var LOC={products:[],customers:[],phones:[],areas:[]};
+var _locRefreshing=false;
+function locLoad(cb){
+ var keys=['products','customers','phones','areas'],n=0;
+ var done=function(){if(++n===keys.length&&cb)cb()};
+ keys.forEach(function(k){kvGet('snap:'+k,function(v){if(v&&v.length)LOC[k]=v;done()})});
+}
+function locRefresh(cb){
+ if(_locRefreshing){if(cb)cb(false);return}
+ _locRefreshing=true;
+ var jobs=[
+  ['products',sb.from('liberty_products').select('*').limit(1000)],
+  ['customers',sb.from('liberty_customers').select('*').limit(1000)],
+  ['phones',sb.from('liberty_customer_phones').select('*').limit(2000)],
+  ['areas',sb.from('areas').select('id,code,name').order('code')]
+ ];
+ var i=0,changed=false;
+ var next=function(){
+  if(i>=jobs.length){_locRefreshing=false;if(changed){OFF.lastSync=Date.now();kvPut('snap:ts',OFF.lastSync)}updateSync();if(cb)cb(changed);return}
+  var j=jobs[i++];
+  j[1].then(function(r){
+   if(r&&!r.error&&r.data&&r.data.length){netMark(true);LOC[j[0]]=r.data;changed=true;kvPut('snap:'+j[0],r.data)}
+   else if(r&&r.error)netMark(false,r.error);
+   next();
+  },function(e){netMark(false,e);next()});
+ };
+ next();
+}
+function locTouch(){if(OFF.online&&Date.now()-OFF.lastSync>120000){locRefresh(function(ch){if(ch&&typeof render==='function')render()})}}
+function prodBySku(s){for(var i=0;i<LOC.products.length;i++){if(LOC.products[i].sku===s)return LOC.products[i]}return null}
+function custById(id){for(var i=0;i<LOC.customers.length;i++){if(LOC.customers[i].id===id)return LOC.customers[i]}return null}
+function heb(a,b){return (a||'').localeCompare(b||'','he')}
+function LQ(fn){return {then:function(ok,er){var v;try{v=fn()}catch(e){if(er)er(e);return this}try{ok({data:v,error:null,local:true})}catch(e2){}return this}}}
+function catFilter(q){
+ q=(q||'').toLowerCase();
+ var out=LOC.products.filter(function(p){
+  if(!p.in_catalog)return false;
+  if(catCat!=='all'&&p.category!==catCat)return false;
+  if(q){var t=((p.name||'')+' '+(p.sku||'')+' '+(p.barcode||'')+' '+(p.brand||'')).toLowerCase();if(t.indexOf(q)<0)return false}
+  return true;
+ });
+ out.sort(function(a,b){var x=a.catalog_order,y=b.catalog_order;if(x==null&&y==null)return heb(a.name,b.name);if(x==null)return 1;if(y==null)return -1;return x-y});
+ return out;
+}
+function prodSearch(q,lim){
+ q=(q||'').toLowerCase();
+ var out=LOC.products.filter(function(p){var t=((p.name||'')+' '+(p.sku||'')).toLowerCase();return t.indexOf(q)>-1});
+ out.sort(function(a,b){return (a.sku||'').localeCompare(b.sku||'')});
+ return out.slice(0,lim||8);
+}
+function custFilter(q,byName,all){
+ q=(q||'').toLowerCase();
+ var out=LOC.customers.filter(function(c){
+  if(!all&&c.lifecycle==='disqualified')return false;
+  if(q){var t=((c.name||'')+' '+(c.city||'')).toLowerCase();if(t.indexOf(q)<0)return false}
+  return true;
+ });
+ if(byName)out.sort(function(a,b){return heb(a.name,b.name)});
+ else out.sort(function(a,b){return (b.debt_agorot||0)-(a.debt_agorot||0)});
+ return out;
+}
+function pendOf(kind){return (OFF.q||[]).filter(function(o){return o.kind===kind})}
+function pendOrders(){return pendOf('order').map(function(o){var r=o.payload.order;return {id:r.id,customer_name:'⏳ '+(o.payload.customer_name||'')+' · ממתין לשליחה',total_agorot:r.total_agorot,commissionable_agorot:r.commissionable_agorot,created_at:o.payload.created_at||new Date(o.ts).toISOString(),status:'pending',_pend:true}})}
+function pendVisits(){return pendOf('visit').map(function(o){var r=o.payload.row;return {customer_name:'⏳ '+(o.payload.customer_name||'')+' · ממתין לשליחה',outcome:r.outcome,summary:r.summary,arrived_at:r.arrived_at,next_visit_date:r.next_visit_date,_pend:true}})}
+var _drDirty=null;
+/* ---- outbox ---- */
+var OB_LABEL={order:'הזמנה',order_update:'עדכון הזמנה',payment:'תשלום',visit:'ביקור',ret:'החזרה',route:'מסלול יומי'};
+function obEnqueue(kind,title,payload,files,cb){
+ var rec={id:uuid(),kind:kind,title:title||'',payload:payload,files:files||null,ts:Date.now(),tries:0,err:null};
+ OFF.q=(OFF.q||[]).concat([rec]);
+ obPut(rec,function(ok){OFF.pending++;updateSync();if(cb)cb(ok,rec);obFlush()});
+ return rec;
+}
+function obPendingOf(kind,cb){obAll(function(l){cb(l.filter(function(x){return x.kind===kind}))})}
+function upFiles(op,bucket,cb){
+ var fs=op.files||[];if(!fs.length){cb([]);return}
+ var urls=[],i=0,err=null;
+ var next=function(){
+  if(i>=fs.length){cb(err?null:urls,err);return}
+  var f=fs[i];var idx=i;i++;
+  var ext=((f.name||'photo.jpg').split('.').pop()||'jpg').toLowerCase();
+  var path=(op.payload&&op.payload.dir?op.payload.dir:'misc')+'/'+op.id+'_'+idx+'.'+ext;
+  sb.storage.from(bucket).upload(path,f,{contentType:f.type||'image/jpeg',upsert:true}).then(function(u){
+   if(u&&u.error&&isNetErr(u.error)){err=u.error;cb(null,err);return}
+   if(!u||!u.error){var pu=sb.storage.from(bucket).getPublicUrl(path);if(pu&&pu.data)urls.push(pu.data.publicUrl)}
+   next();
+  },function(e){err=e;cb(null,err)});
+ };
+ next();
+}
+function isDupErr(e){return !!(e&&(e.code==='23505'||(''+(e.message||'')).indexOf('duplicate key')>-1))}
+function sendOp(op,cb){
+ var p=op.payload||{};
+ var fin=function(r){if(r&&r.error){if(isDupErr(r.error))cb(true);else cb(false,r.error)}else cb(true)};
+ var boom=function(e){cb(false,e)};
+ if(op.kind==='visit'){sb.from('visits').insert(p.row).then(fin,boom);return}
+ if(op.kind==='route'){sb.from('daily_routes').upsert(p.row,{onConflict:'agent_id,route_date'}).then(fin,boom);return}
+ if(op.kind==='payment'){
+  upFiles(op,'payment-photos',function(urls,err){
+   if(err){cb(false,err);return}
+   var row=p.row;row.photos=(urls&&urls.length)?urls:(row.photos||[]);
+   sb.from('payments').insert(row).then(fin,boom);
+  });return}
+ if(op.kind==='ret'){
+  upFiles(op,'return-photos',function(urls,err){
+   if(err){cb(false,err);return}
+   var row=p.row;row.photos=(urls&&urls.length)?urls:(row.photos||[]);
+   sb.from('returns').insert(row).then(fin,boom);
+  });return}
+ if(op.kind==='order'||op.kind==='order_update'){
+  var oid=p.order.id;
+  var items=function(){
+   sb.from('order_items').delete().eq('order_id',oid).then(function(){
+    sb.from('order_items').insert(p.items).then(fin,boom);
+   },boom);
+  };
+  if(op.kind==='order_update'){
+   var patch={};for(var k in p.order){if(k!=='id')patch[k]=p.order[k]}
+   sb.from('orders').update(patch).eq('id',oid).then(function(r){if(r&&r.error){cb(false,r.error);return}items()},boom);
+  }else{
+   sb.from('orders').insert(p.order).then(function(r){if(r&&r.error&&!isDupErr(r.error)){cb(false,r.error);return}items()},boom);
+  }
+  return}
+ cb(false,{message:'סוג פעולה לא מוכר'});
+}
+function obFlush(cb){
+ if(OFF.syncing){if(cb)cb();return}
+ if(navigator.onLine===false){obCount();if(cb)cb();return}
+ OFF.syncing=true;
+ obAll(function(list){
+  if(!list.length){OFF.syncing=false;OFF.pending=0;updateSync();if(cb)cb();return}
+  OFF.pending=list.length;updateSync();
+  var i=0,sent=0;
+  var done=function(){OFF.syncing=false;obCount(function(){if(sent){if(typeof render==='function'&&(route==='myorders'||route==='visits'||route==='outbox'||route==='customer'))render();locRefresh()}});if(cb)cb()};
+  var next=function(){
+   if(i>=list.length){done();return}
+   var op=list[i++];
+   sendOp(op,function(ok,err){
+    if(ok){sent++;obDel(op.id,function(){OFF.pending=Math.max(0,OFF.pending-1);updateSync();next()});return}
+    op.tries=(op.tries||0)+1;op.err=(err&&(err.message||err.msg))||'שגיאה';op.net=isNetErr(err);
+    obPut(op,function(){if(isNetErr(err)){netMark(false,err);done()}else{next()}});
+   });
+  };
+  next();
+ });
+}
+/* ---- sync UI ---- */
+function updateSync(){
+ var el=document.getElementById('syncbar');
+ var show=(!OFF.online)||OFF.pending>0||OFF.syncing;
+ if(!show){if(el)el.remove();return}
+ if(!el){el=document.createElement('div');el.id='syncbar';document.body.appendChild(el);el.onclick=function(){if(typeof render==='function'){route='outbox';render()}}}
+ var txt,cls;
+ if(OFF.syncing){cls='sb-sync';txt='מסנכרן… '+OFF.pending+' ממתינות'}
+ else if(!OFF.online){cls='sb-off';txt='אין חיבור · עובדת אופליין'+(OFF.pending?' · '+OFF.pending+' ממתינות':'')}
+ else{cls='sb-wait';txt=OFF.pending+' פעולות ממתינות לשליחה'}
+ el.className=cls;
+ el.innerHTML='<span class="sbdot"></span><span>'+txt+'</span>'+((OFF.online&&OFF.pending&&!OFF.syncing)?'<b class="sbbtn">שלחי עכשיו</b>':'');
+ var b=el.querySelector('.sbbtn');if(b)b.onclick=function(e){e.stopPropagation();obFlush()};
+}
+/* ---- daily route local mirror ---- */
+function routeLocalSave(){
+ try{localStorage.setItem('lib_route',JSON.stringify({d:todayStr(),area:routeArea,sel:routeSel,built:routeBuilt,origin:getOrigin()}))}catch(e){}
+}
+function routeLocalLoad(){
+ try{var r=JSON.parse(localStorage.getItem('lib_route')||'null');if(r&&r.d===todayStr())return r}catch(e){}
+ return null;
+}
+/* ---- network events ---- */
+window.addEventListener('online',function(){OFF.online=true;updateSync();obFlush();if(_drDirty)saveDailyRoute();locRefresh(function(ch){if(ch&&typeof render==='function')render()})});
+window.addEventListener('offline',function(){OFF.online=false;updateSync()});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){obFlush();locTouch()}});
+setInterval(function(){if(navigator.onLine!==false&&OFF.pending>0&&!OFF.syncing)obFlush()},45000);
+/* ---- service worker ---- */
+if('serviceWorker' in navigator){
+ window.addEventListener('load',function(){
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+   reg.addEventListener('updatefound',function(){
+    var w=reg.installing;if(!w)return;
+    w.addEventListener('statechange',function(){if(w.state==='installed'&&navigator.serviceWorker.controller){toast('עודכנה גרסה חדשה — סגרי ופתחי את האפליקציה')}});
+   });
+  }).catch(function(){});
+ });
+}
+/* ---- outbox screen ---- */
+function outboxView(){
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:8px">'+backBtn()+'<div class="h1" style="margin:0">ממתין לשליחה</div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ obAll(function(l){
+  OFF.pending=l.length;updateSync();
+  var st=OFF.online?'<div class="card" style="background:var(--goods);color:var(--good);font-size:12.5px;font-weight:700">מחוברת לרשת</div>':'<div class="card" style="background:var(--warns);color:var(--warn);font-size:12.5px;font-weight:700">אין חיבור לרשת — הפעולות יישלחו אוטומטית כשהחיבור יחזור</div>';
+  if(!l.length){$('res').innerHTML=st+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px;line-height:1.6">הכל מסונכרן ✓<br>אין פעולות שממתינות לשליחה.</div>';return}
+  var h=st+'<button class="cta" id="obflush" style="height:44px">שליחת הכל עכשיו ('+l.length+')</button>';
+  l.forEach(function(op){
+   var dt=new Date(op.ts).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'});
+   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+esc(OB_LABEL[op.kind]||op.kind)+(op.title?' · '+esc(op.title):'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+dt+(op.tries?' · '+op.tries+' ניסיונות':'')+'</div>'+((op.err&&!op.net)?'<div style="font-size:11.5px;color:var(--bad);margin-top:3px">'+esc(op.err)+'</div>':'')+'</div><button class="chip obdel" data-id="'+op.id+'" style="color:var(--bad)">מחיקה</button></div></div>';
+  });
+  $('res').innerHTML=h;
+  $('obflush').onclick=function(){this.disabled=true;this.textContent='שולח…';obFlush(function(){if(route==='outbox')render()})};
+  var dl=document.querySelectorAll('.obdel');
+  for(var i=0;i<dl.length;i++){(function(b){var armed=false;b.onclick=function(){if(!armed){armed=true;b.textContent='בטוח? מחק';setTimeout(function(){armed=false;b.textContent='מחיקה'},2500);return}obDel(b.getAttribute('data-id'),function(){obCount();if(route==='outbox')render()})}})(dl[i])}
+ });
+}
+var _booting=false;
+function noMeView(){
+ $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center"><div style="font-size:40px">📡</div><div style="font-size:17px;font-weight:800">אין חיבור לאינטרנט</div><div style="font-size:13.5px;color:var(--mut);line-height:1.6;max-width:300px">כדי להשתמש באפליקציה בפעם הראשונה במכשיר הזה צריך חיבור אחד לרשת.<br>אחרי זה היא תעבוד גם בלי קליטה.</div><button class="cta" style="width:200px" onclick="location.reload()">נסי שוב</button></div>';
+}
 function boot(){
- // load me + image map, then render
- sb.from('liberty_me').select('id,name,role').single().then(function(r){me=r.data;restoreDailyRoute();});
- sb.from('liberty_product_images').select('sku,data_url').then(function(r){imgMap={};(r.data||[]).forEach(function(x){imgMap[x.sku]=x.data_url});route='home';render()});
- setTimeout(checkUpdate,8000);setInterval(checkUpdate,5*60*1000);
+ _booting=true;
+ var cm=null;try{cm=JSON.parse(localStorage.getItem('lib_me')||'null')}catch(e){}
+ if(cm&&cm.id)me=cm;
+ var started=false;
+ var start=function(){
+  if(started)return;started=true;_booting=false;
+  if(!me){noMeView();return}
+  route='home';render();
+  obCount();obFlush();
+  restoreDailyRoute();
+  SQ(sb.from('liberty_me').select('id,name,role').single(),null,function(r){
+   if(r.data&&r.data.id){me=r.data;try{localStorage.setItem('lib_me',JSON.stringify(me))}catch(e){}}
+  },{one:true});
+  locRefresh(function(ch){if(ch&&route!=='outbox'&&typeof render==='function')render()});
+  sb.from('liberty_product_images').select('sku,data_url').then(function(r){
+   if(r&&!r.error&&r.data&&r.data.length){var m={};r.data.forEach(function(x){m[x.sku]=x.data_url});imgMap=m;kvPut('imgmap',m);if(route==='catalog'||route==='customer'||route==='prodadmin')render()}
+  },function(){});
+  setTimeout(checkUpdate,8000);setInterval(checkUpdate,5*60*1000);
+ };
+ locLoad(function(){
+  kvGet('snap:ts',function(ts){if(ts)OFF.lastSync=ts;
+   kvGet('imgmap',function(v){
+    if(v)imgMap=v;
+    if(me){start();return}
+    SQ(sb.from('liberty_me').select('id,name,role').single(),null,function(r){
+     if(r.data&&r.data.id){me=r.data;try{localStorage.setItem('lib_me',JSON.stringify(me))}catch(e){}}
+     start();
+    },{one:true});
+   });
+  });
+ });
 }
 
 // ---- Auto-update: detect a newer deploy and refresh (safely) ----
@@ -298,16 +592,16 @@ function homeView(){
  );
  bindGo();
  $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
- sb.from('liberty_customers').select('lifecycle,debt_agorot').then(function(r){var d=r.data||[],act=0,pot=0,debt=0,dbt=0;for(var i=0;i<d.length;i++){if(d[i].lifecycle==='active')act++;if(d[i].lifecycle==='potential')pot++;if(d[i].debt_agorot>0){dbt++;debt+=d[i].debt_agorot;}}if($('s1')){$('s1').textContent=act;$('s2').textContent='+ '+pot+' פוטנציאליים';$('s3').textContent=ils(debt);$('s4').textContent=dbt+' לקוחות';}});
+ locTouch();LQ(function(){return LOC.customers}).then(function(r){var d=r.data||[],act=0,pot=0,debt=0,dbt=0;for(var i=0;i<d.length;i++){if(d[i].lifecycle==='active')act++;if(d[i].lifecycle==='potential')pot++;if(d[i].debt_agorot>0){dbt++;debt+=d[i].debt_agorot;}}if($('s1')){$('s1').textContent=act;$('s2').textContent='+ '+pot+' פוטנציאליים';$('s3').textContent=ils(debt);$('s4').textContent=dbt+' לקוחות';}});
  var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
- sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart).then(function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
+ SQ(sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart),'hometgt:'+mStart,function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
  renderHomeRoute();
 }
 function renderHomeRoute(){
  var el=$('routecard');if(!el)return;
  var ids=routeArea?Object.keys(routeSel).filter(function(k){return routeSel[k];}):[];
  if(!ids.length){if($('hsub'))$('hsub').textContent='עדיין לא תוכנן מסלול להיום';el.innerHTML='<button data-go="route" class="card" style="border:none;cursor:pointer;color:inherit;display:flex;align-items:center;gap:11px;box-shadow:0 6px 18px rgba(36,33,29,.06);padding:14px 16px;width:100%;text-align:right"><span style="width:40px;height:40px;border-radius:11px;background:var(--accs);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+svgIcon('route')+'</span><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--head)">תכנון מסלול היום</div><div style="font-size:11.5px;color:var(--mut)">בחרי אזור ולקוחות ובנה מסלול נסיעה</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>';var b0=el.querySelector('[data-go]');if(b0)b0.onclick=function(){route='route';render();};return;}
- sb.from('liberty_customers').select('id,name,city,debt_agorot').in('id',ids).then(function(r){
+ LQ(function(){return LOC.customers.filter(function(c){return ids.indexOf(c.id)>-1})}).then(function(r){
   var d=r.data||[];var byId={};d.forEach(function(c){byId[c.id]=c;});
   var ordered=ids.map(function(id){return byId[id];}).filter(Boolean);
   var toCollect=ordered.filter(function(c){return c.debt_agorot>0;}).length;
@@ -328,7 +622,7 @@ function catalogView(){
  var chips='<div class="catchips">'+CATS.map(function(c){return '<button class="chip catc'+(catCat===c[0]?' on':'')+'" data-c="'+c[0]+'">'+c[2]+' '+c[1]+'</button>'}).join('')+'</div>';
  shell('<div class="hdr"><div class="h1">קטלוג</div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם מוצר או מק״ט…"></div>'+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var cc=document.querySelectorAll('.catc');for(var x=0;x<cc.length;x++){cc[x].onclick=function(){catCat=this.getAttribute('data-c');for(var y=0;y<cc.length;y++)cc[y].classList.toggle('on',cc[y].getAttribute('data-c')===catCat);run()}}
- function run(){var q=$('q').value.trim();var query=sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,price_agorot,bonus_buy,bonus_get,category,catalog_order,bonus_group').eq('in_catalog',true).order('catalog_order',{ascending:true,nullsFirst:false}).limit(320);if(catCat!=='all')query=query.eq('category',catCat);if(q)query=query.or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%,barcode.ilike.%'+q+'%');query.then(function(r){var d=r.data||[];
+ function run(){var q=$('q').value.trim();locTouch();var query=LQ(function(){return catFilter(q)});query.then(function(r){var d=r.data||[];
   var h='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' מוצרים</div><div class="catgrid">';
   for(var i=0;i<d.length;i++){var p=d[i];
    var u=imgMap[p.sku];
@@ -348,7 +642,7 @@ function catalogView(){
  $('q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
 function productSheet(sku){
- sb.from('liberty_products').select('sku,name,brand,pack_size,is_commissionable,is_teaser,expected_at,price_agorot,consumer_price_agorot,bonus_buy,bonus_get,barcode,category').eq('sku',sku).single().then(function(r){var p=r.data;if(!p)return;var ov=document.createElement('div');ov.className='ovl';
+ LQ(function(){return prodBySku(sku)}).then(function(r){var p=r.data;if(!p)return;var ov=document.createElement('div');ov.className='ovl';
   var img=imgMap[p.sku]?('<img class="imgbig" src="'+imgMap[p.sku]+'">'):('<div class="imgbig" style="display:flex;align-items:center;justify-content:center;color:#c3bcb0;font-size:13px;height:150px">אין תמונה</div>');
   function row(k,v){return v?'<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2)"><span style="color:var(--mut);font-size:13px">'+k+'</span><span style="font-size:13.5px;font-weight:700;text-align:left">'+v+'</span></div>':''}
   var bonus=(p.bonus_buy&&p.bonus_get)?('<span class="badge b-warn" style="font-size:13px">🎁 בונוס '+p.bonus_buy+'+'+p.bonus_get+'</span>'):'';
@@ -361,7 +655,7 @@ function productSheet(sku){
 }
 
 function addToCartBySku(sku){
- sb.from('liberty_products').select('id,sku,name,price_agorot,is_commissionable,bonus_buy,bonus_get,bonus_group').eq('sku',sku).single().then(function(r){var p=r.data;if(!p)return;var ex=null;for(var i=0;i<cart.items.length;i++){if(cart.items[i].id===p.id)ex=cart.items[i]}if(ex){ex.qty++}else{cart.items.push({id:p.id,sku:p.sku,name:p.name,price:p.price_agorot||0,comm:p.is_commissionable===true,bonus_buy:p.bonus_buy,bonus_get:p.bonus_get,bonus_group:p.bonus_group,qty:1})}toast('נוסף להזמנה: '+p.name);route='orders';render()});
+ LQ(function(){return prodBySku(sku)}).then(function(r){var p=r.data;if(!p)return;var ex=null;for(var i=0;i<cart.items.length;i++){if(cart.items[i].id===p.id)ex=cart.items[i]}if(ex){ex.qty++}else{cart.items.push({id:p.id,sku:p.sku,name:p.name,price:p.price_agorot||0,comm:p.is_commissionable===true,bonus_buy:p.bonus_buy,bonus_get:p.bonus_get,bonus_group:p.bonus_group,qty:1})}toast('נוסף להזמנה: '+p.name);route='orders';render()});
 }
 
 // ---------- customers ----------
@@ -369,7 +663,7 @@ var LC={active:['פעיל','b-good'],potential:['פוטנציאלי','b-warn'],d
 function customersView(){
  shell('<div class="hdr"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="h1" style="margin:0">לקוחות</div><button id="newc" class="cta" style="width:auto;height:38px;padding:0 14px;font-size:13.5px">+ לקוח חדש</button></div><div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="שם או עיר…"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  $('newc').onclick=function(){_hist.push(route);route='newcust';render()};
- function run(){var q=$('q').value.trim();var query=sb.from('liberty_customers').select('id,name,city,chain,lifecycle,potential_level,debt_agorot,area_code').neq('lifecycle','disqualified').order('debt_agorot',{ascending:false}).limit(300);if(q)query=query.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var c=d[i];var lc=LC[c.lifecycle]||LC.potential;h+='<div class="card custrow" data-id="'+c.id+'" style="cursor:pointer;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+esc(c.chain):'')+'</div></div><span class="badge '+lc[1]+'">'+lc[0]+(c.potential_level==='high'?' · גבוה':'')+'</span>'+(c.debt_agorot>0?'<span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'}$('res').innerHTML=h;var cd=document.querySelectorAll('.custrow');for(var j=0;j<cd.length;j++){cd[j].onclick=function(){openCustomer(this.getAttribute('data-id'))}}})}
+ function run(){var q=$('q').value.trim();locTouch();var query=LQ(function(){return custFilter(q)});query.then(function(r){var d=r.data||[],h='';for(var i=0;i<d.length;i++){var c=d[i];var lc=LC[c.lifecycle]||LC.potential;h+='<div class="card custrow" data-id="'+c.id+'" style="cursor:pointer;display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+esc(c.chain):'')+'</div></div><span class="badge '+lc[1]+'">'+lc[0]+(c.potential_level==='high'?' · גבוה':'')+'</span>'+(c.debt_agorot>0?'<span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'}$('res').innerHTML=h;var cd=document.querySelectorAll('.custrow');for(var j=0;j<cd.length;j++){cd[j].onclick=function(){openCustomer(this.getAttribute('data-id'))}}})}
  $('q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
 // ---------- CUSTOMER CARD ----------
@@ -377,7 +671,7 @@ var curCust=null, custTab='info';
 function openCustomer(id){curCust=id;custTab='info';route='customer';render()}
 function customerView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:11px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="flex:1;min-width:0"><div id="cname" style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">…</div><div id="cmeta" style="font-size:12.5px;color:#cfe6e8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div></div></div><div id="ctabs" style="display:flex;gap:7px;margin-top:12px;overflow:auto"></div></div><div class="list" id="cbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- sb.from('liberty_customers').select('*').eq('id',curCust).single().then(function(r){
+ locTouch();LQ(function(){return custById(curCust)}).then(function(r){
   var c=r.data;if(!c){$('cbody').innerHTML='לא נמצא';return}
   window.__cc=c;$('cname').textContent=c.name;if($('cmeta'))$('cmeta').textContent=(c.city||'')+(c.area_code?' · אזור '+c.area_code:'')+(c.chain?' · '+c.chain:'')+distStr(c);
   var tabs=[['info','פרטים'],['orders','הזמנות'],['stats','מוצרים'],['return','החזרה']];
@@ -424,10 +718,10 @@ function renderCustTab(){
   loadCustActivity(c);loadInlineContacts(c);loadCustHistory(c);
  } else if(custTab==='orders'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
-  sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(50).then(function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13.5px;font-weight:700">'+dt+'</div><div style="font-size:11.5px;color:var(--mut)">מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});b.innerHTML=(d.length?'<div class="card" style="background:var(--accs);display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--accd)">'+d.length+' הזמנות · סה״כ</span><b style="color:var(--accd)">'+ils(sum)+'</b></div>':'')+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין הזמנות ללקוח זה עדיין.</div>')})
+  SQ(sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(50),'custord:'+c.id,function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13.5px;font-weight:700">'+dt+'</div><div style="font-size:11.5px;color:var(--mut)">מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});b.innerHTML=(d.length?'<div class="card" style="background:var(--accs);display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--accd)">'+d.length+' הזמנות · סה״כ</span><b style="color:var(--accd)">'+ils(sum)+'</b></div>':'')+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין הזמנות ללקוח זה עדיין.</div>')})
  } else if(custTab==='stats'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
-  sb.from('liberty_customer_product_stats').select('sku,name,total_qty,order_count').eq('customer_id',c.id).order('total_qty',{ascending:false}).limit(60).then(function(r){var d=r.data||[];var owned={};d.forEach(function(x){owned[x.sku]=1});
+  SQ(sb.from('liberty_customer_product_stats').select('sku,name,total_qty,order_count').eq('customer_id',c.id).order('total_qty',{ascending:false}).limit(60),'custprod:'+c.id,function(r){var d=r.data||[];var owned={};d.forEach(function(x){owned[x.sku]=1});
    var iron=d.length?('<div class="card" style="background:var(--accs);font-size:12.5px;color:var(--accd);font-weight:700">💪 מוצרי הברזל — מה שהלקוח קונה הכי הרבה</div>'+d.slice(0,10).map(function(p){return '<div class="card" style="display:flex;align-items:center;gap:10px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(p.sku)+' · '+p.order_count+' הזמנות</div></div><div style="text-align:left"><div style="font-size:17px;font-weight:700;color:var(--acc)">'+p.total_qty+'</div><div style="font-size:10px;color:var(--mut)">יח״כ</div></div></div>'}).join('')):'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">עדיין אין הזמנות ללקוח — מוצרי הברזל יופיעו אחרי מספר הזמנות.</div>';
    b.innerHTML='<div>'+iron+'</div><div id="recosec"><div style="color:var(--mut);font-size:13px;padding:8px 0">טוען המלצות…</div></div>';
    buildRecos(c,owned);
@@ -436,12 +730,12 @@ function renderCustTab(){
   b.innerHTML='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סיבת ההחזרה</div><input id="rreason" class="field" placeholder="פגום / פג תוקף / עודף מלאי…"><div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סכום זיכוי מבוקש (₪)</div><input id="rcredit" class="field" inputmode="decimal" placeholder="0"></div><div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">📷 תמונות המוצר (לא חובה)</div><input id="rphotos" type="file" accept="image/*" multiple capture="environment" style="font-size:12.5px;width:100%"><div id="rprev" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div></div><div style="font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5">ההחזרה תירשם כ״ממתינה לאישור מנהל״. הזיכוי ייכנס לאחר אישור.</div></div><button class="cta" id="rsave">רישום החזרה</button><div style="margin-top:6px"><div class="h1" style="font-size:15px">החזרות אחרונות</div><div id="rhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
   $('rphotos').onchange=function(){var pv=$('rprev');pv.innerHTML='';var fs=this.files;for(var i=0;i<fs.length;i++){var u=URL.createObjectURL(fs[i]);pv.innerHTML+='<img src="'+u+'" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">'}};
   $('rsave').onclick=function(){if(!me)return;var reason=$('rreason').value.trim();var cr=Math.round((parseFloat($('rcredit').value)||0)*100);if(!reason){toast('נא למלא סיבה');return}$('rsave').disabled=true;$('rsave').textContent='שומר…';
-   var files=($('rphotos').files)||[];var urls=[];var ups=[];
-   for(var fi=0;fi<files.length;fi++){(function(f){var ext=(f.name.split('.').pop()||'jpg').toLowerCase();var path=me.id+'/'+c.id+'/'+Date.now()+'_'+Math.round(Math.random()*99999)+'.'+ext;ups.push(sb.storage.from('return-photos').upload(path,f,{contentType:f.type||'image/jpeg'}).then(function(u){if(!u.error){var pub=sb.storage.from('return-photos').getPublicUrl(path);urls.push(pub.data.publicUrl)}}))})(files[fi])}
-   Promise.all(ups).then(function(){
-    sb.from('returns').insert({customer_id:c.id,agent_id:me.id,return_date:new Date().toISOString().slice(0,10),reason:reason,status:'pending',credit_agorot:cr,photos:urls}).then(function(rr){if(rr.error){toast('שגיאה');$('rsave').disabled=false;$('rsave').textContent='רישום החזרה'}else{toast('ההחזרה נרשמה ✓'+(urls.length?' · '+urls.length+' תמונות':''));renderCustTab()}})
+   var files=($('rphotos').files)||[];var fl=[];for(var fi=0;fi<files.length;fi++)fl.push(files[fi]);
+   var row={id:uuid(),customer_id:c.id,agent_id:me.id,return_date:new Date().toISOString().slice(0,10),reason:reason,status:'pending',credit_agorot:cr,photos:[]};
+   obEnqueue('ret',c.name+' · '+reason,{row:row,dir:me.id+'/'+c.id},fl.length?fl:null,function(){
+    toast(OFF.online?('ההחזרה נרשמה ✓'+(fl.length?' · '+fl.length+' תמונות':'')):'ההחזרה נשמרה במכשיר · תישלח כשתהיה קליטה');renderCustTab();
    })};
-  sb.from('liberty_my_returns').select('reason,status,credit_agorot,return_date,photos').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(20).then(function(r){var d=r.data||[],h='';d.forEach(function(x){var st=x.status==='approved'?'<span class="badge b-good">אושר</span>':x.status==='rejected'?'<span class="badge b-bad">נדחה</span>':'<span class="badge b-warn">ממתין</span>';var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>'});ph+='</div>'}h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:700">'+esc(x.reason||'')+'</div><div style="font-size:11px;color:var(--mut)">'+(x.return_date||'')+'</div></div><div style="text-align:left">'+st+(x.credit_agorot?'<div style="font-size:13px;font-weight:700;margin-top:3px">'+ils(x.credit_agorot)+'</div>':'')+'</div></div>'+ph+'</div>'});$('rhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין החזרות.</div>'})
+  SQ(sb.from('liberty_my_returns').select('reason,status,credit_agorot,return_date,photos').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(20),'custret:'+c.id,function(r){var d=r.data||[],h='';d.forEach(function(x){var st=x.status==='approved'?'<span class="badge b-good">אושר</span>':x.status==='rejected'?'<span class="badge b-bad">נדחה</span>':'<span class="badge b-warn">ממתין</span>';var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>'});ph+='</div>'}h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:700">'+esc(x.reason||'')+'</div><div style="font-size:11px;color:var(--mut)">'+(x.return_date||'')+'</div></div><div style="text-align:left">'+st+(x.credit_agorot?'<div style="font-size:13px;font-weight:700;margin-top:3px">'+ils(x.credit_agorot)+'</div>':'')+'</div></div>'+ph+'</div>'});$('rhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין החזרות.</div>'})
  }
 }
 function loadContacts(c){
@@ -449,7 +743,7 @@ function loadContacts(c){
  ov.innerHTML='<div class="sheet" style="max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">אנשי קשר · '+esc(c.name)+'</b><span id="ccx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div id="cclist" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ccx').onclick=function(){ov.remove()};
  function load(){
-  sb.from('customer_contacts').select('id,name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).order('is_primary_whatsapp',{ascending:false}).then(function(r){
+  SQ(sb.from('customer_contacts').select('id,name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).order('is_primary_whatsapp',{ascending:false}),'contacts:'+c.id,function(r){
    var d=r.data||[];var h='';
    d.forEach(function(x){var wa=waLink(x.phone,'שלום '+(x.name||'')+', מדברת יסמין מליברטי.');
     h+='<div class="card ccitem" data-id="'+x.id+'"><div style="display:flex;gap:7px"><input class="field cc_name" value="'+esc(x.name||'')+'" placeholder="שם" style="flex:1"><input class="field cc_role" value="'+esc(x.role||'')+'" placeholder="תפקיד" style="width:104px"></div><div style="display:flex;gap:7px;margin-top:7px"><input class="field cc_phone" value="'+esc(x.phone||'')+'" placeholder="טלפון" inputmode="tel" style="flex:1">'+(x.phone?'<a href="tel:'+esc(x.phone)+'" class="chip" style="display:flex;align-items:center">📞</a>':'')+(wa?'<a href="'+wa+'" target="_blank" rel="noopener" class="chip" style="background:#25d366;color:#fff;border-color:#25d366;display:flex;align-items:center">💬</a>':'')+'</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:9px"><label style="font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" class="cc_wa"'+(x.is_primary_whatsapp?' checked':'')+'> WhatsApp ראשי</label><div style="display:flex;gap:7px"><button class="chip cc_del" style="color:var(--bad)">מחיקה</button><button class="chip cc_save" style="background:var(--acc);color:#fff;border-color:var(--acc)">שמירה</button></div></div></div>';
@@ -469,10 +763,10 @@ function loadContacts(c){
 function buildRecos(c,owned){
  var recos=[],seen={};
  function add(list){for(var i=0;i<list.length;i++){var p=list[i];if(!owned[p.sku]&&!seen[p.sku]&&recos.length<8){seen[p.sku]=1;recos.push(p)}}}
- var areaP=c.area_code!=null?sb.from('liberty_area_top_products').select('sku,name,brand,buyers').eq('area_code',c.area_code).order('buyers',{ascending:false}).limit(30):Promise.resolve({data:[]});
+ var areaP=c.area_code!=null?new Promise(function(rs){SQ(sb.from('liberty_area_top_products').select('sku,name,brand,buyers').eq('area_code',c.area_code).order('buyers',{ascending:false}).limit(30),'areatop:'+c.area_code,rs)}):Promise.resolve({data:[]});
  Promise.resolve(areaP).then(function(ar){
   add((ar.data||[]).filter(function(p){return p.buyers>0}));
-  sb.from('liberty_products').select('sku,name,brand,bonus_buy,bonus_get').eq('is_commissionable',true).order('sku').limit(200).then(function(pr){
+  LQ(function(){return LOC.products.filter(function(p){return p.is_commissionable===true})}).then(function(pr){
    var pool=(pr.data||[]).filter(function(p){return p.brand==='מוצרי הבית'||p.brand==='פראש גאם'});
    add(pool);
    var el=document.getElementById('recosec');if(!el)return;
@@ -496,7 +790,7 @@ function buildDebtCard(c){
 }
 function loadInlineContacts(c){
  var el=$('cinline');if(!el)return;
- sb.from('customer_contacts').select('name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).order('is_primary_whatsapp',{ascending:false}).limit(6).then(function(r){
+ SQ(sb.from('customer_contacts').select('name,role,phone,is_primary_whatsapp').eq('customer_id',c.id).order('is_primary_whatsapp',{ascending:false}).limit(6),'contacts:'+c.id,function(r){
   var el2=$('cinline');if(!el2)return;var d=r.data||[];if(!d.length){el2.innerHTML='';return;}
   var rows=d.map(function(x,i){var init=(x.name||'?').trim().charAt(0);var wa=waHref(x.phone);
    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0'+(i<d.length-1?';border-bottom:1px solid var(--line2)':'')+'"><span style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+esc(init)+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(x.name||'')+(x.is_primary_whatsapp?' <span class="badge b-good" style="font-size:9px">ראשי</span>':'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(x.role||'')+(x.role&&x.phone?' · ':'')+esc(x.phone||'')+'</div></div>'+(x.phone?'<a href="tel:'+esc(x.phone)+'" class="chip" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0">📞</a>':'')+(wa?'<a href="'+wa+'" target="_blank" rel="noopener" class="chip" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;background:#25d366;color:#fff;border-color:#25d366">💬</a>':'')+'</div>';
@@ -560,13 +854,10 @@ function openPaymentSheet(c){
  var method='transfer';var ms=document.querySelectorAll('.pym');for(var i=0;i<ms.length;i++){ms[i].onclick=function(){for(var j=0;j<ms.length;j++)ms[j].classList.remove('on');this.classList.add('on');method=this.getAttribute('data-m')}}
  $('py_photo').onchange=function(){var f=this.files&&this.files[0];$('py_prev').innerHTML=f?'<img src="'+URL.createObjectURL(f)+'" style="width:70px;height:70px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">':''};
  $('py_save').onclick=function(){var amt=Math.round((parseFloat($('py_amt').value)||0)*100);if(amt<=0){toast('נא למלא סכום');return}$('py_save').disabled=true;$('py_save').textContent='שומר…';
-  var f=$('py_photo').files&&$('py_photo').files[0];var urls=[];
-  var path=me.id+'/'+c.id+'/'+Date.now()+'.jpg';
-  var doUp=f?sb.storage.from('payment-photos').upload(path,f,{contentType:f.type||'image/jpeg'}).then(function(u){if(!u.error)urls=[sb.storage.from('payment-photos').getPublicUrl(path).data.publicUrl]}):Promise.resolve();
-  doUp.then(function(){
-   sb.from('payments').insert({customer_id:c.id,amount_agorot:amt,method:method,reference:$('py_ref').value.trim()||null,collected_by:me.id,photos:urls}).then(function(r){
-    if(r.error){toast('שגיאה: '+r.error.message);$('py_save').disabled=false;$('py_save').textContent='רישום תשלום'}else{toast('התשלום נרשם ✓');ov.remove();openCustomer(c.id)}
-   })
+  var f=$('py_photo').files&&$('py_photo').files[0];
+  var row={id:uuid(),customer_id:c.id,amount_agorot:amt,method:method,reference:$('py_ref').value.trim()||null,collected_by:me.id,photos:[]};
+  obEnqueue('payment',c.name+' · '+ils(amt),{row:row,dir:me.id+'/'+c.id},f?[f]:null,function(){
+   toast(OFF.online?'התשלום נרשם ✓':'התשלום נשמר במכשיר · יישלח כשתהיה קליטה');ov.remove();openCustomer(c.id);
   });
  };
 }
@@ -588,7 +879,7 @@ function editCustomer(c){
  ecLocShow();
  $('ec_gps').onclick=function(){if(!navigator.geolocation){toast('אין גישה למיקום');return}var b=$('ec_gps');b.textContent='מאתר…';b.disabled=true;navigator.geolocation.getCurrentPosition(function(pos){ecLoc={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6)};ecLocShow();b.textContent='📍 עדכני מיקום';b.disabled=false;toast('המיקום נלכד ✓ — לחצי שמירה');},function(err){b.textContent='📍 קבע לפי המיקום שלי';b.disabled=false;toast('לא ניתן לאתר מיקום')},{enableHighAccuracy:true,timeout:12000})};
  var lc=c.lifecycle||'active';var opts=document.querySelectorAll('.eclc');for(var i=0;i<opts.length;i++){if(opts[i].getAttribute('data-v')===lc)opts[i].classList.add('on');opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
- sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'"'+(a.code===c.area_code?' selected':'')+'>אזור '+a.code+'</option>'});$('ec_area').innerHTML=h});
+ LQ(function(){return LOC.areas}).then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'"'+(a.code===c.area_code?' selected':'')+'>אזור '+a.code+'</option>'});$('ec_area').innerHTML=h});
  $('ec_save').onclick=function(){var name=$('ec_name').value.trim();if(!name){toast('נא למלא שם');return}$('ec_save').disabled=true;$('ec_save').textContent='שומר…';
   var city=$('ec_city').value.trim();
   var rec={name:name,city:city||null,address:$('ec_addr').value.trim()||null,legal_id:$('ec_legal').value.trim()||null,lifecycle:lc,area_id:$('ec_area').value||null,notes:$('ec_notes').value.trim()||null};
@@ -605,8 +896,8 @@ function areasView(){
 }
 function loadAreas(){
  Promise.all([
-  sb.from('areas').select('id,code,name').order('code'),
-  sb.from('liberty_customers').select('area_code').neq('lifecycle','disqualified').limit(1000)
+  LQ(function(){return LOC.areas}),
+  LQ(function(){return LOC.customers.filter(function(c){return c.lifecycle!=='disqualified'})})
  ]).then(function(res){
   var areas=res[0].data||[];var cnt={};(res[1].data||[]).forEach(function(x){if(x.area_code!=null)cnt[x.area_code]=(cnt[x.area_code]||0)+1});
   window.__areas=areas;window.__arealist=areas.map(function(a){return {code:a.code,name:a.name}});
@@ -640,7 +931,7 @@ function areaCustomers(area){
  document.body.appendChild(ov);var changed=false;
  ov.onclick=function(e){if(e.target===ov){ov.remove();if(changed)loadAreas()}};document.getElementById('acx').onclick=function(){ov.remove();if(changed)loadAreas()};
  function optsFor(code){var s='';areas.forEach(function(a){s+='<option value="'+a.id+'"'+(a.code===code?' selected':'')+'>אזור '+a.code+'</option>'});return s}
- sb.from('liberty_customers').select('id,name,city,area_code').eq('area_code',area.code).order('name').limit(300).then(function(r){
+ LQ(function(){return LOC.customers.filter(function(c){return c.area_code===area.code}).sort(function(a,b){return heb(a.name,b.name)})}).then(function(r){
   var d=r.data||[],h='';
   d.forEach(function(c){h+='<div class="card" style="display:flex;align-items:center;gap:9px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(c.city||'')+'</div></div><select class="field acmv" data-id="'+c.id+'" style="width:auto;padding:6px 8px;font-size:12.5px">'+optsFor(c.area_code)+'</select></div>'});
   $('acl').innerHTML=h||'<div class="card" style="color:var(--mut);text-align:center;padding:18px">אין לקוחות באזור זה.</div>';
@@ -661,7 +952,7 @@ function broadcastView(){
  $('bc_area').onchange=function(){bcArea=this.value;renderBc()};
  $('bc_q').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(renderBc,150)});
  if(window.__bcAll){renderBc()}
- else{sb.from('liberty_customer_phones').select('customer_id,name,city,area_code,phone').order('name').limit(1000).then(function(r){window.__bcAll=r.data||[];renderBc()})}
+ else{LQ(function(){return LOC.phones.slice().sort(function(a,b){return heb(a.name,b.name)})}).then(function(r){window.__bcAll=r.data||[];renderBc()})}
 }
 function renderBc(){
  var el=$('bclist');if(!el)return;var all=window.__bcAll||[];
@@ -679,7 +970,7 @@ function renderBc(){
 var _colFilter='all';
 function collectionsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">גבייה</div><div id="coltot" style="font-size:20px;font-weight:700;color:#fff">…</div></div><div id="colsub" style="font-size:12px;color:#bfe0e2;margin-top:2px"></div><div id="colfilters" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div class="list" id="colres"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- sb.from('liberty_customers').select('id,name,city,area_code,debt_agorot,oldest_invoice').gt('debt_agorot',0).order('debt_agorot',{ascending:false}).then(function(r){window.__col=(r.data||[]);renderCollections();});
+ locTouch();LQ(function(){return custFilter('',false,true).filter(function(c){return c.debt_agorot>0})}).then(function(r){window.__col=(r.data||[]);renderCollections();});
 }
 function collAge(c){return c.oldest_invoice?Math.floor((Date.now()-new Date(c.oldest_invoice).getTime())/86400000):null;}
 function collBucket(c){var a=collAge(c);return a==null?'cur':a>60?'crit':a>30?'late':'cur';}
@@ -741,12 +1032,12 @@ function ordersView(){
  if($('saveord'))$('saveord').onclick=saveOrder;
  var steps=document.querySelectorAll('.step button');for(var s=0;s<steps.length;s++){steps[s].onclick=function(){var i=+this.getAttribute('data-i'),d=+this.getAttribute('data-d');cart.items[i].qty+=d;if(cart.items[i].qty<=0)cart.items.splice(i,1);render()}}
  var qis=document.querySelectorAll('.qtyin');for(var qq=0;qq<qis.length;qq++){qis[qq].onclick=function(e){e.stopPropagation();this.select()};qis[qq].onchange=function(){var i=+this.getAttribute('data-i');var v=parseInt(this.value,10);if(isNaN(v)||v<=0){cart.items.splice(i,1)}else{cart.items[i].qty=v}render()}}
- var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}sb.from('liberty_products').select('sku,name,price_agorot').or('name.ilike.%'+q+'%,sku.ilike.%'+q+'%').order('sku').limit(8).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
+ var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}LQ(function(){return prodSearch(q,8)}).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
 }
 function openCustPicker(){
  var o=document.createElement('div');o.className='ovl';o.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">בחירת לקוח</b><span id="cpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="cpq" placeholder="שם או עיר…" autofocus></div></div><div id="cpl" class="list" style="overflow:auto"></div></div>';document.body.appendChild(o);
  o.onclick=function(e){if(e.target===o)o.remove()};$('cpx').onclick=function(){o.remove()};
- function run(){var q=$('cpq').value.trim();var qu=sb.from('liberty_customers').select('id,name,city').neq('lifecycle','disqualified').order('name').limit(60);if(q)qu=qu.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card cpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('cpl').innerHTML=h;var ci=document.querySelectorAll('.cpi');for(var i=0;i<ci.length;i++){ci[i].onclick=function(){cart.cust={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
+ function run(){var q=$('cpq').value.trim();var qu=LQ(function(){return custFilter(q,true).slice(0,60)});qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card cpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('cpl').innerHTML=h;var ci=document.querySelectorAll('.cpi');for(var i=0;i<ci.length;i++){ci[i].onclick=function(){cart.cust={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
  $('cpq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
 function saveOrder(){
@@ -755,22 +1046,16 @@ function saveOrder(){
  var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
  var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;route='myorders';render()};
- if(editingOrderId){
-  var oid=editingOrderId;
-  sb.from('orders').update({customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot}).eq('id',oid).then(function(ru){
-   if(ru.error){toast('שגיאה בעדכון: '+ru.error.message);$('saveord').disabled=false;$('saveord').textContent='עדכון הזמנה';return}
-   sb.from('order_items').delete().eq('order_id',oid).then(function(){
-    sb.from('order_items').insert(itemsFor(oid)).then(function(r2){if(r2.error){toast('עודכן, שגיאה בפריטים')}orderSentModal(snapName,snapItems,t,true,finishOrder)})
-   })
-  });
-  return;
- }
- sb.from('orders').insert({customer_id:cart.cust.id,agent_id:me.id,status:'submitted',subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,submitted_at:new Date().toISOString()}).select('id').single().then(function(r){
-  if(r.error){toast('שגיאה בשמירה: '+r.error.message);$('saveord').disabled=false;return}
-  sb.from('order_items').insert(itemsFor(r.data.id)).then(function(r2){if(r2.error){toast('ההזמנה נשמרה, שגיאה בפריטים')}orderSentModal(snapName,snapItems,t,false,finishOrder)});
+ var oid=editingOrderId||uuid();
+ var orow={id:oid,customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot};
+ if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
+ obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,created_at:new Date().toISOString()},null,function(){
+  if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
+  orderSentModal(snapName,snapItems,t,isUpd,finishOrder);
  });
 }
 function openOrderDetail(id){
+ if(pendOf('order').some(function(o){return o.payload.order.id===id})){toast('ההזמנה ממתינה לשליחה — תיפתח אחרי הסנכרון');return}
  var ov=document.createElement('div');ov.className='ovl';
  ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">פירוט הזמנה</b><span id="odx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div id="odbody" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('odx').onclick=function(){ov.remove()};
@@ -798,7 +1083,7 @@ function openOrderDetail(id){
 function myOrdersView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="display:flex;align-items:center;gap:9px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">ההזמנות שלי</div></div><a href="#" id="newo" style="font-size:13px;font-weight:600;color:#cfe6e8">+ הזמנה חדשה</a></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  $('newo').onclick=function(e){e.preventDefault();editingOrderId=null;cart={cust:null,items:[]};route='orders';render()};
- sb.from('liberty_my_orders').select('id,customer_name,total_agorot,commissionable_agorot,created_at,status').order('created_at',{ascending:false}).limit(60).then(function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});h+='<div class="card ordrow" data-id="'+o.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--head)">'+esc(o.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+dt+' · מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});var head='<div class="card" style="background:var(--accs);display:flex;justify-content:space-between;align-items:center"><div style="font-size:12.5px;color:var(--accd);font-weight:700">'+d.length+' הזמנות · סה״כ</div><div style="font-size:18px;font-weight:700;color:var(--accd)">'+ils(sum)+'</div></div>';$('res').innerHTML=head+(h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:20px">עדיין אין הזמנות. צרי הזמנה ראשונה!</div>');var or=document.querySelectorAll('.ordrow');for(var k=0;k<or.length;k++){or[k].onclick=function(){openOrderDetail(this.getAttribute('data-id'))}}});
+ SQ(sb.from('liberty_my_orders').select('id,customer_name,total_agorot,commissionable_agorot,created_at,status').order('created_at',{ascending:false}).limit(60),'myorders',function(r){var pnd=pendOrders(),pm={};pnd.forEach(function(o){pm[o.id]=1});var d=pnd.concat((r.data||[]).filter(function(o){return !pm[o.id]})),h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'});h+='<div class="card ordrow" data-id="'+o.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--head)">'+esc(o.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+dt+' · מזכה: '+ils(o.commissionable_agorot)+'</div></div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});var head='<div class="card" style="background:var(--accs);display:flex;justify-content:space-between;align-items:center"><div style="font-size:12.5px;color:var(--accd);font-weight:700">'+d.length+' הזמנות · סה״כ</div><div style="font-size:18px;font-weight:700;color:var(--accd)">'+ils(sum)+'</div></div>';$('res').innerHTML=head+(h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:20px">עדיין אין הזמנות. צרי הזמנה ראשונה!</div>');var or=document.querySelectorAll('.ordrow');for(var k=0;k<or.length;k++){or[k].onclick=function(){openOrderDetail(this.getAttribute('data-id'))}}});
 }
 
 // ---------- NEW CUSTOMER ----------
@@ -813,7 +1098,7 @@ function newCustomerView(){
   '<button class="cta" id="nc_save">שמירת לקוח</button></div>');
  var lc='active';var opts=document.querySelectorAll('.lcopt');for(var i=0;i<opts.length;i++){opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
  loadAreaPts(function(){});
- sb.from('areas').select('id,code,name').order('code').then(function(r){var h='<option value="">— אוטומטי לפי מיקום —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'">אזור '+a.code+'</option>'});$('nc_area').innerHTML=h});
+ LQ(function(){return LOC.areas}).then(function(r){var h='<option value="">— אוטומטי לפי מיקום —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'">אזור '+a.code+'</option>'});$('nc_area').innerHTML=h});
  $('nc_save').onclick=function(){var name=$('nc_name').value.trim();if(!name){toast('נא למלא שם');return}$('nc_save').disabled=true;$('nc_save').textContent='שומר…';
   var city=$('nc_city').value.trim();var g=geocodeCity(city);
   var chosenArea=$('nc_area').value||null;var areaId=chosenArea;
@@ -843,9 +1128,9 @@ function routeView(){
  $('dayhistbtn').onclick=function(){route='dayhist';render()};
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
- if(!window.__arealist){sb.from('areas').select('code,name').order('code').then(function(r){window.__arealist=(r.data||[]);if(route==='route')render()})}
+ if(!window.__arealist&&LOC.areas.length){window.__arealist=LOC.areas.map(function(a){return {code:a.code,name:a.name}})}
  if(!routeArea)return;
- sb.from('liberty_customers').select('id,name,city,lifecycle,potential_level,debt_agorot,lat,lng').eq('area_code',routeArea).neq('lifecycle','disqualified').limit(300).then(function(r){
+ locTouch();LQ(function(){return LOC.customers.filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'})}).then(function(r){
   var d=r.data||[];
   var debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
   var rstopBind=function(){var rs=document.querySelectorAll('.rstop');for(var k=0;k<rs.length;k++){rs[k].onclick=function(){openCustomer(this.getAttribute('data-id'))}}};
@@ -895,7 +1180,7 @@ function routeView(){
 function openOriginPicker(){
  var ov=document.createElement('div');ov.className='ovl';ov.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">נקודת מוצא</b><span id="opx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="opq" placeholder="עיר…" autofocus></div></div><div id="opl" class="list" style="overflow:auto"></div></div>';document.body.appendChild(ov);
  ov.onclick=function(e){if(e.target===ov)ov.remove()};$('opx').onclick=function(){ov.remove()};
- function run(){var q=$('opq').value.trim();var qu=sb.from('liberty_customers').select('city,lat,lng').not('lat','is',null).limit(400);qu.then(function(r){var seen={},list=[];(r.data||[]).forEach(function(c){if(c.city&&!seen[c.city]&&(!q||c.city.indexOf(q)>-1)){seen[c.city]=1;list.push(c)}});list.sort(function(a,b){return a.city.localeCompare(b.city,'he')});var h='<div class="card opi" data-name="נהריה" data-lat="33.008" data-lng="35.095" style="cursor:pointer;font-weight:800">נהריה <span style="font-size:11px;color:var(--mut);font-weight:600">(ברירת מחדל)</span></div>';list.forEach(function(c){h+='<div class="card opi" data-name="'+esc(c.city)+'" data-lat="'+c.lat+'" data-lng="'+c.lng+'" style="cursor:pointer;font-size:14px;font-weight:700">'+esc(c.city)+'</div>'});$('opl').innerHTML=h;var oi=document.querySelectorAll('.opi');for(var i=0;i<oi.length;i++){oi[i].onclick=function(){setOrigin({name:this.getAttribute('data-name'),lat:+this.getAttribute('data-lat'),lng:+this.getAttribute('data-lng')});ov.remove();render()}}})}
+ function run(){var q=$('opq').value.trim();var qu=LQ(function(){return LOC.customers.filter(function(c){return c.lat!=null})});qu.then(function(r){var seen={},list=[];(r.data||[]).forEach(function(c){if(c.city&&!seen[c.city]&&(!q||c.city.indexOf(q)>-1)){seen[c.city]=1;list.push(c)}});list.sort(function(a,b){return a.city.localeCompare(b.city,'he')});var h='<div class="card opi" data-name="נהריה" data-lat="33.008" data-lng="35.095" style="cursor:pointer;font-weight:800">נהריה <span style="font-size:11px;color:var(--mut);font-weight:600">(ברירת מחדל)</span></div>';list.forEach(function(c){h+='<div class="card opi" data-name="'+esc(c.city)+'" data-lat="'+c.lat+'" data-lng="'+c.lng+'" style="cursor:pointer;font-size:14px;font-weight:700">'+esc(c.city)+'</div>'});$('opl').innerHTML=h;var oi=document.querySelectorAll('.opi');for(var i=0;i<oi.length;i++){oi[i].onclick=function(){setOrigin({name:this.getAttribute('data-name'),lat:+this.getAttribute('data-lat'),lng:+this.getAttribute('data-lng')});ov.remove();render()}}})}
  $('opq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
 
@@ -914,13 +1199,13 @@ function visitsView(){
  var outcome='הזמנה';var oc=document.querySelectorAll('.oc');for(var i=0;i<oc.length;i++){oc[i].onclick=function(){for(var j=0;j<oc.length;j++)oc[j].classList.remove('on');this.classList.add('on');outcome=this.getAttribute('data-v')}}
  if($('vpick'))$('vpick').onclick=openVisitPicker;
  if($('vchg'))$('vchg').onclick=openVisitPicker;
- $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;sb.from('visits').insert(rec).then(function(r){if(r.error){toast('שגיאה בשמירה: '+r.error.message);$('savevis').disabled=false;$('savevis').textContent='שמירת ביקור'}else{toast('הביקור נשמר ✓');visitTarget=null;render()}})};
- sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30).then(function(r){var d=r.data||[],h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
+ $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;render()})};
+ SQ(sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30),'myvisits',function(r){var d=pendVisits().concat(r.data||[]),h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
 }
 function openVisitPicker(){
  var o=document.createElement('div');o.className='ovl';o.innerHTML='<div class="sheet"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">בחירת לקוח</b><span id="vpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="vpq" placeholder="שם או עיר…" autofocus></div></div><div id="vpl" class="list" style="overflow:auto"></div></div>';document.body.appendChild(o);
  o.onclick=function(e){if(e.target===o)o.remove()};$('vpx').onclick=function(){o.remove()};
- function run(){var q=$('vpq').value.trim();var qu=sb.from('liberty_customers').select('id,name,city').order('name').limit(60);if(q)qu=qu.or('name.ilike.%'+q+'%,city.ilike.%'+q+'%');qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card vpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('vpl').innerHTML=h;var vi=document.querySelectorAll('.vpi');for(var i=0;i<vi.length;i++){vi[i].onclick=function(){visitTarget={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
+ function run(){var q=$('vpq').value.trim();var qu=LQ(function(){return custFilter(q,true,true).slice(0,60)});qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card vpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('vpl').innerHTML=h;var vi=document.querySelectorAll('.vpi');for(var i=0;i<vi.length;i++){vi[i].onclick=function(){visitTarget={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
  $('vpq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
 
@@ -928,7 +1213,7 @@ function openVisitPicker(){
 function targetsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">יעדים ועמלות</div><div style="color:#cfe6e8;font-size:12.5px;margin-top:2px">עמלות ומדרגות · החודש</div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
- sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart).then(function(res){
+ SQ(sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart),'targets:'+mStart,function(res){
   var orders=res.data||[];
   var achieved=0,sales=0;orders.forEach(function(o){achieved+=o.commissionable_agorot||0;sales+=o.total_agorot||0});
   var T2=7500000,T3=8500000; // 75K -> 2%, 85K -> 3%
@@ -990,7 +1275,24 @@ function genReport(){
   $('rshare').onclick=function(){window.open('https://wa.me/?text='+encodeURIComponent(window.__reportText),'_blank')};
  });
 }
-function render(){sb.auth.getSession().then(function(r){if(!r.data.session){loginView();return}if(!me){boot();return}
+function hasCachedMe(){try{var m=JSON.parse(localStorage.getItem('lib_me')||'null');return !!(m&&m.id)}catch(e){return false}}
+function render(){
+ if(navigator.onLine===false){
+  if(me){renderRoute();return}
+  if(!_booting&&hasCachedMe()){boot();return}
+  if(!_booting){loginView();return}
+  return;
+ }
+ try{
+  sb.auth.getSession().then(function(r){
+   var sess=(r&&r.data)?r.data.session:null;
+   if(!sess){if(me&&!OFF.online){renderRoute();return}loginView();return}
+   if(!me){if(!_booting)boot();return}
+   renderRoute();
+  },function(){if(me)renderRoute();else loginView()});
+ }catch(e){if(me)renderRoute();else loginView()}
+}
+function renderRoute(){
  if(_hist[_hist.length-1]!==route)_hist.push(route);
  if(route==='catalog')catalogView();
  else if(route==='customers')customersView();
@@ -1007,13 +1309,14 @@ function render(){sb.auth.getSession().then(function(r){if(!r.data.session){logi
  else if(route==='broadcast')broadcastView();
  else if(route==='dayhist')dayHistView();
  else if(route==='prodadmin')prodAdminView();
+ else if(route==='outbox')outboxView();
  else homeView();
-})}
+}
 function drPill(label,val,color){return '<div style="background:#fbfaf8;border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:66px"><div style="font-size:10px;color:var(--mut);font-weight:700">'+label+'</div><div style="font-size:15px;font-weight:700;color:'+color+'">'+val+'</div></div>'}
 function dayHistView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">היסטוריית מסלולים</div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  if(!me){$('res').innerHTML='<div style="color:var(--mut);font-size:13px;text-align:center;padding:24px">טוען…</div>';return}
- sb.from('daily_routes').select('route_date,area_code,selected_ids,report').eq('agent_id',me.id).eq('status','archived').order('route_date',{ascending:false}).limit(90).then(function(r){
+ SQ(sb.from('daily_routes').select('route_date,area_code,selected_ids,report').eq('agent_id',me.id).eq('status','archived').order('route_date',{ascending:false}).limit(90),'dayhist',function(r){
   var d=r.data||[];
   if(!d.length){$('res').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px;line-height:1.6">אין עדיין ימים בהיסטוריה.<br>המסלול והדו״ח היומי יישמרו כאן אוטומטית בסוף כל יום.</div>';return}
   var h='';
