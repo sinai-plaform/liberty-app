@@ -91,7 +91,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-24-5';
+var APP_VERSION='2026-08-24-6';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -676,12 +676,38 @@ function renderBc(){
 }
 
 // ---------- collections ----------
+var _colFilter='all';
 function collectionsView(){
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">גבייה · גיול אוגוסט</div></div><div class="list"><div id="tot" style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"></div><div id="res" style="display:flex;flex-direction:column;gap:9px"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>');
- sb.from('liberty_customers').select('id,name,city,debt_agorot,oldest_invoice').gt('debt_agorot',0).order('debt_agorot',{ascending:false}).then(function(r){var d=r.data||[],total=0,o30=0,h='',now=Date.now();for(var i=0;i<d.length;i++){total+=d[i].debt_agorot;var days=d[i].oldest_invoice?Math.floor((now-new Date(d[i].oldest_invoice).getTime())/86400000):null;if(days!=null&&days>30)o30++;var sev=days==null?'var(--line)':days>60?'var(--bad)':days>30?'var(--warn)':'var(--good)';h+='<div class="card cdebt" data-id="'+d[i].id+'" style="border-inline-start:4px solid '+sev+';display:flex;align-items:center;gap:10px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:var(--head)">'+esc(d[i].name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(d[i].city||'')+(days!=null?' · הוותיקה: לפני '+days+' יום':'')+'</div></div><div style="font-size:16px;font-weight:700;color:var(--bad);white-space:nowrap">'+ils(d[i].debt_agorot)+'</div><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'}$('tot').innerHTML='<div class="stat" style="background:var(--bads)"><div style="font-size:11px;font-weight:700;color:var(--badd)">חוב כולל</div><div style="font-size:17px;font-weight:700;color:var(--badd)">'+ils(total)+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;font-weight:700;color:var(--warnd)">מעל 30 יום</div><div style="font-size:17px;font-weight:700;color:var(--warnd)">'+o30+' לקוחות</div></div>';$('res').innerHTML=h;var cb=document.querySelectorAll('.cdebt');for(var j=0;j<cb.length;j++){cb[j].onclick=function(){openCustomer(this.getAttribute('data-id'))}}});
+ shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">גבייה</div><div id="coltot" style="font-size:20px;font-weight:700;color:#fff">…</div></div><div id="colsub" style="font-size:12px;color:#bfe0e2;margin-top:2px"></div><div id="colfilters" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div class="list" id="colres"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ sb.from('liberty_customers').select('id,name,city,area_code,debt_agorot,oldest_invoice').gt('debt_agorot',0).order('debt_agorot',{ascending:false}).then(function(r){window.__col=(r.data||[]);renderCollections();});
+}
+function collAge(c){return c.oldest_invoice?Math.floor((Date.now()-new Date(c.oldest_invoice).getTime())/86400000):null;}
+function collBucket(c){var a=collAge(c);return a==null?'cur':a>60?'crit':a>30?'late':'cur';}
+function renderCollections(){
+ var d=window.__col||[];var total=0,cnt60=0;
+ d.forEach(function(c){total+=c.debt_agorot;var a=collAge(c);if(a!=null&&a>60)cnt60++;});
+ if($('coltot'))$('coltot').textContent=ils(total);
+ if($('colsub'))$('colsub').textContent=d.length+' לקוחות · '+cnt60+' מעל 60 יום';
+ var filters=[['all','הכל'],['crit','קריטי'],['late','31–60'],['cur','עד 30']];
+ if($('colfilters'))$('colfilters').innerHTML=filters.map(function(f){var on=_colFilter===f[0];return '<button class="chip colf" data-f="'+f[0]+'" style="'+(on?'background:#fff;color:var(--acc);border-color:#fff':'background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.25)')+'">'+f[1]+'</button>';}).join('');
+ var groups=[['crit','קריטי · 60 יום ומעלה','var(--bad)','var(--badd)'],['late','מתעכב · 31–60 יום','var(--warn)','var(--warnd)'],['cur','שוטף · עד 30 יום','var(--good)','var(--goodd)']];
+ var h='';
+ groups.forEach(function(g){
+  if(_colFilter!=='all'&&_colFilter!==g[0])return;
+  var rows=d.filter(function(c){return collBucket(c)===g[0];});
+  if(!rows.length)return;
+  h+='<div style="font-size:11.5px;font-weight:700;color:'+g[3]+';margin:8px 2px 1px">'+g[1]+' · '+rows.length+'</div>';
+  rows.forEach(function(c){var a=collAge(c);var nbars=g[0]==='crit'?3:g[0]==='late'?2:1;
+   var bars='';for(var b=0;b<3;b++){bars+='<span style="width:4px;height:'+(8+b*4)+'px;border-radius:2px;background:'+(b<nbars?g[2]:'var(--line)')+'"></span>';}
+   h+='<div class="card coldebt" data-id="'+c.id+'" style="border-inline-start:4px solid '+g[2]+';display:flex;align-items:center;gap:11px;cursor:pointer"><div style="display:flex;align-items:flex-end;gap:2px;height:16px">'+bars+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:var(--head)">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(a!=null?' · לפני '+a+' יום':'')+'</div></div><div style="text-align:left"><div style="font-size:16px;font-weight:700;color:var(--bad);white-space:nowrap">'+ils(c.debt_agorot)+'</div><button class="colpay chip" data-id="'+c.id+'" style="margin-top:4px;padding:3px 13px;background:var(--acc);color:#fff;border-color:var(--acc);font-size:11.5px">תשלום</button></div></div>';
+  });
+ });
+ if($('colres'))$('colres').innerHTML=h||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:26px">אין חובות בקטגוריה זו.</div>';
+ var fb=document.querySelectorAll('.colf');for(var i=0;i<fb.length;i++){fb[i].onclick=function(){_colFilter=this.getAttribute('data-f');renderCollections();};}
+ var cb=document.querySelectorAll('.coldebt');for(var j=0;j<cb.length;j++){cb[j].onclick=function(){openCustomer(this.getAttribute('data-id'));};}
+ var pb=document.querySelectorAll('.colpay');for(var k=0;k<pb.length;k++){pb[k].onclick=function(e){e.stopPropagation();var id=this.getAttribute('data-id');var c=(window.__col||[]).filter(function(x){return x.id===id;})[0];if(c)openPaymentSheet(c);};}
 }
 
-// ---------- ORDER BUILDER ----------
 function cartTotals(){var sub=0,comm=0;for(var i=0;i<cart.items.length;i++){var it=cart.items[i];var lt=it.price*it.qty;sub+=lt;if(it.comm)comm+=lt}var bi=bonusInfo(cart.items);var vat=Math.round(sub*VAT);return {sub:sub,vat:vat,total:sub+vat,comm:comm,freeq:bi.total,bi:bi}}
 function ordersView(){
  var t=cartTotals();
