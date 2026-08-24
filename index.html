@@ -99,7 +99,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-24-7';
+var APP_VERSION='2026-08-24-8';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -643,14 +643,18 @@ function catalogView(){
 }
 function productSheet(sku){
  LQ(function(){return prodBySku(sku)}).then(function(r){var p=r.data;if(!p)return;var ov=document.createElement('div');ov.className='ovl';
-  var img=imgMap[p.sku]?('<img class="imgbig" src="'+imgMap[p.sku]+'">'):('<div class="imgbig" style="display:flex;align-items:center;justify-content:center;color:#c3bcb0;font-size:13px;height:150px">אין תמונה</div>');
+  var img=imgMap[p.sku]?('<img class="imgbig" id="psbig" src="'+imgMap[p.sku]+'">'):('<div class="imgbig" style="display:flex;align-items:center;justify-content:center;color:#c3bcb0;font-size:13px;height:150px">אין תמונה</div>');
   function row(k,v){return v?'<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2)"><span style="color:var(--mut);font-size:13px">'+k+'</span><span style="font-size:13.5px;font-weight:700;text-align:left">'+v+'</span></div>':''}
   var bonus=(p.bonus_buy&&p.bonus_get)?('<span class="badge b-warn" style="font-size:13px">🎁 בונוס '+p.bonus_buy+'+'+p.bonus_get+'</span>'):'';
   var comm=p.is_commissionable===true?'<span class="badge b-good">מזכה בעמלה</span>':(p.is_commissionable===false?'<span class="badge b-mut">ללא עמלה</span>':'');
   var rows=row('מק״ט','<span class="mono">'+esc(p.sku)+'</span>')+row('קטגוריה',catLabel(p.category))+row('מותג',p.brand?esc(p.brand):'')+row('גודל אריזה',p.pack_size||'')+row('מחיר לסוכן','<b style="color:var(--acc)">'+ils(p.price_agorot)+'</b>')+row('מחיר צרכן',p.consumer_price_agorot?ils(p.consumer_price_agorot):'')+row('בונוס',bonus)+row('עמלה',comm)+row('ברקוד',p.barcode?('<span class="mono">'+esc(p.barcode)+'</span>'):'')+row('סטטוס',p.is_teaser?'<span class="badge b-acc">בקרוב</span>':'');
-  ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px;flex:1">'+esc(p.name)+'</b><span id="psx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+img+'<div class="card">'+rows+'</div><button class="cta" id="psadd">+ הוספה להזמנה</button></div></div>';
+  ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px;flex:1">'+esc(p.name)+'</b><span id="psx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+img+'<div id="psgal" style="display:none;gap:8px;overflow-x:auto;padding:2px 0 2px;-webkit-overflow-scrolling:touch"></div><div class="card">'+rows+'</div><button class="cta" id="psadd">+ הוספה להזמנה</button></div></div>';
   document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('psx').onclick=function(){ov.remove()};
   document.getElementById('psadd').onclick=function(){ov.remove();addToCartBySku(p.sku)};
+  (function(){var gsku=p.sku;var prim=imgMap[gsku]||null;
+   function render(urls){var seen={},list=[];[prim].concat(urls||[]).forEach(function(u){if(u&&!seen[u]){seen[u]=1;list.push(u)}});var g=document.getElementById('psgal');if(!g)return;if(list.length<=1){g.style.display='none';return;}g.style.display='flex';g.innerHTML=list.map(function(u,i){return '<img src="'+u+'" data-u="'+u+'" style="width:58px;height:58px;object-fit:cover;border-radius:10px;border:2px solid '+(i===0?'var(--acc)':'var(--line)')+';cursor:pointer;flex:none">'}).join('');var ts=g.querySelectorAll('img');for(var i=0;i<ts.length;i++){ts[i].onclick=function(){var u=this.getAttribute('data-u');var big=document.getElementById('psbig');if(big)big.src=u;for(var j=0;j<ts.length;j++)ts[j].style.borderColor='var(--line)';this.style.borderColor='var(--acc)';}}}
+   try{sb.from('liberty_product_gallery').select('url,sort').eq('sku',gsku).order('sort').then(function(r){render((r&&r.data)?r.data.map(function(x){return x.url}):[]);},function(){render([]);});}catch(e){render([]);}
+  })();
  });
 }
 
