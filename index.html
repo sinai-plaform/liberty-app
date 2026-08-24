@@ -153,6 +153,50 @@ function nnOrder(stops,origin){var pts=stops.filter(function(s){return s.lat!=nu
 function mapsUrl(origin,stops){var pts=[[origin.lat,origin.lng]];stops.forEach(function(s){if(s.lat!=null)pts.push([s.lat,s.lng])});var path=pts.map(function(p){return p[0]+','+p[1]}).join('/');return 'https://www.google.com/maps/dir/'+path}
 function waLink(phone,text){if(!phone)return null;var p=(''+phone).replace(/[^0-9]/g,'');if(p[0]==='0')p='972'+p.slice(1);return 'https://wa.me/'+p+(text?('?text='+encodeURIComponent(text)):'')}
 function wazeUrl(lat,lng){return 'https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes'}
+// ---- daily route persistence ----
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function localDate(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+var __drSaveTmr=null;
+function saveDailyRoute(){
+ if(!me||!routeArea)return;
+ var ids=Object.keys(routeSel).filter(function(k){return routeSel[k]});
+ sb.from('daily_routes').upsert({agent_id:me.id,route_date:todayStr(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()},{onConflict:'agent_id,route_date'}).then(function(){});
+}
+function saveDailyRouteDeb(){clearTimeout(__drSaveTmr);__drSaveTmr=setTimeout(saveDailyRoute,500)}
+function archiveStaleRoutes(cb){
+ if(!me){cb&&cb();return}
+ sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('status','active').lt('route_date',todayStr()).then(function(r){
+  var stale=r.data||[];if(!stale.length){cb&&cb();return}
+  var since=new Date(Date.now()-45*86400000).toISOString();
+  Promise.all([
+   sb.from('liberty_my_orders').select('total_agorot,created_at').gte('created_at',since),
+   sb.from('liberty_my_visits').select('arrived_at').gte('arrived_at',since),
+   sb.from('payments').select('amount_agorot,created_at,collected_by').gte('created_at',since)
+  ]).then(function(res){
+   var orders=(res[0].data||[]),visits=(res[1].data||[]),pays=(res[2].data||[]);
+   var chain=Promise.resolve();
+   stale.forEach(function(row){
+    var dt=row.route_date;
+    var oo=orders.filter(function(o){return localDate(o.created_at)===dt});
+    var vv=visits.filter(function(v){return v.arrived_at&&localDate(v.arrived_at)===dt});
+    var pp=pays.filter(function(p){return localDate(p.created_at)===dt&&(!me||!p.collected_by||p.collected_by===me.id)});
+    var report={planned:(row.selected_ids||[]).length,visited:vv.length,orders:oo.length,orders_sum:oo.reduce(function(s,o){return s+(o.total_agorot||0)},0),collected:pp.reduce(function(s,p){return s+(p.amount_agorot||0)},0)};
+    chain=chain.then(function(){return sb.from('daily_routes').update({status:'archived',report:report,updated_at:new Date().toISOString()}).eq('id',row.id)});
+   });
+   chain.then(function(){cb&&cb()});
+  });
+ });
+}
+function restoreDailyRoute(){
+ if(!me)return;
+ archiveStaleRoutes(function(){
+  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',todayStr()).eq('status','active').limit(1).then(function(r){
+   var row=(r.data||[])[0];
+   if(row){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin)}
+   if(route==='route')render();
+  });
+ });
+}
 // proportional bonus: 20+4 at qty 10 -> 2 free
 function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty*get/buy)}
 // group-aware bonus: products sharing a bonus_group pool their qty (mix-and-match)
@@ -188,7 +232,7 @@ function loginView(){
 
 function boot(){
  // load me + image map, then render
- sb.from('liberty_me').select('id,name,role').single().then(function(r){me=r.data;});
+ sb.from('liberty_me').select('id,name,role').single().then(function(r){me=r.data;restoreDailyRoute();});
  sb.from('liberty_product_images').select('sku,data_url').then(function(r){imgMap={};(r.data||[]).forEach(function(x){imgMap[x.sku]=x.data_url});route='home';render()});
 }
 
@@ -651,10 +695,11 @@ function routeView(){
  var chips='<div style="display:flex;gap:8px;overflow:auto;padding:2px 0">';
  if(alist){alist.forEach(function(a){chips+='<button class="chip areac'+(routeArea===a.code?' on':'')+'" data-a="'+a.code+'">אזור '+a.code+'</button>'})}
  else{for(var i=1;i<=6;i++){chips+='<button class="chip areac'+(routeArea===i?' on':'')+'" data-a="'+i+'">אזור '+i+'</button>'}}
- chips+='<button id="mgareas" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">⚙︎ אזורים</button></div>';
+ chips+='<button id="mgareas" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">⚙︎ אזורים</button><button id="dayhistbtn" class="chip" style="background:#fbfaf8;white-space:nowrap">🗂 היסטוריה</button></div>';
  var originBar='<div style="display:flex;align-items:center;gap:8px;background:var(--accs);border-radius:12px;padding:9px 12px;margin-bottom:10px"><span style="font-size:16px">📍</span><div style="flex:1"><div style="font-size:11px;color:var(--accd);font-weight:700">נקודת מוצא</div><div style="font-size:14px;font-weight:800;color:var(--accd)">'+esc(o.name)+'</div></div><button id="chgorigin" class="chip" style="background:#fff">שינוי</button></div>';
  shell('<div class="hdr"><div class="h1">מסלול נסיעה יומי</div>'+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם היום, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
- var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeSel={};routeBuilt=false;render()}}
+ var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeSel={};routeBuilt=false;saveDailyRoute();render()}}
+ $('dayhistbtn').onclick=function(){route='dayhist';render()};
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
  if(!window.__arealist){sb.from('areas').select('code,name').order('code').then(function(r){window.__arealist=(r.data||[]);if(route==='route')render()})}
@@ -678,7 +723,7 @@ function routeView(){
    var idx=0;withGeo.forEach(function(c){idx++;var tag=c.lifecycle==='active'?'<span class="badge b-good">פעיל</span>':'<span class="badge b-warn">פוטנציאלי</span>';h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+idx+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+'</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'});
    if(noGeo.length){h+='<div class="card" style="background:var(--warn-s);font-size:11.5px;color:var(--warn);font-weight:700;margin-top:8px">⚠︎ '+noGeo.length+' לקוחות נבחרו ללא מיקום — לא משובצים בניווט (עדכני מיקום GPS בכרטיס)</div>';noGeo.forEach(function(c){h+='<div class="card rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;opacity:.8"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+'</div></div></div>'})}
    $('res').innerHTML=h;
-   $('editsel').onclick=function(){routeBuilt=false;render()};
+   $('editsel').onclick=function(){routeBuilt=false;saveDailyRoute();render()};
    rstopBind();
    return;
   }
@@ -698,12 +743,12 @@ function routeView(){
   document.body.appendChild(bar);
   var refreshCnt=function(){var n=selCount();if($('selc'))$('selc').textContent=n;if(document.getElementById('bcnt'))document.getElementById('bcnt').textContent=n;var bb=document.getElementById('buildbtn');if(bb)bb.disabled=(n===0)};
   refreshCnt();
-  var toggle=function(el){var id=el.getAttribute('data-id');routeSel[id]=!routeSel[id];var on=!!routeSel[id];el.style.border=on?'2px solid var(--acc)':'';el.style.background=on?'var(--accs)':'';var box=el.querySelector('.rselbox');box.style.border='2px solid '+(on?'var(--acc)':'#ccc');box.style.background=on?'var(--acc)':'#fff';box.textContent=on?'✓':'';refreshCnt()};
+  var toggle=function(el){var id=el.getAttribute('data-id');routeSel[id]=!routeSel[id];var on=!!routeSel[id];el.style.border=on?'2px solid var(--acc)':'';el.style.background=on?'var(--accs)':'';var box=el.querySelector('.rselbox');box.style.border='2px solid '+(on?'var(--acc)':'#ccc');box.style.background=on?'var(--acc)':'#fff';box.textContent=on?'✓':'';refreshCnt();saveDailyRouteDeb()};
   var rc=document.querySelectorAll('.rsel');for(var k=0;k<rc.length;k++){(function(card){var box=card.querySelector('.rselbox');if(box)box.onclick=function(e){e.stopPropagation();toggle(card)};card.onclick=function(){openCustomer(card.getAttribute('data-id'))}})(rc[k])}
-  $('selall').onclick=function(){d.forEach(function(c){routeSel[c.id]=true});render()};
-  $('selnone').onclick=function(){routeSel={};render()};
-  $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});render()};
-  document.getElementById('buildbtn').onclick=function(){if(selCount()===0){toast('בחרי לפחות לקוח אחד');return}routeBuilt=true;render()};
+  $('selall').onclick=function(){d.forEach(function(c){routeSel[c.id]=true});saveDailyRoute();render()};
+  $('selnone').onclick=function(){routeSel={};saveDailyRoute();render()};
+  $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});saveDailyRoute();render()};
+  document.getElementById('buildbtn').onclick=function(){if(selCount()===0){toast('בחרי לפחות לקוח אחד');return}routeBuilt=true;saveDailyRoute();render()};
  });
 }
 function openOriginPicker(){
@@ -819,8 +864,25 @@ function render(){sb.auth.getSession().then(function(r){if(!r.data.session){logi
  else if(route==='newcust')newCustomerView();
  else if(route==='areas')areasView();
  else if(route==='broadcast')broadcastView();
+ else if(route==='dayhist')dayHistView();
  else homeView();
 })}
+function drPill(label,val,color){return '<div style="background:#fbfaf8;border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:66px"><div style="font-size:10px;color:var(--mut);font-weight:700">'+label+'</div><div style="font-size:15px;font-weight:800;color:'+color+'">'+val+'</div></div>'}
+function dayHistView(){
+ shell('<div class="hdr"><div style="display:flex;align-items:center;gap:8px">'+backBtn()+'<div class="h1" style="margin:0">היסטוריית מסלולים</div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ if(!me){$('res').innerHTML='<div style="color:var(--mut);font-size:13px;text-align:center;padding:24px">טוען…</div>';return}
+ sb.from('daily_routes').select('route_date,area_code,selected_ids,report').eq('agent_id',me.id).eq('status','archived').order('route_date',{ascending:false}).limit(90).then(function(r){
+  var d=r.data||[];
+  if(!d.length){$('res').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px;line-height:1.6">אין עדיין ימים בהיסטוריה.<br>המסלול והדו״ח היומי יישמרו כאן אוטומטית בסוף כל יום.</div>';return}
+  var h='';
+  d.forEach(function(row){
+   var rep=row.report||{};
+   var dt=new Date(row.route_date+'T00:00:00').toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',year:'2-digit'});
+   h+='<div class="card" style="display:flex;flex-direction:column;gap:9px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:14.5px;font-weight:800">'+dt+'</div>'+(row.area_code?'<span class="badge b-mut">אזור '+row.area_code+'</span>':'')+'</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+drPill('תוכננו',(rep.planned!=null?rep.planned:(row.selected_ids||[]).length),'var(--acc)')+drPill('ביקורים',rep.visited||0,'var(--good)')+drPill('הזמנות',rep.orders||0,'var(--acc)')+drPill('סכום',ils(rep.orders_sum||0),'var(--accd)')+drPill('נגבה',ils(rep.collected||0),'var(--bad)')+'</div></div>';
+  });
+  $('res').innerHTML=h;
+ });
+}
 render();
 </script>
 </body>
