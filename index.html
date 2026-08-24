@@ -541,7 +541,8 @@ function areaCustomers(area){
 var bcArea='all';
 function broadcastView(){
  var areaOpts='<option value="all">כל האזורים</option>';for(var i=1;i<=6;i++)areaOpts+='<option value="'+i+'"'+(bcArea==(''+i)?' selected':'')+'>אזור '+i+'</option>';
- shell('<div class="hdr"><div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+backBtn()+'<div class="h1" style="margin:0">תפוצה ללקוחות</div></div>'+
+ shell('<div style="background:var(--acc);padding:14px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">תפוצה ללקוחות</div></div></div>'+
+  '<div class="list" style="padding-bottom:0">'+
   '<textarea id="bc_msg" class="field" style="min-height:80px" placeholder="הודעה ללקוחות — משלוח הגיע / מבצע / קטלוג חדש…"></textarea>'+
   '<input id="bc_link" class="field" style="margin-top:8px" placeholder="קישור (קטלוג/מבצע) — לא חובה" inputmode="url">'+
   '<div style="display:flex;gap:8px;margin-top:9px"><select id="bc_area" class="field" style="flex:none;width:auto">'+areaOpts+'</select><div class="search" style="flex:1;margin:0"><input id="bc_q" placeholder="סינון לפי שם/עיר…"></div></div></div>'+
