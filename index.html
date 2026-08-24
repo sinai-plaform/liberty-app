@@ -90,6 +90,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+var APP_VERSION='2026-08-24-2';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -236,7 +237,36 @@ function boot(){
  // load me + image map, then render
  sb.from('liberty_me').select('id,name,role').single().then(function(r){me=r.data;restoreDailyRoute();});
  sb.from('liberty_product_images').select('sku,data_url').then(function(r){imgMap={};(r.data||[]).forEach(function(x){imgMap[x.sku]=x.data_url});route='home';render()});
+ setTimeout(checkUpdate,8000);setInterval(checkUpdate,5*60*1000);
 }
+
+// ---- Auto-update: detect a newer deploy and refresh (safely) ----
+var _updSeen=null,_updBusy=false;
+function _safeReload(){
+ if(document.querySelector('.ovl'))return false;                       // a sheet/overlay is open
+ var a=document.activeElement,tn=a?a.tagName:'';
+ if(tn==='INPUT'||tn==='TEXTAREA'||tn==='SELECT')return false;         // mid typing
+ if(typeof cart!=='undefined'&&cart&&cart.items&&cart.items.length)return false; // order in progress
+ return true;
+}
+function _doReload(){location.replace(location.pathname+'?v='+_updSeen);}
+function _applyUpd(){ if(_safeReload())_doReload(); else _showUpdBanner(); }
+function _showUpdBanner(){
+ if(document.getElementById('updbar'))return;
+ var b=document.createElement('div');b.id='updbar';
+ b.style.cssText='position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);z-index:60;background:var(--acc);color:#fff;border-radius:13px;padding:11px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(10,79,86,.35);font-weight:700;font-size:13.5px';
+ b.innerHTML='<span style="flex:1">גרסה חדשה זמינה</span><button id="updgo" style="background:#fff;color:var(--acc);border:none;border-radius:9px;padding:7px 15px;font-weight:700;font-size:13px;cursor:pointer">רענון</button>';
+ document.body.appendChild(b);
+ document.getElementById('updgo').onclick=_doReload;
+}
+function checkUpdate(){
+ if(_updBusy)return;_updBusy=true;
+ fetch('index.html?vc='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
+  _updBusy=false;var m=t.match(/APP_VERSION='([^']+)'/);
+  if(m&&m[1]&&m[1]!==APP_VERSION){_updSeen=m[1];_applyUpd();}
+ }).catch(function(){_updBusy=false;});
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden){if(_updSeen)_applyUpd();else checkUpdate();}});
 
 function homeView(){
  shell('<div style="background:var(--acc);padding:16px 16px 44px"><div style="color:#cfe6e8;font-size:13px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div><div id="hi" style="color:#fff;font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:2px">שלום'+(me?', '+esc(me.name):'…')+'</div><button data-go="catalog" style="margin-top:14px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button></div><div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><button class="card" data-go="customers" style="text-align:right;border:none;background:var(--accs);box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--accd);font-weight:700">לקוחות פעילים</div><div id="s1" style="font-size:26px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin-top:2px">…</div><div id="s2" style="font-size:12px;color:var(--mut);margin-top:1px"></div></button><button class="card" data-go="collections" style="text-align:right;border:none;background:var(--bads);box-shadow:0 6px 18px rgba(36,33,29,.06);cursor:pointer;color:inherit"><div style="font-size:12px;color:var(--badd);font-weight:700">חוב פתוח</div><div id="s3" style="font-size:22px;font-weight:700;color:var(--bad);letter-spacing:-.01em;margin-top:2px">…</div><div id="s4" style="font-size:12px;color:var(--mut);margin-top:1px"></div></button></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px"><button class="card qa" data-go="route" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🚚</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">מסלול</div></button><button class="card qa" data-go="visits" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📍</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">ביקורים</div></button><button class="card qa" data-go="reports" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">📊</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">דוחות</div></button><button class="card qa" data-go="targets" style="border:none;cursor:pointer;color:inherit;text-align:center;padding:14px 4px"><div style="font-size:21px">🎯</div><div style="font-size:11.5px;font-weight:700;margin-top:4px">יעדים</div></button></div><button class="card" data-go="broadcast" style="border:none;cursor:pointer;color:inherit;display:flex;align-items:center;gap:11px;box-shadow:0 6px 18px rgba(36,33,29,.06);padding:14px 16px"><div style="font-size:23px">📣</div><div style="text-align:right"><div style="font-size:14.5px;font-weight:700;color:var(--head)">תפוצה ללקוחות</div><div style="font-size:11.5px;color:var(--mut)">משלוחים · פרסומים · קטלוגים</div></div></button><div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים. הזמנות, גבייה, מסלול, ביקורים, תפוצה ויעדים.</div><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
