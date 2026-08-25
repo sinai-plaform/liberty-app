@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-11';
+var APP_VERSION='2026-08-25-12';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -130,7 +130,7 @@ function confirmModal(msg,onYes,yesLabel){
  document.getElementById('cm_yes').onclick=function(){ov.remove();onYes()};
 }
 // ---------- order notifications (one-tap from agent's own email/WhatsApp) ----------
-var ORDER_EMAILS='libertyrezovation@gmail.com,sales3@libertyisrael.co.il';
+var ORDER_EMAILS='sales3@libertyisrael.co.il';
 var ORDER_WA='972545030607';
 var cartPaidOnSpot=true;
 function buildOrderText(custName,items,t,isUpdate){
