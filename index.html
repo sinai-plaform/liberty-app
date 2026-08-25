@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-10';
+var APP_VERSION='2026-08-25-11';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -172,6 +172,7 @@ function nnOrder(stops,origin){var pts=stops.filter(function(s){return s.lat!=nu
 function mapsUrl(origin,stops){var pts=[[origin.lat,origin.lng]];stops.forEach(function(s){if(s.lat!=null)pts.push([s.lat,s.lng])});var path=pts.map(function(p){return p[0]+','+p[1]}).join('/');return 'https://www.google.com/maps/dir/'+path}
 function waLink(phone,text){if(!phone)return null;var p=(''+phone).replace(/[^0-9]/g,'');if(p[0]==='0')p='972'+p.slice(1);return 'https://wa.me/'+p+(text?('?text='+encodeURIComponent(text)):'')}
 function wazeUrl(lat,lng){return 'https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes'}
+function custPhone(id){try{for(var i=0;i<(LOC.phones||[]).length;i++){if(LOC.phones[i].customer_id===id&&LOC.phones[i].phone)return LOC.phones[i].phone;}}catch(e){}return null;}
 // ---- daily route persistence ----
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function localDate(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -595,7 +596,7 @@ function qaBtn(go,label,icon){return '<button class="card qa" data-go="'+go+'" s
 function workDaysLeft(){var now=new Date();var y=now.getFullYear(),m=now.getMonth();var end=new Date(y,m+1,0).getDate();var c=0;for(var day=now.getDate();day<=end;day++){var dw=new Date(y,m,day).getDay();if(dw>=0&&dw<=4)c++;}return c;}
 function homeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=qaBtn('route','מסלול','route')+qaBtn('visits','ביקורים','visits')+qaBtn('mystats','הנתונים שלי','stats')+qaBtn('reports','דוחות','reports')+qaBtn('targets','יעדים','targets')+qaBtn('newcust','לקוח חדש','newcust')+qaBtn('broadcast','תפוצה','broadcast')+(isMgr()?qaBtn('prodadmin','ניהול','admin'):'');
+ var qa=qaBtn('route','מסלול','route')+qaBtn('visits','ביקורים','visits')+qaBtn('mystats','הנתונים שלי','stats')+qaBtn('reports','דוחות','reports')+qaBtn('newcust','לקוח חדש','newcust')+qaBtn('broadcast','תפוצה','broadcast')+(isMgr()?qaBtn('prodadmin','ניהול','admin'):'');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -620,14 +621,30 @@ function renderHomeRoute(){
  var ids=routeArea?Object.keys(routeSel).filter(function(k){return routeSel[k];}):[];
  if(!ids.length){if($('hsub'))$('hsub').textContent='עדיין לא תוכנן מסלול להיום';el.innerHTML='<button data-go="route" class="card" style="border:none;cursor:pointer;color:inherit;display:flex;align-items:center;gap:11px;box-shadow:0 6px 18px rgba(36,33,29,.06);padding:14px 16px;width:100%;text-align:right"><span style="width:40px;height:40px;border-radius:11px;background:var(--accs);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+svgIcon('route')+'</span><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--head)">תכנון מסלול היום</div><div style="font-size:11.5px;color:var(--mut)">בחרי אזור ולקוחות ובנה מסלול נסיעה</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>';var b0=el.querySelector('[data-go]');if(b0)b0.onclick=function(){route='route';render();};return;}
  LQ(function(){return LOC.customers.filter(function(c){return ids.indexOf(c.id)>-1})}).then(function(r){
-  var d=r.data||[];var byId={};d.forEach(function(c){byId[c.id]=c;});
-  var ordered=ids.map(function(id){return byId[id];}).filter(Boolean);
+  var d=r.data||[];var o=getOrigin();var ordered=nnOrder(d,o);
   if($('hsub'))$('hsub').textContent=ordered.length+' עצירות מתוכננות היום';
-  var shown=Math.min(3,ordered.length);var rows='';
-  ordered.slice(0,3).forEach(function(c,i){rows+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0'+(i<shown-1?';border-bottom:1px solid var(--line2)':'')+'"><span style="width:24px;height:24px;border-radius:50%;background:var(--accs);color:var(--accd);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(c.city||'')+'</div></div></div>';});
-  var more=ordered.length>3?'<div style="text-align:center;font-size:12px;color:var(--acc);font-weight:700;padding-top:9px">+ '+(ordered.length-3)+' עצירות נוספות</div>':'';
-  el.innerHTML='<button data-go="route" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right;box-shadow:0 6px 18px rgba(36,33,29,.06);width:100%"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px"><div style="font-size:14px;font-weight:700;color:var(--head)">המסלול של היום</div><div style="font-size:12px;color:var(--mut);font-weight:600">'+ordered.length+' עצירות ›</div></div>'+rows+more+'</button>';
-  var b1=el.querySelector('[data-go]');if(b1)b1.onclick=function(){route='route';render();};
+  routeDoneSet(todayStr(),function(doneSet){
+   if(route!=='home')return;var e2=$('routecard');if(!e2)return;
+   var doneCount=ordered.filter(function(c){return doneSet[c.id];}).length;
+   var next=null;for(var i=0;i<ordered.length;i++){if(!doneSet[ordered[i].id]){next=ordered[i];break;}}
+   if(!next){e2.innerHTML='<div class="card" style="background:var(--goods);text-align:center;box-shadow:0 6px 18px rgba(36,33,29,.06)"><div style="font-size:14.5px;font-weight:800;color:var(--goodd)">🎉 כל '+ordered.length+' היעדים הושלמו</div><button data-go="route" style="margin-top:9px;width:100%;height:42px;border:none;border-radius:11px;background:#fff;color:var(--accd);font-weight:700;cursor:pointer">🏁 סיום יום ודוח ›</button></div>';var bb=e2.querySelector('[data-go]');if(bb)bb.onclick=function(){route='route';render();};return;}
+   var idx=ordered.indexOf(next)+1;var ph=custPhone(next.id);
+   var wa=ph?waLink(ph,''):null;
+   var navHref=(next.lat!=null)?('https://www.google.com/maps/dir/?api=1&destination='+next.lat+','+next.lng):('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((next.name||'')+' '+(next.city||'')));
+   var nowD=new Date(),op=next.opening_hours?isOpenAt(next.opening_hours,nowD.getDay(),nowD.getHours()*60+nowD.getMinutes()):null;
+   var stateBadge=op===true?' <span class="badge b-good" style="font-size:9px">🟢 פתוח</span>':(op===false?' <span class="badge b-bad" style="font-size:9px">🔴 סגור</span>':'');
+   function act(icon,label,href,bid){var st='flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;text-decoration:none;color:var(--acc);font-weight:700;font-size:11px;cursor:pointer;background:none;border:none;border-inline-start:1px solid var(--line2)';var inner='<span style="font-size:17px">'+icon+'</span><span>'+label+'</span>';return href?('<a href="'+href+'"'+(href.indexOf('tel:')===0?'':' target="_blank" rel="noopener"')+' style="'+st+'">'+inner+'</a>'):('<button id="'+bid+'" style="'+st+'">'+inner+'</button>');}
+   var acts=(ph?act('📞','חיוג','tel:'+ph):'')+(wa?act('💬','הודעה',wa):'')+act('🧭','ניווט',navHref)+act('📝','ביקור',null,'hr_visit');
+   e2.innerHTML='<div class="card" style="box-shadow:0 6px 18px rgba(36,33,29,.06);padding:0;overflow:hidden">'+
+     '<div id="hr_top" style="cursor:pointer;padding:13px 15px 11px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div style="font-size:11.5px;color:var(--acc);font-weight:800">היעד הבא · '+idx+' מתוך '+ordered.length+'</div><div style="font-size:12px;color:var(--mut);font-weight:600">כל המסלול ›</div></div>'+
+       '<div style="font-size:16px;font-weight:800;color:var(--head);line-height:1.25">'+esc(next.name)+stateBadge+'</div>'+
+       '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+esc(next.city||'')+(next.opening_hours?' · 🕒 '+esc(next.opening_hours):'')+(doneCount?' · '+doneCount+' בוצעו':'')+'</div>'+
+     '</div>'+
+     '<div style="display:flex;border-top:1px solid var(--line2)">'+acts+'</div>'+
+   '</div>';
+   if($('hr_top'))$('hr_top').onclick=function(){route='route';render();};
+   if($('hr_visit'))$('hr_visit').onclick=function(){visitTarget={id:next.id,name:next.name};_visitFrom='home';route='visits';render();};
+  });
  });
 }
 
@@ -1318,11 +1335,19 @@ function routeView(){
     // nearby prospect suggestions (existing potential customers + map search for new ones)
     var selPts=withGeo,clat=o.lat,clng=o.lng;if(selPts.length){var _la=0,_lo=0;selPts.forEach(function(s){_la+=s.lat;_lo+=s.lng});clat=_la/selPts.length;clng=_lo/selPts.length;}
     var prospects=[];if(selPts.length){d.forEach(function(c){if(routeSel[c.id]||c.lat==null)return;if(!(c.lifecycle==='potential'||c.potential_level==='high'))return;var best=1e9;selPts.forEach(function(s){var dd=hav(s,c);if(dd<best)best=dd});if(best<=3.0)prospects.push({c:c,d:best})});prospects.sort(function(a,b){return a.d-b.d});prospects=prospects.slice(0,6);}
+    // collection revisits — debt over 90 days (same area, not already in route)
+    var collectList=d.filter(function(c){return !routeSel[c.id]&&c.debt_agorot>0&&collAge(c)!=null&&collAge(c)>90;});
+    collectList.sort(function(a,b){return (b.debt_agorot||0)-(a.debt_agorot||0);});collectList=collectList.slice(0,6);
+    var ccard='';
+    if(collectList.length){ccard='<div class="card" style="background:var(--bads);border:1px solid #e6c3bd;margin-top:10px"><div style="font-size:13px;font-weight:800;color:var(--bad);margin-bottom:4px">🔴 לגבייה — חוב מעל 90 יום</div><div style="font-size:11.5px;color:var(--bad);margin-bottom:6px">כדאי לשלב ביקור גבייה — הוסיפי למסלול:</div>';
+     collectList.forEach(function(c){var ph=custPhone(c.id);var age=collAge(c);ccard+='<div style="background:#fff;display:flex;align-items:center;gap:8px;padding:9px 11px;margin:6px 0;border-radius:11px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--bad);font-weight:600">חוב '+ils(c.debt_agorot)+' · '+age+' ימים'+(c.city?' · '+esc(c.city):'')+'</div></div>'+(ph?'<a href="tel:'+esc(ph)+'" style="width:34px;height:34px;border-radius:9px;background:var(--accs);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:15px">📞</a>':'')+'<button class="paddp" data-id="'+c.id+'" style="height:34px;padding:0 12px;border:none;border-radius:9px;background:var(--acc);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer">+ הוסף</button></div>';});
+     ccard+='</div>';}
     var pcard='<div class="card" style="background:var(--accs);margin-top:10px"><div style="font-size:13px;font-weight:800;color:var(--accd);margin-bottom:4px">🔍 עסקים פוטנציאליים בקרבת המסלול</div>';
-    if(prospects.length){pcard+='<div style="font-size:11.5px;color:var(--accd);margin-bottom:6px">לקוחות פוטנציאליים קרובים שלא במסלול — הוסיפי בלחיצה:</div>';prospects.forEach(function(p){pcard+='<div style="background:#fff;display:flex;align-items:center;gap:9px;padding:9px 11px;margin:6px 0;border-radius:11px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(p.c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.c.city||'')+' · '+p.d.toFixed(1)+' ק״מ מהמסלול'+(p.c.potential_level==='high'?' · <span style="color:var(--warn);font-weight:700">פוטנציאל גבוה</span>':'')+'</div></div><button class="paddp" data-id="'+p.c.id+'" style="height:34px;padding:0 13px;border:none;border-radius:9px;background:var(--acc);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer">+ הוסף</button></div>'});}
-    else{pcard+='<div style="font-size:11.5px;color:var(--accd);margin-bottom:6px">אין לקוחות פוטנציאליים רשומים קרוב למסלול. חפשי עסקים חדשים בקרבת מקום:</div>';}
-    pcard+='<div style="display:flex;gap:7px;margin-top:8px"><a href="https://www.google.com/maps/search/'+encodeURIComponent('בית מרקחת פרטי')+'/@'+clat+','+clng+',14z" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#fff;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:11.5px;font-weight:700;color:var(--accd)">🏥 בתי מרקחת סביב</a><a href="https://www.google.com/maps/search/'+encodeURIComponent('מרפאת שיניים פרטית')+'/@'+clat+','+clng+',14z" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#fff;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:11.5px;font-weight:700;color:var(--accd)">🦷 מרפאות שיניים סביב</a></div></div>';
-    h+=pcard;
+    if(prospects.length){pcard+='<div style="font-size:11.5px;color:var(--accd);margin-bottom:6px">לקוחות פוטנציאליים קרובים שלא במסלול — הוסיפי בלחיצה:</div>';prospects.forEach(function(p){var ph=custPhone(p.c.id);var reasons=[p.d.toFixed(1)+' ק״מ מהמסלול'];if(p.c.potential_level==='high')reasons.push('פוטנציאל גבוה');if(p.c.opening_hours)reasons.push('שעות פתיחה ידועות');if(ph)reasons.push('יש טלפון');pcard+='<div style="background:#fff;display:flex;align-items:center;gap:8px;padding:9px 11px;margin:6px 0;border-radius:11px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(p.c.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.c.city||'')+' · '+reasons.join(' · ')+'</div></div>'+(ph?'<a href="tel:'+esc(ph)+'" style="width:34px;height:34px;border-radius:9px;background:var(--sur);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:15px">📞</a>':'')+'<button class="paddp" data-id="'+p.c.id+'" style="height:34px;padding:0 12px;border:none;border-radius:9px;background:var(--acc);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer">+ הוסף</button></div>'});}
+    else{pcard+='<div style="font-size:11.5px;color:var(--accd);margin-bottom:6px">אין לקוחות פוטנציאליים רשומים קרוב למסלול. חפשי עסקים חדשים בקרבת מקום (עדיפות למי שיש טלפון):</div>';}
+    pcard+='<div style="display:flex;gap:7px;margin-top:8px"><a href="https://www.google.com/maps/search/'+encodeURIComponent('בית מרקחת פרטי')+'/@'+clat+','+clng+',14z" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#fff;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:11.5px;font-weight:700;color:var(--accd)">🏥 בתי מרקחת סביב</a><a href="https://www.google.com/maps/search/'+encodeURIComponent('מרפאת שיניים פרטית')+'/@'+clat+','+clng+',14z" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:9px;background:#fff;border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:11.5px;font-weight:700;color:var(--accd)">🦷 מרפאות שיניים סביב</a></div>';
+    pcard+='<div style="font-size:10.5px;color:var(--accd);margin-top:7px;line-height:1.5">הקישורים פותחים בגוגל מפות עסקים פרטיים סביב המסלול — עם טלפון, כתובת ושעות פתיחה. עסק שנראה מתאים — הוסיפי כלקוח חדש דרך «לקוח חדש».</div></div>';
+    h+=ccard+pcard;
     if(!planningFuture)h+='<button class="cta" id="endday" style="background:var(--bad);margin-top:14px">🏁 סיום יום ויצירת דוח</button>';
     $('res').innerHTML=h+'<div style="height:20px"></div>';
     if($('backtoday'))$('backtoday').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};
