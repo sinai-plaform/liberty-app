@@ -102,12 +102,13 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-12';
+var APP_VERSION='2026-08-25-13';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
 var $=function(id){return document.getElementById(id)};
 var VAT=0.18;
+var MIN_ORDER=60000; // מינימום להזמנה: 600 ₪ (באגורות) — נמדד מול סכום הביניים (לפני מע״מ)
 var ils=function(a){return a==null?'—':'₪'+(a/100).toLocaleString('he-IL',{maximumFractionDigits:2})};
 var esc=function(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
 var route='home';
@@ -1068,6 +1069,7 @@ function discLabel(){var D=cart.discount;if(!D||!D.value)return '';var v=D.kind=
 function ordersView(){
  var t=cartTotals();
  var _units=0;for(var _u=0;_u<cart.items.length;_u++)_units+=cart.items[_u].qty;
+ var belowMin=cart.items.length>0&&t.sub<MIN_ORDER;var missMin=MIN_ORDER-t.sub;
  var custBtn=cart.cust?('<div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח</div><div style="font-size:15.5px;font-weight:800">'+esc(cart.cust.name)+'</div></div><button id="chgcust" class="chip">שינוי</button></div>'):('<button id="pickcust" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">בחירת לקוח להזמנה</button>');
  var lines='';
  for(var i=0;i<cart.items.length;i++){var it=cart.items[i];
@@ -1090,6 +1092,7 @@ function ordersView(){
   (cart.items.length?'<button id="discbtn" style="width:100%;height:42px;background:#fff;border:1px dashed var(--acc);color:var(--acc);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">🎁 '+(cart.discount&&cart.discount.value?'שינוי הטבת סוכן':'הטבת סוכן / הנחה')+'</button>':'')+
   '<div class="card" style="background:var(--surq)"><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">סכום ביניים · '+_units+' יח׳</span><b>'+ils(t.sub)+'</b></div>'+(t.disc>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--good)"><span style="font-weight:700">🎁 '+esc(discLabel())+'</span><b>−'+ils(t.disc)+'</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(t.vat)+'</b></div>'+(t.freeq>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--warnd)"><span>🎁 יח׳ בונוס חינם</span><b>'+t.freeq+' יח׳</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:18px;padding:9px 0 2px;border-top:1px solid var(--line);margin-top:5px"><span style="font-weight:700;color:var(--head)">סה״כ לתשלום</span><b style="color:var(--acc);letter-spacing:-.01em">'+ils(t.total)+'</b></div></div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">תשלום</div><div style="display:flex;gap:8px"><button class="chip pos'+(cartPaidOnSpot?' on':'')+'" data-p="1" style="flex:1">✅ שולם במקום</button><button class="chip pos'+(cartPaidOnSpot?'':' on')+'" data-p="0" style="flex:1">🧾 לחיוב / חוב</button></div>'+(cartPaidOnSpot?'':'<div style="font-size:11.5px;color:var(--warn);margin-top:7px;font-weight:600">ההזמנה תירשם כחוב על הלקוח</div>')+'</div>'+
+  (belowMin?'<div class="card" style="background:#fff4e5;border:1px solid #f0c98a;padding:12px 14px"><div style="font-size:13.5px;font-weight:800;color:var(--warnd)">⚠️ מתחת למינימום הזמנה</div><div style="font-size:12.5px;color:var(--warn);margin-top:4px;font-weight:600">מינימום להזמנה הוא ₪600 (לפני מע״מ). חסרים עוד '+ils(missMin)+'.</div></div>':'')+
   '<button class="cta" id="saveord"'+((!cart.cust||!cart.items.length)?' disabled':'')+'>'+(editingOrderId?'עדכון הזמנה · ':'שמירת הזמנה · ')+ils(t.total)+'</button>'+
   '</div>');
  var pos=document.querySelectorAll('.pos');for(var pi=0;pi<pos.length;pi++){pos[pi].onclick=function(){cartPaidOnSpot=this.getAttribute('data-p')==='1';render()}}
@@ -1097,7 +1100,7 @@ function ordersView(){
  $('myord').onclick=function(e){e.preventDefault();if(editingOrderId){editingOrderId=null;cart={cust:null,items:[]}}route='myorders';render()};
  if($('pickcust'))$('pickcust').onclick=openCustPicker;
  if($('chgcust'))$('chgcust').onclick=openCustPicker;
- if($('saveord'))$('saveord').onclick=saveOrder;
+ if($('saveord'))$('saveord').onclick=function(){saveOrder();};
  var steps=document.querySelectorAll('.step button');for(var s=0;s<steps.length;s++){steps[s].onclick=function(){var i=+this.getAttribute('data-i'),d=+this.getAttribute('data-d');cart.items[i].qty+=d;if(cart.items[i].qty<=0)cart.items.splice(i,1);render()}}
  var qis=document.querySelectorAll('.qtyin');for(var qq=0;qq<qis.length;qq++){qis[qq].onclick=function(e){e.stopPropagation();this.select()};qis[qq].onchange=function(){var i=+this.getAttribute('data-i');var v=parseInt(this.value,10);if(isNaN(v)||v<=0){cart.items.splice(i,1)}else{cart.items[i].qty=v}render()}}
  var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}LQ(function(){return prodSearch(q,8)}).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
@@ -1126,9 +1129,11 @@ function openCustPicker(){
  function run(){var q=$('cpq').value.trim();var qu=LQ(function(){return custFilter(q,true).slice(0,60)});qu.then(function(r){var h='';(r.data||[]).forEach(function(c){h+='<div class="card cpi" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="cursor:pointer"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+'</div></div>'});$('cpl').innerHTML=h;var ci=document.querySelectorAll('.cpi');for(var i=0;i<ci.length;i++){ci[i].onclick=function(){cart.cust={id:this.getAttribute('data-id'),name:this.getAttribute('data-name')};o.remove();render()}}})}
  $('cpq').addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(run,150)});run();
 }
-function saveOrder(){
- if(!cart.cust||!cart.items.length||!me)return;$('saveord').disabled=true;$('saveord').textContent='שומר…';
+function saveOrder(force){
+ if(!cart.cust||!cart.items.length||!me)return;
  var t=cartTotals();
+ if(!force&&t.sub<MIN_ORDER){confirmModal('סכום ההזמנה '+ils(t.sub)+' נמוך מהמינימום ₪600 (לפני מע״מ). חסרים עוד '+ils(MIN_ORDER-t.sub)+'. לשמור בכל זאת?',function(){saveOrder(true);},'שמירה בכל זאת');return;}
+ $('saveord').disabled=true;$('saveord').textContent='שומר…';
  var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
  var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;route='myorders';render()};
