@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-27';
+var APP_VERSION='2026-08-26-28';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -990,7 +990,7 @@ function teamRangeBounds(){
 }
 function teamRangeLabel(){return {today:'היום','7':'7 ימים','30':'30 יום',year:'מתחילת השנה',custom:'טווח נבחר'}[_teamRange.mode]||'';}
 function teamView(){
- shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">צוות</div><div style="color:#cfe6e8;font-size:12px">סקירה ופעילות · לפי טווח תאריכים</div></div></div></div><div class="list" id="res"></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">צוות ופעילות</div><div style="color:#cfe6e8;font-size:12px">ביצועי הצוות ותיעוד הפעולות · לפי טווח תאריכים</div></div></div></div><div class="list" id="res"></div>');
  bindGo();
  var rng=[['today','היום'],['7','7 ימים'],['30','30 יום'],['year','השנה'],['custom','תאריכים']];
  var rchips=rng.map(function(c){return '<button class="trchip chip'+(_teamRange.mode===c[0]?' on':'')+'" data-r="'+c[0]+'" style="white-space:nowrap;flex:none">'+c[1]+'</button>';}).join('');
@@ -1463,12 +1463,43 @@ function loadAreas(){
   window.__areas=areas;window.__arealist=areas.map(function(a){return {code:a.code,name:a.name}});
   var h='';
   areas.forEach(function(a){
-   h+='<div class="card"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">'+a.code+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:1.3">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11.5px;color:var(--mut)">'+(cnt[a.code]||0)+' לקוחות</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button class="chip aren" data-id="'+a.id+'" data-code="'+a.code+'" data-name="'+esc(a.name||'')+'">✏️ שם</button><button class="chip acust" data-code="'+a.code+'" data-name="'+esc(a.name||('אזור '+a.code))+'">👥 לקוחות</button></div></div>';
+   h+='<div class="card"><div style="display:flex;align-items:center;gap:10px"><div style="width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">'+a.code+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;line-height:1.3">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11.5px;color:var(--mut)">'+(cnt[a.code]||0)+' לקוחות</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><button class="chip aren" data-id="'+a.id+'" data-code="'+a.code+'" data-name="'+esc(a.name||'')+'">✏️ שם</button><button class="chip aagent" data-id="'+a.id+'" data-code="'+a.code+'" data-name="'+esc(a.name||('אזור '+a.code))+'">👤 סוכנים</button><button class="chip acust" data-code="'+a.code+'" data-name="'+esc(a.name||('אזור '+a.code))+'">👥 לקוחות</button></div></div>';
   });
   $('res').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין אזורים.</div>';
   var rn=document.querySelectorAll('.aren');for(var i=0;i<rn.length;i++){rn[i].onclick=function(){renameAreaSheet({id:this.getAttribute('data-id'),code:this.getAttribute('data-code'),name:this.getAttribute('data-name')})}}
   var cu=document.querySelectorAll('.acust');for(var j=0;j<cu.length;j++){cu[j].onclick=function(){areaCustomers({code:+this.getAttribute('data-code'),name:this.getAttribute('data-name')})}}
+  var ag=document.querySelectorAll('.aagent');for(var k=0;k<ag.length;k++){ag[k].onclick=function(){areaAgents({id:this.getAttribute('data-id'),code:+this.getAttribute('data-code'),name:this.getAttribute('data-name')})}}
  });
+}
+function areaAgents(area){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px;flex:1;min-width:0">👤 סוכנים · '+esc(area.name)+'</b><span class="agsx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div style="font-size:12px;color:var(--mut);padding:2px 2px 6px">סמני אילו סוכנים מכסים את האזור. אם האזור כבר משוייך, תיפתח בחירה כיצד לשייך.</div><div id="ags_list"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div><button class="cta" id="ags_go">שמירה</button><div id="ags_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
+ document.body.appendChild(ov);var changed=false;
+ var close=function(){ov.remove();if(changed)loadAreas();};
+ ov.querySelector('.agsx').onclick=close;ov.onclick=function(e){if(e.target===ov)close();};
+ var byId={},ownCount={};
+ Promise.all([sb.from('liberty_team_agents').select('id,name,role,active').order('name'),sb.from('liberty_agent_areas').select('agent_id').eq('area_id',area.id),sb.from('liberty_customers').select('agent_id').eq('area_id',area.id)]).then(function(res){
+  var agentsArr=((res[0]&&res[0].data)||[]).filter(function(a){return a.role==='agent'&&a.active;});
+  agentsArr.forEach(function(a){byId[a.id]=a;});window.__agentsById=Object.assign(window.__agentsById||{},byId);
+  var coverSet={};((res[1]&&res[1].data)||[]).forEach(function(r){coverSet[r.agent_id]=1;});
+  ((res[2]&&res[2].data)||[]).forEach(function(c){if(c.agent_id)ownCount[c.agent_id]=(ownCount[c.agent_id]||0)+1;});
+  var domOwner=null,bn=-1;for(var kk in ownCount){if(ownCount[kk]>bn){bn=ownCount[kk];domOwner=kk;}}
+  var h=agentsArr.map(function(a){var mine=coverSet[a.id];return '<label class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;margin:4px 0"><input type="checkbox" class="agschk" data-id="'+a.id+'" data-name="'+esc(a.name)+'" data-was="'+(mine?'1':'0')+'"'+(mine?' checked':'')+' style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(a.name)+'</div>'+((ownCount[a.id])?'<div style="font-size:11px;color:var(--mut)">'+ownCount[a.id]+' לקוחות באזור</div>':'')+'</div></label>';}).join('');
+  $('ags_list').innerHTML=h||'<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין סוכנים פעילים.</div>';
+  $('ags_go').onclick=function(){
+   var chks=document.querySelectorAll('.agschk'),ops=[],conflicts=[];
+   for(var i=0;i<chks.length;i++){var c=chks[i],was=c.getAttribute('data-was')==='1',now=c.checked,aid=c.getAttribute('data-id'),an=c.getAttribute('data-name');
+    if(now&&!was){if(domOwner&&domOwner!==aid)conflicts.push({id:aid,name:an});else ops.push({agent:aid,mode:'swap'});}
+    else if(!now&&was)ops.push({agent:aid,mode:'remove'});
+   }
+   if(!ops.length&&!conflicts.length){close();return;}
+   var b=$('ags_go');b.disabled=true;b.textContent='שומר…';
+   var run=function(){if(!ops.length){close();return;}Promise.all(ops.map(function(o){return sb.rpc('liberty_area_assign',{p_area:area.id,p_agent:o.agent,p_mode:o.mode});})).then(function(){changed=true;close();},function(e){if($('ags_err'))$('ags_err').textContent='שגיאה: '+((e&&e.message)||'');b.disabled=false;b.textContent='שמירה';});};
+   var oname=domOwner&&byId[domOwner]?byId[domOwner].name:'';
+   var qi=0,next=function(){if(qi>=conflicts.length){run();return;}var a=conflicts[qi++];areaChoiceModal(area.name,oname,a.name,function(mode){if(mode==='swap')ops.push({agent:a.id,mode:'swap'});else if(mode==='shared'||mode==='scratch')ops.push({agent:a.id,mode:'cover'});else if(mode==='partial'){areaPartialPicker(area.id,area.name,a.id,a.name,function(){changed=true;ops.push({agent:a.id,mode:'cover'});next();});return;}next();});};
+   next();
+  };
+ },function(){if($('ags_list'))$('ags_list').innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינה</div>';});
 }
 function renameAreaSheet(a){
  var ov=document.createElement('div');ov.className='ovl';
