@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-18';
+var APP_VERSION='2026-08-25-19';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -643,7 +643,7 @@ function loadTeamData(cb){
 function mgrQa(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
 function mgrHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=mgrQa('team','צוות','stats')+mgrQa('agents','ניהול סוכנים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('catalog','קטלוג','targets')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
+ var qa=mgrQa('team','צוות','stats')+mgrQa('agents','ניהול סוכנים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -673,6 +673,60 @@ function mgrHomeView(){
  });
 }
 function openAgentDash(id){_dashAgent=id;route='agentdash';render();}
+function agentsView(){
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">ניהול סוכנים</div><div style="color:#cfe6e8;font-size:12px">הוספה, השבתה, תפקיד ואיפוס קוד</div></div><button id="agnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ סוכן</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ bindGo();
+ if($('agnew'))$('agnew').onclick=function(){openAgentEditor(null);};
+ loadAgents();
+}
+function loadAgents(){
+ sb.from('liberty_team_agents').select('*').order('role').then(function(r){
+  if(route!=='agents')return;var d=(r&&r.data)||[];window.__agents=d;
+  var byId={};d.forEach(function(a){byId[a.id]=a;});window.__agentsById=byId;
+  var roleHe={agent:'סוכן',manager:'מנהל',office:'משרד',admin:'אדמין'};
+  var h='';
+  d.forEach(function(a){var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
+   h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
+  $('res').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' משתמשים · הקישי לעריכה</div>'+h;
+  var it=document.querySelectorAll('.agedit');for(var i=0;i<it.length;i++){it[i].onclick=function(){openAgentEditor(window.__agentsById[this.getAttribute('data-id')]);};}
+ },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה: '+esc((e&&e.message)||'')+'</div>';});
+}
+function openAgentEditor(a){
+ var isNew=!a;var mgrs=(window.__agents||[]).filter(function(x){return x.role==='manager'||x.role==='admin';});
+ var roleOpts=[['agent','סוכן'],['manager','מנהל'],['office','משרד']].map(function(r){return '<option value="'+r[0]+'"'+((a&&a.role===r[0])||(isNew&&r[0]==='agent')?' selected':'')+'>'+r[1]+'</option>';}).join('');
+ var mgrOpts='<option value="">— ללא —</option>'+mgrs.map(function(m){return '<option value="'+m.id+'"'+((a&&a.manager_id===m.id)?' selected':'')+'>'+esc(m.name)+'</option>';}).join('');
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(isNew?'סוכן חדש':'עריכת '+esc(a.name))+'</b><span id="agx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  '<div class="card"><label style="display:block"><span class="lbl">שם מלא</span><input id="ag_name" class="field" value="'+(a?esc(a.name):'')+'"></label><div style="display:flex;gap:9px;margin-top:10px"><label style="flex:1"><span class="lbl">קוד עובד'+(isNew?'':' (קבוע)')+'</span><input id="ag_code" class="field" inputmode="numeric" value="'+(a?esc(a.employee_code||''):'')+'"'+(isNew?'':' disabled')+'></label><label style="flex:1"><span class="lbl">טלפון</span><input id="ag_phone" class="field" inputmode="tel" value="'+(a?esc(a.phone||''):'')+'"></label></div></div>'+
+  '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תפקיד</span><select id="ag_role" class="field">'+roleOpts+'</select></label><label style="flex:1"><span class="lbl">כפוף למנהל</span><select id="ag_mgr" class="field">'+mgrOpts+'</select></label></div></div>'+
+  '<div class="card"><label style="display:block"><span class="lbl">'+(isNew?'קוד אישי (PIN) — לפחות 4 ספרות':'איפוס קוד אישי (השאירי ריק לשמירה)')+'</span><input id="ag_pin" class="field" inputmode="numeric" placeholder="'+(isNew?'PIN לכניסה':'PIN חדש (אופציונלי)')+'"></label>'+(isNew?'':'<label style="display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag_active"'+(a.active?' checked':'')+'> סוכן פעיל</label>')+'</div>'+
+  '<button class="cta" id="ag_save">'+(isNew?'יצירת סוכן':'שמירת שינויים')+'</button>'+
+  '<div id="ag_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
+  '</div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('agx').onclick=function(){ov.remove();};
+ $('ag_save').onclick=function(){
+  var name=$('ag_name').value.trim(),phone=$('ag_phone').value.trim()||null,role=$('ag_role').value,mgr=$('ag_mgr').value||null,pin=$('ag_pin').value.trim();
+  var err=$('ag_err');err.textContent='';
+  if(!name){err.textContent='נא למלא שם';return;}
+  var btn=$('ag_save');btn.disabled=true;btn.textContent='שומר…';
+  if(isNew){
+   var code=$('ag_code').value.trim();
+   if(!code||!pin){err.textContent='נא למלא קוד עובד ו-PIN';btn.disabled=false;btn.textContent='יצירת סוכן';return;}
+   sb.functions.invoke('manage-agent',{body:{action:'create',code:code,pin:pin,name:name,role:role,phone:phone,manager_id:mgr}}).then(function(r){
+    if(r.error||(r.data&&r.data.error)){err.textContent=(r.data&&r.data.error)||r.error.message||'שגיאה';btn.disabled=false;btn.textContent='יצירת סוכן';return;}
+    toast('הסוכן נוצר ✓');ov.remove();loadAgents();
+   },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='יצירת סוכן';});
+  } else {
+   var upd={name:name,phone:phone,role:role,manager_id:mgr,active:$('ag_active').checked};
+   sb.from('liberty_team_agents').update(upd).eq('id',a.id).then(function(r1){
+    if(r1&&r1.error){err.textContent='שגיאה: '+r1.error.message;btn.disabled=false;btn.textContent='שמירת שינויים';return;}
+    var done=function(){toast('עודכן ✓');ov.remove();loadAgents();};
+    if(pin){sb.functions.invoke('manage-agent',{body:{action:'reset_pin',id:a.id,pin:pin}}).then(function(r2){if(r2.error||(r2.data&&r2.data.error)){err.textContent='הפרטים נשמרו אך איפוס ה-PIN נכשל: '+((r2.data&&r2.data.error)||r2.error.message);btn.disabled=false;btn.textContent='שמירת שינויים';return;}done();},function(){done();});}
+    else done();
+   },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='שמירת שינויים';});
+  }
+ };
+}
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 function teamView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">סקירת צוות</div><div style="color:#cfe6e8;font-size:12px">בחרי סוכן לצפייה מפורטת</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -889,7 +943,7 @@ function renderCustTab(){
   loadCustActivity(c);loadInlineContacts(c);loadCustHistory(c);loadContactPref(c);
  } else if(custTab==='orders'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
-  SQ(sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(50),'custord:'+c.id,function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13.5px;font-weight:700">'+dt+'</div></div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});b.innerHTML=(d.length?'<div class="card" style="background:var(--accs);display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--accd)">'+d.length+' הזמנות · סה״כ</span><b style="color:var(--accd)">'+ils(sum)+'</b></div>':'')+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין הזמנות ללקוח זה עדיין.</div>')})
+  SQ(sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status,agent_name').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(50),'custord:'+c.id,function(r){var d=r.data||[],h='',sum=0;d.forEach(function(o){sum+=o.total_agorot||0;var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});h+='<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13.5px;font-weight:700">'+dt+'</div>'+((isMgr()&&o.agent_name)?'<div style="font-size:11px;color:var(--mut)">ע״י '+esc(o.agent_name)+'</div>':'')+'</div><div style="font-size:16px;font-weight:700;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>'});b.innerHTML=(d.length?'<div class="card" style="background:var(--accs);display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--accd)">'+d.length+' הזמנות · סה״כ</span><b style="color:var(--accd)">'+ils(sum)+'</b></div>':'')+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין הזמנות ללקוח זה עדיין.</div>')})
  } else if(custTab==='stats'){
   b.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
   SQ(sb.from('liberty_customer_product_stats').select('sku,name,total_qty,order_count').eq('customer_id',c.id).order('total_qty',{ascending:false}).limit(60),'custprod:'+c.id,function(r){var d=r.data||[];var owned={};d.forEach(function(x){owned[x.sku]=1});
@@ -972,13 +1026,13 @@ function loadInlineContacts(c){
 function loadCustHistory(c){
  var el=$('chist');if(!el)return;
  Promise.all([
-  sb.from('liberty_my_orders').select('total_agorot,created_at').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(5),
-  sb.from('liberty_my_visits').select('outcome,summary,arrived_at,created_at').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(5),
+  sb.from('liberty_my_orders').select('total_agorot,created_at,agent_name').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(5),
+  sb.from('liberty_my_visits').select('outcome,summary,arrived_at,created_at,agent_name').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(5),
   sb.from('payments').select('amount_agorot,method,paid_date,created_at').eq('customer_id',c.id).order('created_at',{ascending:false}).limit(5)
  ]).then(function(res){
-  var el2=$('chist');if(!el2)return;var items=[];
-  (res[0].data||[]).forEach(function(o){items.push({t:new Date(o.created_at).getTime(),dot:'var(--acc)',title:'הזמנה',sub:ils(o.total_agorot),date:o.created_at});});
-  (res[1].data||[]).forEach(function(v){items.push({t:new Date(v.created_at||v.arrived_at).getTime(),dot:'var(--warn)',title:'ביקור',sub:esc(v.outcome||v.summary||''),date:v.created_at||v.arrived_at});});
+  var el2=$('chist');if(!el2)return;var items=[];var _by=function(n){return (isMgr()&&n)?(' · ע״י '+esc(n)):'';};
+  (res[0].data||[]).forEach(function(o){items.push({t:new Date(o.created_at).getTime(),dot:'var(--acc)',title:'הזמנה'+_by(o.agent_name),sub:ils(o.total_agorot),date:o.created_at});});
+  (res[1].data||[]).forEach(function(v){items.push({t:new Date(v.created_at||v.arrived_at).getTime(),dot:'var(--warn)',title:'ביקור'+_by(v.agent_name),sub:esc(v.outcome||v.summary||''),date:v.created_at||v.arrived_at});});
   (res[2].data||[]).forEach(function(p){items.push({t:new Date(p.created_at||p.paid_date).getTime(),dot:'var(--good)',title:'תשלום · '+methodLabel(p.method),sub:ils(p.amount_agorot),date:p.created_at||p.paid_date});});
   items=items.filter(function(x){return !isNaN(x.t);});items.sort(function(a,b){return b.t-a.t;});items=items.slice(0,7);
   if(!items.length){el2.innerHTML='';return;}
@@ -1775,7 +1829,7 @@ function renderRoute(){
  else if(route==='prodadmin')prodAdminView();
  else if(route==='team')teamView();
  else if(route==='agentdash')agentDashView();
- else if(route==='agents')soonView('ניהול סוכנים','הוספה/השבתת סוכנים, שיוך לאזורים, איפוס PIN והרשאות — בבנייה (שלב הבא).');
+ else if(route==='agents')agentsView();
  else if(route==='approvals')soonView('אישורים','אישור החזרות והרשאות הטבה לכל סוכן — בבנייה (שלב הבא).');
  else if(route==='outbox')outboxView();
  else homeView();
