@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-21';
+var APP_VERSION='2026-08-25-22';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -751,12 +751,33 @@ function openAreaAssign(){
  var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
  var agents=(window.__agents||[]).filter(function(a){return a.role==='agent'&&a.active;});
  var agOpts=agents.map(function(a){return '<option value="'+a.id+'">'+esc(a.name)+'</option>';}).join('');
- ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🔗 שיוך אזור לסוכן</b><span id="aax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div class="card"><div style="font-size:12px;color:var(--warn);line-height:1.6;margin-bottom:8px">כל הלקוחות באזור שייבחר יועברו לסוכן הנבחר. פעולה זו משנה שיוך לקוחות.</div><label style="display:block"><span class="lbl">אזור</span><select id="aa_area" class="field"><option value="">טוען אזורים…</option></select></label><label style="display:block;margin-top:10px"><span class="lbl">סוכן יעד</span><select id="aa_agent" class="field">'+(agOpts||'<option value="">אין סוכנים פעילים</option>')+'</select></label></div><div id="aa_info" style="font-size:12.5px;color:var(--mut);text-align:center;padding:2px 0"></div><button class="cta" id="aa_go">שייך לקוחות</button><div id="aa_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🔗 שיוך אזורים לסוכן</b><span id="aax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div class="card"><div style="font-size:12px;color:var(--warn);line-height:1.6;margin-bottom:8px">כל הלקוחות באזורים שתסמני יועברו לסוכן הנבחר. סוכן יכול לכסות כמה אזורים — סמני כמה שצריך.</div><label style="display:block"><span class="lbl">סוכן יעד</span><select id="aa_agent" class="field">'+(agOpts||'<option value="">אין סוכנים פעילים</option>')+'</select></label></div><div style="font-size:12px;color:var(--mut);font-weight:700;padding:2px 2px 4px">בחרי אזורים</div><div id="aa_areas"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div><div id="aa_sum" style="font-size:12.5px;color:var(--acc);font-weight:700;text-align:center;padding:6px 0"></div><button class="cta" id="aa_go" disabled>שייך לקוחות</button><div id="aa_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('aax').onclick=function(){ov.remove();};
- sb.from('areas').select('id,code,name').order('code').then(function(r){var a=(r&&r.data)||[];var sel=$('aa_area');if(sel)sel.innerHTML='<option value="">— בחרי אזור —</option>'+a.map(function(x){return '<option value="'+x.id+'">'+esc(x.name||('אזור '+x.code))+'</option>';}).join('');});
- var updInfo=function(){var area=$('aa_area').value;if(!area){$('aa_info').textContent='';return;}sb.from('liberty_customers').select('id',{count:'exact',head:true}).eq('area_id',area).then(function(r){if($('aa_info'))$('aa_info').textContent='באזור זה '+(r.count!=null?r.count:'?')+' לקוחות';},function(){});};
- $('aa_area').onchange=updInfo;
- $('aa_go').onclick=function(){var area=$('aa_area').value,agent=$('aa_agent').value;var err=$('aa_err');err.textContent='';if(!area||!agent){err.textContent='בחרי אזור וסוכן';return;}var an=(agents.filter(function(a){return a.id===agent;})[0]||{}).name||'';confirmModal('להעביר את כל הלקוחות באזור הנבחר לסוכן '+an+'?',function(){var b=$('aa_go');b.disabled=true;b.textContent='משייך…';sb.rpc('liberty_reassign_area',{p_area:area,p_agent:agent}).then(function(r){if(r.error){err.textContent='שגיאה: '+r.error.message;b.disabled=false;b.textContent='שייך לקוחות';return;}toast(r.data+' לקוחות שויכו ל'+an+' ✓');ov.remove();},function(e){err.textContent='שגיאה: '+((e&&e.message)||'');b.disabled=false;b.textContent='שייך לקוחות';});},'העברה');};
+ var areasList=[],countByCode={};
+ Promise.all([sb.from('areas').select('id,code,name').order('code'),sb.from('liberty_customers').select('area_code').limit(5000)]).then(function(res){
+  areasList=(res[0]&&res[0].data)||[];
+  ((res[1]&&res[1].data)||[]).forEach(function(c){if(c.area_code!=null)countByCode[c.area_code]=(countByCode[c.area_code]||0)+1;});
+  var h=areasList.map(function(a){var n=countByCode[a.code]||0;return '<label class="card aarea" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 13px"><input type="checkbox" class="aachk" data-id="'+a.id+'" data-code="'+a.code+'" data-n="'+n+'" style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11px;color:var(--mut)">'+n+' לקוחות</div></div></label>';}).join('');
+  if($('aa_areas'))$('aa_areas').innerHTML=h||'<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין אזורים.</div>';
+  var chks=document.querySelectorAll('.aachk');
+  var refresh=function(){var tot=0,cnt=0;for(var i=0;i<chks.length;i++){if(chks[i].checked){cnt++;tot+=+chks[i].getAttribute('data-n')||0;}}if($('aa_sum'))$('aa_sum').textContent=cnt?('נבחרו '+cnt+' אזורים · '+tot+' לקוחות'):'';if($('aa_go'))$('aa_go').disabled=(cnt===0);};
+  for(var i=0;i<chks.length;i++)chks[i].onchange=refresh;
+ },function(){if($('aa_areas'))$('aa_areas').innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינת אזורים</div>';});
+ $('aa_go').onclick=function(){
+  var agent=$('aa_agent').value,err=$('aa_err');err.textContent='';
+  var chks=document.querySelectorAll('.aachk'),ids=[],tot=0;for(var i=0;i<chks.length;i++){if(chks[i].checked){ids.push(chks[i].getAttribute('data-id'));tot+=+chks[i].getAttribute('data-n')||0;}}
+  if(!agent){err.textContent='בחרי סוכן יעד';return;}
+  if(!ids.length){err.textContent='סמני לפחות אזור אחד';return;}
+  var an=(agents.filter(function(a){return a.id===agent;})[0]||{}).name||'';
+  confirmModal('להעביר '+tot+' לקוחות מ-'+ids.length+' אזורים לסוכן '+an+'?',function(){
+   var b=$('aa_go');b.disabled=true;b.textContent='משייך…';
+   Promise.all(ids.map(function(aid){return sb.rpc('liberty_reassign_area',{p_area:aid,p_agent:agent});})).then(function(results){
+    var moved=0,bad=null;results.forEach(function(r){if(r.error)bad=r.error;else moved+=(+r.data||0);});
+    if(bad){err.textContent='שגיאה: '+bad.message;b.disabled=false;b.textContent='שייך לקוחות';return;}
+    toast(moved+' לקוחות שויכו ל'+an+' ✓');ov.remove();
+   },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');b.disabled=false;b.textContent='שייך לקוחות';});
+  },'העברה');
+ };
 }
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 function teamView(){
