@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-13';
+var APP_VERSION='2026-08-25-14';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -213,19 +213,42 @@ function archiveStaleRoutes(cb){
   });
  });
 }
+function _applyRouteRow(row){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routeLocalSave();}
+function carryDismissed(){try{return localStorage.getItem('carry_dismiss')===todayStr()}catch(e){return false}}
+function setCarryDismissed(){try{localStorage.setItem('carry_dismiss',todayStr())}catch(e){}}
+// offer to move an incomplete previous-day route into today (instead of silently archiving it)
+function showCarryPrompt(cand,done){
+ var n=(cand.selected_ids||[]).length;
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px"><div style="font-size:30px;text-align:center">🗓</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:6px">מסלול קודם שלא הושלם</div><div style="font-size:13px;color:var(--mut);text-align:center;line-height:1.6;margin-top:8px">יש מסלול מתאריך '+heDateFull(cand.route_date)+' עם '+n+' עצירות שלא סומן כהושלם. להעביר אותו למסלול של היום?</div><button class="cta" id="carryYes" style="margin-top:16px">↪️ העבר להיום ('+n+' עצירות)</button><button id="carryNo" style="width:100%;height:44px;margin-top:9px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">לא, שמור בארכיון</button></div>';
+ document.body.appendChild(ov);
+ $('carryNo').onclick=function(){setCarryDismissed();ov.remove();done&&done();};
+ $('carryYes').onclick=function(){
+  var ids=cand.selected_ids||[];
+  var row={agent_id:me.id,route_date:todayStr(),area_code:cand.area_code,origin:cand.origin,selected_ids:ids,built:true,status:'active',updated_at:new Date().toISOString()};
+  sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(){
+   _applyRouteRow(row);setCarryDismissed();ov.remove();toast('המסלול הועבר להיום ✓');done&&done();if(typeof render==='function')render();
+  },function(){toast('לא הצלחתי להעביר — נסי שוב');});
+ };
+}
 function restoreDailyRoute(){
  if(!me)return;
  if(routeDate&&routeDate!==todayStr())return; // planning a future day — don't override
  var lr=routeLocalLoad();
  if(lr&&lr.area){routeArea=lr.area;routeSel=lr.sel||{};routeBuilt=!!lr.built;if(lr.origin&&lr.origin.lat!=null)setOrigin(lr.origin);if(route==='route')render()}
  if(navigator.onLine===false)return;
- archiveStaleRoutes(function(){
-  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',todayStr()).eq('status','active').limit(1).then(function(r){
-   var row=(r&&r.data)?r.data[0]:null;
-   if(row&&!lr){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routeLocalSave()}
-   if(route==='route')render();
-  },function(e){netMark(false,e)});
- });
+ var lrStops=(lr&&lr.sel)?Object.keys(lr.sel).filter(function(k){return lr.sel[k]}).length:0;
+ sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('status','active').lte('route_date',todayStr()).order('route_date',{ascending:false}).then(function(r){
+  var rows=(r&&r.data)||[],todayRow=null,stale=[];
+  rows.forEach(function(x){if(x.route_date===todayStr())todayRow=x;else if(x.route_date<todayStr())stale.push(x)});
+  var todayStops=todayRow?(todayRow.selected_ids||[]).length:0;
+  // prefer the server route when it has more stops than the local cache (fixes empty-cache overriding a real route)
+  if(todayRow&&todayStops>lrStops){_applyRouteRow(todayRow);if(route==='route')render();}
+  var cand=null;for(var i=0;i<stale.length;i++){if((stale[i].selected_ids||[]).length>0){cand=stale[i];break}}
+  var afterDecide=function(){archiveStaleRoutes(function(){if(route==='route')render();});};
+  if(cand&&todayStops===0&&lrStops===0&&!carryDismissed())showCarryPrompt(cand,afterDecide);
+  else afterDecide();
+ },function(e){netMark(false,e);archiveStaleRoutes(function(){});});
 }
 // proportional bonus: 20+4 at qty 10 -> 2 free
 function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty*get/buy)}
@@ -1256,6 +1279,85 @@ function parseHours(str){
 }
 // true=open, false=closed, null=unknown/unparseable
 function isOpenAt(str,jsDay,mins){var rules=parseHours(str);if(!rules)return null;var any=false;for(var i=0;i<rules.length;i++){var r=rules[i];if(r.days.indexOf(jsDay)>-1){any=true;if(mins>=r.from&&mins<r.to)return true}}return false;}
+// ---- route planning: pick a target day (today / tomorrow / specific date / week / month) ----
+function pad2(n){return String(n).padStart(2,'0')}
+function ymd(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+function parseYmd(ds){var p=String(ds).split('-');return new Date(+p[0],(+p[1])-1,+p[2])}
+function dateAdd(ds,delta){var d=parseYmd(ds);d.setDate(d.getDate()+delta);return ymd(d)}
+var HEDAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+var HEDAYS_S=['א','ב','ג','ד','ה','ו','ש'];
+var HEMONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+function heDateFull(ds){try{var d=parseYmd(ds);return 'יום '+HEDAYS[d.getDay()]+' · '+d.getDate()+'/'+(d.getMonth()+1)}catch(e){return ds}}
+function fetchPlannedRoutes(from,to,cb){var map={};if(navigator.onLine===false||!me){cb(map);return}
+ sb.from('daily_routes').select('route_date,selected_ids,built,status').eq('agent_id',me.id).eq('status','active').gte('route_date',from).lte('route_date',to).then(function(r){
+  (r&&r.data||[]).forEach(function(row){map[row.route_date]={n:(row.selected_ids||[]).length,built:!!row.built}});cb(map);
+ },function(){cb(map)});}
+function loadRouteForDate(ds,cb){routeArea=null;routeSel={};routeBuilt=false;
+ if(navigator.onLine===false||!me){cb&&cb();return}
+ sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',ds).eq('status','active').limit(1).then(function(r){
+  var row=(r&&r.data)?r.data[0]:null;
+  if(row){routeArea=row.area_code;(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);}
+  cb&&cb();
+ },function(){cb&&cb();});}
+function planFor(ds){
+ if(ds===todayStr()){routeDate=null;routeEnded=false;_routeReport=null;route='route';restoreDailyRoute();render();return}
+ routeDate=ds;routeEnded=false;_routeReport=null;
+ loadRouteForDate(ds,function(){route='route';render();});
+}
+function planRow(p,icon,title,sub){return '<div class="card pprow" data-p="'+p+'" style="display:flex;align-items:center;gap:11px;cursor:pointer"><span style="font-size:20px">'+icon+'</span><div style="flex:1"><div style="font-size:14px;font-weight:800">'+title+'</div><div style="font-size:11.5px;color:var(--mut)">'+sub+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>';}
+function openPlanPicker(){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ var today=todayStr(),tm=tomorrowStr();
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">📆 תכנון מסלול</b><span id="ppx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'
+  +planRow('today','📍','היום',heDateFull(today))
+  +planRow('tom','🌅','מחר',heDateFull(tm))
+  +'<div class="card"><div style="font-size:13px;font-weight:800;margin-bottom:8px">📅 תאריך ספציפי</div><div style="display:flex;gap:8px"><input id="ppdate" type="date" min="'+today+'" value="'+curRouteDate()+'" style="flex:1;height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:14px;background:#fff"><button id="ppgo" class="cta" style="width:auto;padding:0 18px;height:42px">בחר</button></div></div>'
+  +planRow('week','🗓','תכנון שבועי','צפייה בשבוע — תכנון לכל יום')
+  +planRow('month','📆','תכנון חודשי','לוח חודשי — תכנון לכל תאריך')
+  +'</div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};$('ppx').onclick=function(){ov.remove()};
+ var rows=ov.querySelectorAll('.pprow');for(var i=0;i<rows.length;i++){rows[i].onclick=function(){var p=this.getAttribute('data-p');ov.remove();if(p==='today')planFor(todayStr());else if(p==='tom')planFor(tm);else if(p==='week')openWeekPlan(curRouteDate());else if(p==='month')openMonthPlan(curRouteDate());}}
+ $('ppgo').onclick=function(){var v=$('ppdate').value;if(!v){toast('בחרי תאריך');return}if(v<today){toast('לא ניתן לתכנן לתאריך שעבר');return}ov.remove();planFor(v)};
+}
+function openWeekPlan(base){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🗓 תכנון שבועי</b><span id="wpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div id="wpbody" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px;padding:14px">טוען…</div></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};$('wpx').onclick=function(){ov.remove()};
+ var ws=parseYmd(base||todayStr());ws.setDate(ws.getDate()-ws.getDay());
+ function draw(){var wsStr=ymd(ws),weStr=dateAdd(wsStr,6),today=todayStr();
+  fetchPlannedRoutes(wsStr,weStr,function(map){
+   var h='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px"><button id="wprev" class="chip">‹ שבוע קודם</button><div style="font-size:12.5px;font-weight:700;color:var(--mut)">'+heDate(wsStr)+' – '+heDate(weStr)+'</div><button id="wnext" class="chip">שבוע הבא ›</button></div>';
+   for(var i=0;i<7;i++){var ds=dateAdd(wsStr,i),past=ds<today,info=map[ds],d=parseYmd(ds);
+    h+='<div class="wpday'+(past?'':' pprow')+'" data-d="'+ds+'" style="display:flex;align-items:center;gap:10px;background:'+(ds===today?'var(--accs)':'#fff')+';border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:6px 0;cursor:'+(past?'default':'pointer')+';opacity:'+(past?'.5':'1')+'"><div style="width:38px;text-align:center;flex:none"><div style="font-size:11px;color:var(--mut);font-weight:700">'+HEDAYS_S[d.getDay()]+'</div><div style="font-size:17px;font-weight:800;color:var(--head)">'+d.getDate()+'</div></div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">יום '+HEDAYS[d.getDay()]+(ds===today?' · היום':'')+'</div><div style="font-size:11.5px;color:'+(info?'var(--acc)':'var(--mut)')+';font-weight:600">'+(info?('🚗 '+info.n+' עצירות'+(info.built?' · מוכן':' · טיוטה')):(past?'—':'אין מסלול · הקישי לתכנון'))+'</div></div>'+(past?'':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg>')+'</div>';}
+   $('wpbody').innerHTML=h;
+   $('wprev').onclick=function(){ws.setDate(ws.getDate()-7);draw()};
+   $('wnext').onclick=function(){ws.setDate(ws.getDate()+7);draw()};
+   var dd=document.querySelectorAll('.wpday.pprow');for(var k=0;k<dd.length;k++){dd[k].onclick=function(){var ds=this.getAttribute('data-d');ov.remove();planFor(ds)}}
+  });
+ }
+ draw();
+}
+function openMonthPlan(base){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">📆 תכנון חודשי</b><span id="mpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div id="mpbody" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px;padding:14px">טוען…</div></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};$('mpx').onclick=function(){ov.remove()};
+ var c=parseYmd(base||todayStr()),my={y:c.getFullYear(),m:c.getMonth()};
+ function draw(){var start=new Date(my.y,my.m,1);start.setDate(1-start.getDay());
+  var from=ymd(new Date(my.y,my.m,1)),to=ymd(new Date(my.y,my.m+1,0)),today=todayStr();
+  fetchPlannedRoutes(from,to,function(map){
+   var h='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px"><button id="mprev" class="chip">‹</button><div style="font-size:14px;font-weight:800">'+HEMONTHS[my.m]+' '+my.y+'</div><button id="mnext" class="chip">›</button></div>';
+   h+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:11px;color:var(--mut);font-weight:700;margin-bottom:4px">';HEDAYS_S.forEach(function(x){h+='<div>'+x+'</div>'});h+='</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+   for(var i=0;i<42;i++){var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),inM=(d.getMonth()===my.m),past=ds<today,info=map[ds],clk=inM&&!past;
+    h+='<div class="mpday'+(clk?' pprow':'')+'" data-d="'+ds+'" style="aspect-ratio:1;border-radius:9px;border:1px solid '+(ds===today?'var(--acc)':'var(--line)')+';background:'+(!inM?'transparent':(info?'var(--accs)':'#fff'))+';display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:'+(clk?'pointer':'default')+';opacity:'+(!inM?'.22':(past?'.45':'1'))+'"><div style="font-size:13px;font-weight:700;color:var(--head)">'+d.getDate()+'</div>'+(info?'<div style="font-size:9.5px;font-weight:800;color:var(--acc);line-height:1">'+info.n+'</div>':'')+'</div>';}
+   h+='</div><div style="font-size:11px;color:var(--mut);margin-top:10px;text-align:center">מספר בתא = עצירות מתוכננות · הקישי על תאריך כדי לתכנן</div>';
+   $('mpbody').innerHTML=h;
+   $('mprev').onclick=function(){my.m--;if(my.m<0){my.m=11;my.y--}draw()};
+   $('mnext').onclick=function(){my.m++;if(my.m>11){my.m=0;my.y++}draw()};
+   var dd=document.querySelectorAll('.mpday.pprow');for(var k=0;k<dd.length;k++){dd[k].onclick=function(){var ds=this.getAttribute('data-d');ov.remove();planFor(ds)}}
+  });
+ }
+ draw();
+}
 function routeView(){
  var o=getOrigin();
  var alist=window.__arealist;
@@ -1264,13 +1366,16 @@ function routeView(){
  else{for(var i=1;i<=6;i++){chips+='<button class="chip areac'+(routeArea===i?' on':'')+'" data-a="'+i+'">אזור '+i+'</button>'}}
  chips+='<button id="mgareas" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">⚙︎ אזורים</button><button id="dayhistbtn" class="chip" style="background:#fbfaf8;white-space:nowrap">🗂 היסטוריה</button></div>';
  var originBar='<div style="display:flex;align-items:center;gap:8px;background:var(--accs);border-radius:12px;padding:9px 12px;margin-bottom:10px"><span style="font-size:16px">📍</span><div style="flex:1"><div style="font-size:11px;color:var(--accd);font-weight:700">נקודת מוצא</div><div style="font-size:14px;font-weight:700;color:var(--accd)">'+esc(o.name)+'</div></div><button id="chgorigin" class="chip" style="background:#fff">שינוי</button></div>';
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">מסלול נסיעה יומי</div></div><div style="background:var(--sur);padding:12px 16px 13px;border-bottom:1px solid var(--line)">'+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם היום, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
+ var _isToday=(curRouteDate()===todayStr());
+ var planBar='<button id="planbtn" style="width:100%;display:flex;align-items:center;gap:9px;background:'+(_isToday?'#fbfaf8':'var(--warns)')+';border:1px solid '+(_isToday?'var(--line)':'#e7c9a0')+';border-radius:12px;padding:9px 12px;margin-bottom:10px;cursor:pointer;text-align:right"><span style="font-size:16px">📆</span><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">תכנון מסלול</div><div style="font-size:14px;font-weight:800;color:'+(_isToday?'var(--head)':'var(--warn)')+'">'+(_isToday?'היום · '+heDateFull(todayStr()):heDateFull(curRouteDate()))+'</div></div><span style="font-size:12px;color:var(--acc);font-weight:700">שינוי ›</span></button>';
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">מסלול נסיעה יומי</div></div><div style="background:var(--sur);padding:12px 16px 13px;border-bottom:1px solid var(--line)">'+planBar+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
+ if($('planbtn'))$('planbtn').onclick=openPlanPicker;
  var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeSel={};routeBuilt=false;saveDailyRoute();render()}}
  $('dayhistbtn').onclick=function(){route='dayhist';render()};
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
  if(!window.__arealist&&LOC.areas.length){window.__arealist=LOC.areas.map(function(a){return {code:a.code,name:a.name}})}
- if(!routeArea){if(curRouteDate()!==todayStr()&&$('res')){$('res').innerHTML='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים מסלול למחר · '+heDate(curRouteDate())+'</div><button id="backtoday3" class="chip" style="background:#fff">היום</button></div><div style="color:var(--mut);font-size:13px;padding:14px 2px">בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.</div>';if($('backtoday3'))$('backtoday3').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};}return;}
+ if(!routeArea){if(curRouteDate()!==todayStr()&&$('res')){$('res').innerHTML='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday3" class="chip" style="background:#fff">היום</button></div><div style="color:var(--mut);font-size:13px;padding:14px 2px">בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.</div>';if($('backtoday3'))$('backtoday3').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};}return;}
  locTouch();LQ(function(){return LOC.customers.filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'})}).then(function(r){
   var d=r.data||[];
   var debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
@@ -1327,7 +1432,7 @@ function routeView(){
     var pct=sel.length?Math.round(doneCount/sel.length*100):0;
     var currentId=null;for(var si=0;si<seq.length;si++){if(!doneSet[seq[si].id]){currentId=seq[si].id;break}}
     var h='';
-    if(planningFuture)h+='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מסלול מתוכנן ליום מחר · '+heDate(curRouteDate())+'</div><button id="backtoday" class="chip" style="background:#fff">היום</button></div>';
+    if(planningFuture)h+='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מסלול מתוכנן · '+heDateFull(curRouteDate())+'</div><button id="backtoday" class="chip" style="background:#fff">היום</button></div>';
     h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button></div>';
     if(planningFuture){
      h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+sel.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+selDebt+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:700;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
@@ -1367,7 +1472,7 @@ function routeView(){
 
   // ---- SELECTION MODE ----
   var selCount=function(){return d.filter(function(c){return routeSel[c.id]}).length};
-  var h=(curRouteDate()!==todayStr())?('<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים מסלול למחר · '+heDate(curRouteDate())+'</div><button id="backtoday2" class="chip" style="background:#fff">היום</button></div>'):'';
+  var h=(curRouteDate()!==todayStr())?('<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday2" class="chip" style="background:#fff">היום</button></div>'):'';
   h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לקוחות באזור</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">נבחרו</div><div id="selc" style="font-size:20px;font-weight:700;color:var(--acc)">'+selCount()+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+debtCust+'</div></div></div>';
   h+='<div style="display:flex;gap:7px;flex-wrap:wrap;margin:2px 0"><button id="selall" class="chip">בחר הכל</button><button id="selnone" class="chip">נקה בחירה</button><button id="seldebt" class="chip">רק לגבייה</button></div>';
   h+='<div style="font-size:12.5px;color:var(--mut);padding:0 2px 6px;line-height:1.5">סמני את הלקוחות שתגיעי אליהם היום, ואז לחצי <b>בנה מסלול</b> — המערכת תסדר אותם למסלול נסיעה יעיל מנקודת המוצא.</div>';
