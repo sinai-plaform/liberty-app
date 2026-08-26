@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-24';
+var APP_VERSION='2026-08-25-25';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -297,6 +297,10 @@ function uuid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID
  var h='0123456789abcdef',s='';for(var i=0;i<36;i++){s+=(i===8||i===13||i===18||i===23)?'-':(i===14?'4':(i===19?h[Math.floor(Math.random()*4)+8]:h[Math.floor(Math.random()*16)]))}return s}
 function isNetErr(e){if(!e)return false;if(navigator.onLine===false)return true;var m=((e.message||'')+' '+(e.details||'')+' '+(e.name||'')).toLowerCase();return m.indexOf('fetch')>-1||m.indexOf('network')>-1||m.indexOf('timeout')>-1||m.indexOf('typeerror')>-1||e.code==='ECONNRESET'}
 function netMark(ok,err){var was=OFF.online;if(ok){OFF.online=(navigator.onLine!==false);OFF.lastErr=null}else if(isNetErr(err)){OFF.online=false}if(was!==OFF.online)updateSync()}
+var _authFixing=false,_authTried=false;
+function isAuthErr(e){if(!e)return false;var c=(e.code||'')+'';var m=((e.message||'')+' '+(e.details||'')+' '+(e.hint||'')).toLowerCase();return c==='42501'||c==='PGRST301'||m.indexOf('permission denied')>-1||m.indexOf('jwt')>-1||m.indexOf('row-level security')>-1||m.indexOf('not authenticated')>-1;}
+function _forceRelogin(){_authTried=false;try{toast('החיבור פג — יש להתחבר מחדש כדי לשלוח את ההזמנות הממתינות');}catch(e){}me=null;try{localStorage.removeItem('lib_me')}catch(e){}route='home';try{loginView()}catch(e){}}
+function handleAuthLoss(){if(_authFixing)return;_authFixing=true;if(_authTried){_authFixing=false;_forceRelogin();return;}_authTried=true;var fail=function(){_authFixing=false;_forceRelogin();};try{sb.auth.refreshSession().then(function(r){_authFixing=false;if(r&&r.data&&r.data.session&&!r.error){obFlush();}else{fail();}},fail);}catch(e){fail();}}
 /* ---- IndexedDB ---- */
 var _db=null,_dbq=null;
 function idb(cb){
@@ -481,9 +485,9 @@ function obFlush(cb){
    if(i>=list.length){done();return}
    var op=list[i++];
    sendOp(op,function(ok,err){
-    if(ok){sent++;obDel(op.id,function(){OFF.pending=Math.max(0,OFF.pending-1);updateSync();next()});return}
+    if(ok){_authTried=false;sent++;obDel(op.id,function(){OFF.pending=Math.max(0,OFF.pending-1);updateSync();next()});return}
     op.tries=(op.tries||0)+1;op.err=(err&&(err.message||err.msg))||'שגיאה';op.net=isNetErr(err);
-    obPut(op,function(){if(isNetErr(err)){netMark(false,err);done()}else{next()}});
+    obPut(op,function(){if(isNetErr(err)){netMark(false,err);done()}else if(isAuthErr(err)){done();handleAuthLoss()}else{next()}});
    });
   };
   next();
@@ -514,7 +518,7 @@ function routeLocalLoad(){
 /* ---- network events ---- */
 window.addEventListener('online',function(){OFF.online=true;updateSync();obFlush();if(_drDirty)saveDailyRoute();locRefresh(function(ch){if(ch&&typeof render==='function')render()})});
 window.addEventListener('offline',function(){OFF.online=false;updateSync()});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){obFlush();locTouch()}});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){try{if(sb.auth.startAutoRefresh)sb.auth.startAutoRefresh();sb.auth.getSession();}catch(e){}obFlush();locTouch()}});
 setInterval(function(){if(navigator.onLine!==false&&OFF.pending>0&&!OFF.syncing)obFlush()},45000);
 /* ---- service worker ---- */
 if('serviceWorker' in navigator){
