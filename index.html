@@ -11,6 +11,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap">
 <style>
 :root{--bg:#f7f5f2;--sur:#fff;--surq:#f2efe9;--ink:#1c1a17;--head:#322f2a;--mut:#7d776d;--mut2:#8b857a;--line:#e2ddd4;--line2:#eae6de;--acc:#0f6b74;--accd:#0a4f56;--acc2:#2f9aa2;--accl:#93c6ca;--accs:#eef5f5;--accs2:#d5e7e8;--good:#1c7a4f;--goodd:#155c3c;--goods:#e4f0e8;--warn:#9a6207;--warnd:#7a4d06;--warns:#f8eeda;--bad:#a52f27;--badd:#8a251e;--bads:#f7e6e3;--pop:#e8613f}
+@keyframes rzoomin{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+@keyframes rslidein{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes rspin{0%{transform:rotate(-25deg)}100%{transform:rotate(360deg)}}
+@keyframes rpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes rpop{0%{transform:scale(0);opacity:0}70%{transform:scale(1.2);opacity:1}100%{transform:scale(1)}}
+@keyframes rfall{0%{transform:translateY(-24px) rotate(0);opacity:1}100%{transform:translateY(130px) rotate(320deg);opacity:0}}
+.animwrap{position:relative;overflow:hidden}
+.confetti{position:absolute;top:-6px;width:8px;height:13px;border-radius:2px;animation:rfall 1.15s linear forwards;z-index:2}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:'IBM Plex Sans Hebrew','Heebo',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-synthesis:none;text-wrap:pretty;-webkit-tap-highlight-color:transparent}
 input,button,select,textarea{font-family:inherit}input,textarea{outline:none}
@@ -102,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-28';
+var APP_VERSION='2026-08-26-29';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -830,6 +838,19 @@ function _agLoadAreas(agentId){
   box.innerHTML=h||'<div style="color:var(--mut);font-size:12.5px">אין אזורים.</div>';
  },function(){box.innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינת אזורים</div>';});
 }
+function _agLoadAttendance(agentId){
+ var box=$('ag_att');if(!box)return;
+ sb.from('liberty_attendance').select('work_date,started_at,ended_at').eq('agent_id',agentId).order('work_date',{ascending:false}).limit(30).then(function(r){
+  var d=(r&&r.data)||[];if(!d.length){box.innerHTML='<div style="color:var(--mut);font-size:12px">אין עדיין רישומי נוכחות.</div>';return;}
+  var fmt=function(t){return t?new Date(t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'—';};
+  var tot=0;
+  var h=d.map(function(a){var dur='';if(a.started_at&&a.ended_at){var mins=Math.max(0,Math.round((new Date(a.ended_at)-new Date(a.started_at))/60000));tot+=mins;dur=Math.floor(mins/60)+'ש '+(mins%60)+'ד';}else if(a.started_at){dur='<span style="color:var(--good);font-weight:700">פעיל</span>';}
+   var dt=new Date(a.work_date+'T00:00:00').toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'});
+   return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 2px;border-bottom:1px solid var(--line2);font-size:12.5px"><div style="font-weight:700;color:var(--head);min-width:78px">'+dt+'</div><div style="color:var(--mut);direction:ltr;flex:1;text-align:center">'+fmt(a.started_at)+' – '+fmt(a.ended_at)+'</div><div style="font-weight:700;color:var(--acc);min-width:58px;text-align:left">'+dur+'</div></div>';}).join('');
+  var sumRow='<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--accd);padding:8px 2px 2px">סה״כ שעות ('+d.length+' ימים)<span>'+Math.floor(tot/60)+'ש '+(tot%60)+'ד</span></div>';
+  box.innerHTML=h+sumRow;
+ },function(){box.innerHTML='<div style="color:var(--bad);font-size:12px">שגיאה בטעינה</div>';});
+}
 function areaChoiceModal(areaName,otherName,agentName,cb){
  var ov=document.createElement('div');ov.className='ovl';
  var on=esc(otherName||'סוכן אחר'),an=esc(agentName);
@@ -897,12 +918,13 @@ function openAgentEditor(a){
   '<div class="card"><label style="display:block"><span class="lbl">שם מלא</span><input id="ag_name" class="field" value="'+(a?esc(a.name):'')+'"></label><div style="display:flex;gap:9px;margin-top:10px"><label style="flex:1"><span class="lbl">קוד עובד'+(isNew?'':' (קבוע)')+'</span><input id="ag_code" class="field" inputmode="numeric" value="'+(a?esc(a.employee_code||''):'')+'"'+(isNew?'':' disabled')+'></label><label style="flex:1"><span class="lbl">טלפון</span><input id="ag_phone" class="field" inputmode="tel" value="'+(a?esc(a.phone||''):'')+'"></label></div></div>'+
   '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תפקיד</span><select id="ag_role" class="field">'+roleOpts+'</select></label><label style="flex:1"><span class="lbl">כפוף למנהל</span><select id="ag_mgr" class="field">'+mgrOpts+'</select></label></div></div>'+
   (isNew?'':'<div class="card" id="ag_area_sec" style="display:'+(a.role==='agent'?'block':'none')+'"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:3px">🗺️ אזורים שהסוכן מכסה</div><div style="font-size:11px;color:var(--mut);margin-bottom:7px">סמני אזורים. אם אזור כבר משוייך לסוכן אחר תישאלי אם להחליף או לצרף.</div><div id="ag_areas"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
+  (isNew?'':'<div class="card"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:6px">🕐 נוכחות · 30 יום אחרונים</div><div id="ag_att"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
   '<div class="card"><label style="display:block"><span class="lbl">'+(isNew?'קוד אישי (PIN) — לפחות 4 ספרות':'איפוס קוד אישי (השאירי ריק לשמירה)')+'</span><input id="ag_pin" class="field" inputmode="numeric" placeholder="'+(isNew?'PIN לכניסה':'PIN חדש (אופציונלי)')+'"></label>'+(isNew?'':'<label style="display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag_active"'+(a.active?' checked':'')+'> סוכן פעיל</label>')+'</div>'+
   '<button class="cta" id="ag_save">'+(isNew?'יצירת סוכן':'שמירת שינויים')+'</button>'+
   '<div id="ag_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
   '</div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('agx').onclick=function(){ov.remove();};
- if(!isNew){if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';};if(a.role==='agent')_agLoadAreas(a.id);}
+ if(!isNew){if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';};if(a.role==='agent')_agLoadAreas(a.id);_agLoadAttendance(a.id);}
  $('ag_save').onclick=function(){
   var name=$('ag_name').value.trim(),phone=$('ag_phone').value.trim()||null,role=$('ag_role').value,mgr=$('ag_mgr').value||null,pin=$('ag_pin').value.trim();
   var err=$('ag_err');err.textContent='';
@@ -1103,6 +1125,27 @@ function homeView(){
  locTouch();
  renderHomeRoute();
 }
+var _cheerPending=false,_revealTarget=null;
+function wdayState(){try{var v=localStorage.getItem('lib_wday_'+todayStr());return v?JSON.parse(v):null;}catch(e){return null;}}
+function wdaySave(s){try{localStorage.setItem('lib_wday_'+todayStr(),JSON.stringify(s));}catch(e){}}
+function wdayStarted(){var s=wdayState();return !!(s&&s.startedAt);}
+function wdayEnded(){var s=wdayState();return !!(s&&s.endedAt);}
+function startWorkday(cb){var s=wdayState()||{};if(!s.startedAt)s.startedAt=new Date().toISOString();wdaySave(s);try{sb.rpc('liberty_workday_start').then(function(){},function(){});}catch(e){}cb&&cb();}
+function endWorkday(cb){var s=wdayState()||{};s.endedAt=new Date().toISOString();if(!s.startedAt)s.startedAt=s.endedAt;wdaySave(s);try{sb.rpc('liberty_workday_end').then(function(){},function(){});}catch(e){}cb&&cb();}
+function bannerAnim(el,type,cb){
+ if(!el){cb&&cb();return;}
+ var html='';
+ if(type==='start'){
+  html='<div class="card animwrap" style="background:linear-gradient(135deg,var(--acc),var(--acc2));text-align:center;padding:26px 18px;box-shadow:0 8px 22px rgba(10,79,86,.3)"><div style="font-size:40px;animation:rpop .5s ease-out">🚀</div><div style="color:#fff;font-size:18px;font-weight:800;margin-top:6px;animation:rslidein .5s ease-out">יום עבודה התחיל!</div><div style="color:#d6ecee;font-size:12.5px;margin-top:3px;animation:rslidein .7s ease-out">בהצלחה 💪</div></div>';
+ } else if(type==='next'){
+  html='<div class="card animwrap" style="background:linear-gradient(135deg,var(--accd),var(--acc));text-align:center;padding:28px 18px;box-shadow:0 8px 22px rgba(10,79,86,.3)"><div style="font-size:40px;display:inline-block;animation:rspin 1s ease-in-out">🧭</div><div style="color:#fff;font-size:18px;font-weight:800;margin-top:6px;letter-spacing:.03em;animation:rzoomin .6s ease-out">היעד הבא</div></div>';
+ } else {
+  var cols=['#e8613f','#1c7a4f','#f0b429','#2f9aa2','#a52f27'],conf='';for(var i=0;i<14;i++){conf+='<span class="confetti" style="left:'+(4+i*7)+'%;background:'+cols[i%5]+';animation-delay:'+(i*35)+'ms"></span>';}
+  html='<div class="card animwrap" style="background:linear-gradient(135deg,var(--good),#28a06a);text-align:center;padding:26px 18px;box-shadow:0 8px 22px rgba(21,92,60,.3)">'+conf+'<div style="font-size:40px;animation:rpop .5s ease-out">🎉</div><div style="color:#fff;font-size:18px;font-weight:800;margin-top:6px;animation:rslidein .5s ease-out">כל הכבוד!</div><div style="color:#dff0e7;font-size:12.5px;margin-top:3px;animation:rslidein .7s ease-out">הביקור תועד ✓</div></div>';
+ }
+ el.innerHTML=html;
+ setTimeout(function(){cb&&cb();},type==='cheer'?1450:(type==='start'?1150:1200));
+}
 function renderHomeRoute(){
  var el=$('routecard');if(!el)return;
  var ids=routeArea?Object.keys(routeSel).filter(function(k){return routeSel[k];}):[];
@@ -1114,23 +1157,43 @@ function renderHomeRoute(){
    if(route!=='home')return;var e2=$('routecard');if(!e2)return;
    var doneCount=ordered.filter(function(c){return doneSet[c.id];}).length;
    var next=null;for(var i=0;i<ordered.length;i++){if(!doneSet[ordered[i].id]){next=ordered[i];break;}}
-   if(!next){e2.innerHTML='<div class="card" style="background:var(--goods);text-align:center;box-shadow:0 6px 18px rgba(36,33,29,.06)"><div style="font-size:14.5px;font-weight:800;color:var(--goodd)">🎉 כל '+ordered.length+' היעדים הושלמו</div><button data-go="route" style="margin-top:9px;width:100%;height:42px;border:none;border-radius:11px;background:#fff;color:var(--accd);font-weight:700;cursor:pointer">🏁 סיום יום ודוח ›</button></div>';var bb=e2.querySelector('[data-go]');if(bb)bb.onclick=function(){route='route';render();};return;}
-   var idx=ordered.indexOf(next)+1;var ph=custPhone(next.id);
-   var wa=ph?waLink(ph,''):null;
+   if(!next){
+    var showEnd=function(){var ec=$('routecard');if(!ec)return;
+     if(wdayEnded()){ec.innerHTML='<div class="card" style="background:linear-gradient(135deg,var(--goodd),var(--good));text-align:center;box-shadow:0 6px 18px rgba(21,92,60,.25);padding:20px 16px;animation:rslidein .35s ease-out"><div style="font-size:30px">🌙</div><div style="font-size:16px;font-weight:800;color:#fff;margin-top:3px">היום הסתיים · כל הכבוד!</div><button data-go="reports" style="margin-top:11px;width:100%;height:42px;border:none;border-radius:11px;background:#fff;color:var(--goodd);font-weight:800;cursor:pointer">📊 צפייה בדוח היום ›</button></div>';var bd=ec.querySelector('[data-go]');if(bd)bd.onclick=function(){route='reports';render();};return;}
+     ec.innerHTML='<div class="card animwrap" style="background:linear-gradient(135deg,var(--good),#28a06a);text-align:center;box-shadow:0 6px 18px rgba(21,92,60,.25);padding:20px 16px;animation:rslidein .35s ease-out"><div style="font-size:32px">🎯</div><div style="font-size:15.5px;font-weight:800;color:#fff;margin-top:3px">כל '+ordered.length+' היעדים הושלמו!</div><div style="font-size:12px;color:#dff0e7;margin-top:2px">אפשר לסיים את יום העבודה</div><button id="hr_endday" style="margin-top:11px;width:100%;height:46px;border:none;border-radius:11px;background:#fff;color:var(--goodd);font-weight:800;cursor:pointer">🏁 סיום יום עבודה</button></div>';
+     if($('hr_endday'))$('hr_endday').onclick=function(){endWorkday(function(){endDayNow(todayStr(),ordered.length,function(rep){_routeReport=rep;renderHomeRoute();});});};
+    };
+    if(_cheerPending){_cheerPending=false;bannerAnim(e2,'cheer',showEnd);return;}
+    showEnd();return;
+   }
+   var idx=ordered.indexOf(next)+1;var ph=custPhone(next.id);var wa=ph?waLink(ph,''):null;
    var navHref=(next.lat!=null)?('https://www.google.com/maps/dir/?api=1&destination='+next.lat+','+next.lng):('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((next.name||'')+' '+(next.city||'')));
    var nowD=new Date(),op=next.opening_hours?isOpenAt(next.opening_hours,nowD.getDay(),nowD.getHours()*60+nowD.getMinutes()):null;
+   var accent=op===false?'var(--bad)':(op===true?'var(--good)':'var(--acc)');
    var stateBadge=op===true?' <span class="badge b-good" style="font-size:9px">🟢 פתוח</span>':(op===false?' <span class="badge b-bad" style="font-size:9px">🔴 סגור</span>':'');
    function act(icon,label,href,bid){var st='flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;text-decoration:none;color:var(--acc);font-weight:700;font-size:11px;cursor:pointer;background:none;border:none;border-inline-start:1px solid var(--line2)';var inner='<span style="font-size:17px">'+icon+'</span><span>'+label+'</span>';return href?('<a href="'+href+'"'+(href.indexOf('tel:')===0?'':' target="_blank" rel="noopener"')+' style="'+st+'">'+inner+'</a>'):('<button id="'+bid+'" style="'+st+'">'+inner+'</button>');}
    var acts=(ph?act('📞','חיוג','tel:'+ph):'')+(wa?act('💬','הודעה',wa):'')+act('🧭','ניווט',navHref)+act('📝','ביקור',null,'hr_visit');
-   e2.innerHTML='<div class="card" style="box-shadow:0 6px 18px rgba(36,33,29,.06);padding:0;overflow:hidden">'+
-     '<div id="hr_top" style="cursor:pointer;padding:13px 15px 11px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div style="font-size:11.5px;color:var(--acc);font-weight:800">היעד הבא · '+idx+' מתוך '+ordered.length+'</div><div style="font-size:12px;color:var(--mut);font-weight:600">כל המסלול ›</div></div>'+
-       '<div style="font-size:16px;font-weight:800;color:var(--head);line-height:1.25">'+esc(next.name)+stateBadge+'</div>'+
-       '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+esc(next.city||'')+(next.opening_hours?' · 🕒 '+esc(next.opening_hours):'')+(doneCount?' · '+doneCount+' בוצעו':'')+'</div>'+
-     '</div>'+
-     '<div style="display:flex;border-top:1px solid var(--line2)">'+acts+'</div>'+
-   '</div>';
-   if($('hr_top'))$('hr_top').onclick=function(){route='route';render();};
-   if($('hr_visit'))$('hr_visit').onclick=function(){visitTarget={id:next.id,name:next.name};_visitFrom='home';route='visits';render();};
+   var showDetails=function(){
+    var e3=$('routecard');if(!e3)return;
+    e3.innerHTML='<div class="card" style="box-shadow:0 6px 18px rgba(36,33,29,.06);padding:0;overflow:hidden;border-inline-start:4px solid '+accent+';animation:rslidein .35s ease-out">'+
+      '<div id="hr_top" style="cursor:pointer;padding:13px 15px 11px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div style="font-size:11.5px;color:var(--acc);font-weight:800">🎯 היעד הבא · '+idx+' מתוך '+ordered.length+'</div><div style="font-size:12px;color:var(--mut);font-weight:600">כל המסלול ›</div></div>'+
+        '<div style="font-size:16px;font-weight:800;color:var(--head);line-height:1.25">'+esc(next.name)+stateBadge+'</div>'+
+        '<div style="font-size:12px;color:var(--mut);margin-top:2px">'+esc(next.city||'')+(next.opening_hours?' · 🕒 '+esc(next.opening_hours):'')+(doneCount?' · '+doneCount+' בוצעו':'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;border-top:1px solid var(--line2)">'+acts+'</div>'+
+    '</div>';
+    if($('hr_top'))$('hr_top').onclick=function(){route='route';render();};
+    if($('hr_visit'))$('hr_visit').onclick=function(){visitTarget={id:next.id,name:next.name};_visitFrom='home';route='visits';render();};
+    _revealTarget=next.id;
+   };
+   if(!wdayStarted()){
+    e2.innerHTML='<div class="card animwrap" style="background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 8px 22px rgba(10,79,86,.3);padding:18px 16px;text-align:center"><div style="color:#eafafa;font-size:12.5px;font-weight:700">'+ordered.length+' עצירות ממתינות לך היום</div><div style="color:#fff;font-size:17px;font-weight:800;margin-top:2px">מוכנה להתחיל?</div><button id="hr_start" style="margin-top:12px;width:100%;height:50px;border:none;border-radius:12px;background:#fff;color:var(--accd);font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);animation:rpulse 1.8s ease-in-out infinite">▶️ התחלת יום עבודה</button></div>';
+    if($('hr_start'))$('hr_start').onclick=function(){startWorkday(function(){bannerAnim($('routecard'),'start',function(){bannerAnim($('routecard'),'next',showDetails);});});};
+    return;
+   }
+   if(_cheerPending){_cheerPending=false;_revealTarget=next.id;bannerAnim(e2,'cheer',function(){bannerAnim($('routecard'),'next',showDetails);});return;}
+   if(_revealTarget!==next.id){_revealTarget=next.id;bannerAnim(e2,'next',showDetails);return;}
+   showDetails();
   });
  });
 }
@@ -2013,7 +2076,7 @@ function routeView(){
     $('editsel').onclick=function(){routeBuilt=false;saveDailyRoute();render()};
     bindStops();
     var pa=document.querySelectorAll('.paddp');for(var pi=0;pi<pa.length;pi++){pa[pi].onclick=function(e){e.stopPropagation();routeSel[this.getAttribute('data-id')]=true;saveDailyRoute();render()}}
-    if($('endday')){var armed=false;$('endday').onclick=function(){var b=this;if(!armed){armed=true;b.textContent='בטוח? לחצי שוב לסיום היום';setTimeout(function(){armed=false;if(b)b.textContent='🏁 סיום יום ויצירת דוח'},3000);return}b.disabled=true;b.textContent='מסכם…';endDayNow(curRouteDate(),sel.length,function(rep){_routeReport=rep||{planned:sel.length};routeEnded=true;render()})}}
+    if($('endday')){var armed=false;$('endday').onclick=function(){var b=this;if(!armed){armed=true;b.textContent='בטוח? לחצי שוב לסיום היום';setTimeout(function(){armed=false;if(b)b.textContent='🏁 סיום יום ויצירת דוח'},3000);return}b.disabled=true;b.textContent='מסכם…';var _endFin=function(){endDayNow(curRouteDate(),sel.length,function(rep){_routeReport=rep||{planned:sel.length};routeEnded=true;render()})};if(curRouteDate()===todayStr())endWorkday(_endFin);else _endFin();}}
    };
    if(planningFuture)proceed({});else routeDoneSet(curRouteDate(),proceed);
    return;
@@ -2080,7 +2143,7 @@ function visitsView(){
  var outcome='הזמנה';var oc=document.querySelectorAll('.oc');for(var i=0;i<oc.length;i++){oc[i].onclick=function(){for(var j=0;j<oc.length;j++)oc[j].classList.remove('on');this.classList.add('on');outcome=this.getAttribute('data-v')}}
  if($('vpick'))$('vpick').onclick=openVisitPicker;
  if($('vchg'))$('vchg').onclick=openVisitPicker;
- $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}render()})};
+ $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render()})};
  SQ(sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30),'myvisits',function(r){var d=pendVisits().concat(r.data||[]),h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
 }
 function openVisitPicker(){
