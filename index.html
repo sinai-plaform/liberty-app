@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-29';
+var APP_VERSION='2026-08-26-30';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -194,17 +194,21 @@ function custPhone(id){try{for(var i=0;i<(LOC.phones||[]).length;i++){if(LOC.pho
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function localDate(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 var __drSaveTmr=null;
+function pendRouteSave(row){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');m[row.route_date]=row;localStorage.setItem('lib_route_pending',JSON.stringify(m));}catch(e){}}
+function pendRouteClear(date){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');if(m[date]){delete m[date];localStorage.setItem('lib_route_pending',JSON.stringify(m));}}catch(e){}}
+function pendRouteFlush(){if(!me||navigator.onLine===false)return;var m;try{m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');}catch(e){return;}var keys=Object.keys(m);if(!keys.length)return;keys.forEach(function(k){var row=m[k];row.agent_id=me.id;sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){if(!(r&&r.error))pendRouteClear(k);},function(){});});}
 function saveDailyRoute(){
  if(!me||!routeArea)return;
  routeLocalSave();
  var ids=Object.keys(routeSel).filter(function(k){return routeSel[k]});
  var row={agent_id:me.id,route_date:curRouteDate(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()};
- if(navigator.onLine===false){_drDirty=row;return}
+ if(navigator.onLine===false){_drDirty=row;pendRouteSave(row);return}
  sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){
-  if(r&&r.error){netMark(false,r.error);_drDirty=row}else{netMark(true);_drDirty=null}
- },function(e){netMark(false,e);_drDirty=row});
+  if(r&&r.error){netMark(false,r.error);_drDirty=row;pendRouteSave(row);}else{netMark(true);_drDirty=null;pendRouteClear(row.route_date);}
+ },function(e){netMark(false,e);_drDirty=row;pendRouteSave(row);});
 }
-function saveDailyRouteDeb(){clearTimeout(__drSaveTmr);__drSaveTmr=setTimeout(saveDailyRoute,500)}
+function saveDailyRouteDeb(){clearTimeout(__drSaveTmr);__drSaveTmr=setTimeout(saveDailyRoute,400)}
+function flushRouteSave(){if(__drSaveTmr){clearTimeout(__drSaveTmr);__drSaveTmr=null;saveDailyRoute();}}
 function archiveStaleRoutes(cb){
  if(!me){cb&&cb();return}
  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('status','active').lt('route_date',todayStr()).then(function(r){
@@ -253,6 +257,7 @@ function restoreDailyRoute(){
  var lr=routeLocalLoad();
  if(lr&&lr.area){routeArea=lr.area;routeSel=lr.sel||{};routeBuilt=!!lr.built;if(lr.origin&&lr.origin.lat!=null)setOrigin(lr.origin);if(route==='route')render()}
  if(navigator.onLine===false)return;
+ pendRouteFlush();
  var lrStops=(lr&&lr.sel)?Object.keys(lr.sel).filter(function(k){return lr.sel[k]}).length:0;
  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('status','active').lte('route_date',todayStr()).order('route_date',{ascending:false}).then(function(r){
   var rows=(r&&r.data)||[],todayRow=null,stale=[];
@@ -513,14 +518,16 @@ function updateSync(){
 }
 /* ---- daily route local mirror ---- */
 function routeLocalSave(){
- try{localStorage.setItem('lib_route',JSON.stringify({d:todayStr(),area:routeArea,sel:routeSel,built:routeBuilt,origin:getOrigin()}))}catch(e){}
+ try{localStorage.setItem('lib_route',JSON.stringify({d:curRouteDate(),area:routeArea,sel:routeSel,built:routeBuilt,origin:getOrigin()}))}catch(e){}
 }
 function routeLocalLoad(){
  try{var r=JSON.parse(localStorage.getItem('lib_route')||'null');if(r&&r.d===todayStr())return r}catch(e){}
  return null;
 }
 /* ---- network events ---- */
-window.addEventListener('online',function(){OFF.online=true;updateSync();obFlush();if(_drDirty)saveDailyRoute();locRefresh(function(ch){if(ch&&typeof render==='function')render()})});
+window.addEventListener('online',function(){OFF.online=true;updateSync();obFlush();if(_drDirty)saveDailyRoute();pendRouteFlush();locRefresh(function(ch){if(ch&&typeof render==='function')render()})});
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){flushRouteSave();}else{pendRouteFlush();}});
+window.addEventListener('pagehide',function(){flushRouteSave();});
 window.addEventListener('offline',function(){OFF.online=false;updateSync()});
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){obFlush();locTouch()}});
 setInterval(function(){if(navigator.onLine!==false&&OFF.pending>0&&!OFF.syncing)obFlush()},45000);
@@ -1042,22 +1049,29 @@ function renderTeamOverview(){
  loadTeamData(function(t){
   if(route!=='team')return;
   var agents=(t.rows||[]).filter(function(x){return x.role==='agent'||x.role==='manager';});
+  var fromDate=b.from.slice(0,10),toDate=b.to?b.to.slice(0,10):todayStr();
   var oq=sb.from('liberty_team_orders').select('agent_id,total_agorot,created_at').gte('created_at',b.from);
   var vq=sb.from('liberty_team_visits').select('agent_id,arrived_at').gte('arrived_at',b.from);
   var pq=sb.from('liberty_team_payments').select('agent_id,amount_agorot,created_at').gte('created_at',b.from);
+  var aq=sb.from('liberty_attendance').select('agent_id,work_date,started_at,ended_at').gte('work_date',fromDate).lte('work_date',toDate);
   if(b.to){oq=oq.lte('created_at',b.to);vq=vq.lte('arrived_at',b.to);pq=pq.lte('created_at',b.to);}
-  Promise.all([oq,vq,pq]).then(function(res){
+  Promise.all([oq,vq,pq,aq]).then(function(res){
    if(route!=='team')return;
    var stat={},ensure=function(id){return stat[id]||(stat[id]={on:0,os:0,v:0,c:0});};
    ((res[0]&&res[0].data)||[]).forEach(function(o){var s=ensure(o.agent_id);s.on++;s.os+=o.total_agorot||0;});
    ((res[1]&&res[1].data)||[]).forEach(function(v){ensure(v.agent_id).v++;});
    ((res[2]&&res[2].data)||[]).forEach(function(p){ensure(p.agent_id).c+=p.amount_agorot||0;});
+   var att={},checkedIn={},isToday=(_teamRange.mode==='today');
+   ((res[3]&&res[3].data)||[]).forEach(function(a){var A=att[a.agent_id]||(att[a.agent_id]={days:0,mins:0,start:null,end:null});if(a.started_at){A.days++;checkedIn[a.agent_id]=1;A.start=a.started_at;A.end=a.ended_at||null;if(a.started_at&&a.ended_at)A.mins+=Math.max(0,Math.round((new Date(a.ended_at)-new Date(a.started_at))/60000));}});
+   var tm=function(t){return t?new Date(t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';};
+   var attLine=function(id){var A=att[id];if(isToday){if(A&&A.start)return '<div style="font-size:11.5px;color:var(--good);font-weight:700;margin-top:6px;direction:rtl">🕐 עלה '+tm(A.start)+(A.end?' · ירד '+tm(A.end):' · פעיל')+'</div>';return '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">🕐 לא עלה היום</div>';}if(A&&A.days)return '<div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:6px">🕐 '+A.days+' ימי נוכחות · '+Math.floor(A.mins/60)+'ש '+(A.mins%60)+'ד</div>';return '<div style="font-size:11.5px;color:var(--mut);margin-top:6px">🕐 אין נוכחות בטווח</div>';};
    var TON=0,TOS=0,TV=0,TC=0;for(var kk in stat){TON+=stat[kk].on;TOS+=stat[kk].os;TV+=stat[kk].v;TC+=stat[kk].c;}
    var nag=agents.filter(function(a){return a.role==='agent';}).length;
-   var kpi='<div class="card" style="background:#fbfaf8"><div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">'+teamRangeLabel()+' · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',nag,'var(--acc)')+drPill('ביקורים',TV,'var(--good)')+drPill('הזמנות',TON,'var(--acc)')+drPill('סכום',ils(TOS),'var(--accd)')+drPill('נגבה',ils(TC),'var(--bad)')+'</div></div>';
+   var nIn=Object.keys(checkedIn).length;
+   var kpi='<div class="card" style="background:#fbfaf8"><div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">'+teamRangeLabel()+' · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',nag,'var(--acc)')+drPill(isToday?'עלו היום':'עלו',nIn,'var(--acc2)')+drPill('ביקורים',TV,'var(--good)')+drPill('הזמנות',TON,'var(--acc)')+drPill('סכום',ils(TOS),'var(--accd)')+drPill('נגבה',ils(TC),'var(--bad)')+'</div></div>';
    agents.sort(function(a,b2){return ((stat[b2.agent_id]&&stat[b2.agent_id].os)||0)-((stat[a.agent_id]&&stat[a.agent_id].os)||0);});
    var h='';agents.forEach(function(x){var s=stat[x.agent_id]||{on:0,os:0,v:0,c:0};
-    h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(x.name)+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.cust_n||0)+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('ביקורים',s.v,'var(--good)')+drPill('הזמנות',s.on,'var(--acc)')+drPill('סכום',ils(s.os),'var(--accd)')+drPill('נגבה',ils(s.c),'var(--bad)')+((x.missed_cnt>0)?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+((x.aging_debt>0)?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div></div>';});
+    h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(x.name)+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.cust_n||0)+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('ביקורים',s.v,'var(--good)')+drPill('הזמנות',s.on,'var(--acc)')+drPill('סכום',ils(s.os),'var(--accd)')+drPill('נגבה',ils(s.c),'var(--bad)')+((x.missed_cnt>0)?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+((x.aging_debt>0)?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div>'+attLine(x.agent_id)+'</div>';});
    $('tbody').innerHTML=kpi+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין סוכנים.</div>');
    var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++)ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};
   },function(){if($('tbody'))$('tbody').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
@@ -2111,7 +2125,7 @@ function routeView(){
   document.body.appendChild(bar);
   var refreshCnt=function(){var n=selCount();if($('selc'))$('selc').textContent=n;if(document.getElementById('bcnt'))document.getElementById('bcnt').textContent=n;var bb=document.getElementById('buildbtn');if(bb)bb.disabled=(n===0)};
   refreshCnt();
-  var toggle=function(el){var id=el.getAttribute('data-id');routeSel[id]=!routeSel[id];var on=!!routeSel[id];el.style.border=on?'2px solid var(--acc)':'';el.style.background=on?'var(--accs)':'';var box=el.querySelector('.rselbox');box.style.border='2px solid '+(on?'var(--acc)':'#ccc');box.style.background=on?'var(--acc)':'#fff';box.textContent=on?'✓':'';refreshCnt();saveDailyRouteDeb()};
+  var toggle=function(el){var id=el.getAttribute('data-id');routeSel[id]=!routeSel[id];var on=!!routeSel[id];el.style.border=on?'2px solid var(--acc)':'';el.style.background=on?'var(--accs)':'';var box=el.querySelector('.rselbox');box.style.border='2px solid '+(on?'var(--acc)':'#ccc');box.style.background=on?'var(--acc)':'#fff';box.textContent=on?'✓':'';refreshCnt();saveDailyRoute()};
   var rc=document.querySelectorAll('.rsel');for(var k=0;k<rc.length;k++){(function(card){var box=card.querySelector('.rselbox');if(box)box.onclick=function(e){e.stopPropagation();toggle(card)};card.onclick=function(){openCustomer(card.getAttribute('data-id'))}})(rc[k])}
   var rq=document.querySelectorAll('.rquick');for(var rqi=0;rqi<rq.length;rqi++){rq[rqi].onclick=function(e){e.stopPropagation();routeSel[this.getAttribute('data-id')]=true;saveDailyRoute();render()}}
   if($('backtoday2'))$('backtoday2').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;routeArea=null;routeSel={};routeBuilt=false;restoreDailyRoute();render()};
