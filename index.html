@@ -297,10 +297,6 @@ function uuid(){try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID
  var h='0123456789abcdef',s='';for(var i=0;i<36;i++){s+=(i===8||i===13||i===18||i===23)?'-':(i===14?'4':(i===19?h[Math.floor(Math.random()*4)+8]:h[Math.floor(Math.random()*16)]))}return s}
 function isNetErr(e){if(!e)return false;if(navigator.onLine===false)return true;var m=((e.message||'')+' '+(e.details||'')+' '+(e.name||'')).toLowerCase();return m.indexOf('fetch')>-1||m.indexOf('network')>-1||m.indexOf('timeout')>-1||m.indexOf('typeerror')>-1||e.code==='ECONNRESET'}
 function netMark(ok,err){var was=OFF.online;if(ok){OFF.online=(navigator.onLine!==false);OFF.lastErr=null}else if(isNetErr(err)){OFF.online=false}if(was!==OFF.online)updateSync()}
-var _authFixing=false,_authTried=false;
-function isAuthErr(e){if(!e)return false;var c=(e.code||'')+'';var m=((e.message||'')+' '+(e.details||'')+' '+(e.hint||'')).toLowerCase();return c==='42501'||c==='PGRST301'||m.indexOf('permission denied')>-1||m.indexOf('jwt')>-1||m.indexOf('row-level security')>-1||m.indexOf('not authenticated')>-1;}
-function _forceRelogin(){_authTried=false;try{toast('החיבור פג — יש להתחבר מחדש כדי לשלוח את ההזמנות הממתינות');}catch(e){}me=null;try{localStorage.removeItem('lib_me')}catch(e){}route='home';try{loginView()}catch(e){}}
-function handleAuthLoss(){if(_authFixing)return;_authFixing=true;if(_authTried){_authFixing=false;_forceRelogin();return;}_authTried=true;var fail=function(){_authFixing=false;_forceRelogin();};try{sb.auth.refreshSession().then(function(r){_authFixing=false;if(r&&r.data&&r.data.session&&!r.error){obFlush();}else{fail();}},fail);}catch(e){fail();}}
 /* ---- IndexedDB ---- */
 var _db=null,_dbq=null;
 function idb(cb){
@@ -485,9 +481,9 @@ function obFlush(cb){
    if(i>=list.length){done();return}
    var op=list[i++];
    sendOp(op,function(ok,err){
-    if(ok){_authTried=false;sent++;obDel(op.id,function(){OFF.pending=Math.max(0,OFF.pending-1);updateSync();next()});return}
+    if(ok){sent++;obDel(op.id,function(){OFF.pending=Math.max(0,OFF.pending-1);updateSync();next()});return}
     op.tries=(op.tries||0)+1;op.err=(err&&(err.message||err.msg))||'שגיאה';op.net=isNetErr(err);
-    obPut(op,function(){if(isNetErr(err)){netMark(false,err);done()}else if(isAuthErr(err)){done();handleAuthLoss()}else{next()}});
+    obPut(op,function(){if(isNetErr(err)){netMark(false,err);done()}else{next()}});
    });
   };
   next();
@@ -518,7 +514,7 @@ function routeLocalLoad(){
 /* ---- network events ---- */
 window.addEventListener('online',function(){OFF.online=true;updateSync();obFlush();if(_drDirty)saveDailyRoute();locRefresh(function(ch){if(ch&&typeof render==='function')render()})});
 window.addEventListener('offline',function(){OFF.online=false;updateSync()});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){try{if(sb.auth.startAutoRefresh)sb.auth.startAutoRefresh();sb.auth.getSession();}catch(e){}obFlush();locTouch()}});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&navigator.onLine!==false){obFlush();locTouch()}});
 setInterval(function(){if(navigator.onLine!==false&&OFF.pending>0&&!OFF.syncing)obFlush()},45000);
 /* ---- service worker ---- */
 if('serviceWorker' in navigator){
@@ -616,15 +612,100 @@ function checkUpdate(){
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden){if(_updSeen)_applyUpd();else checkUpdate();}});
 
-function svgIcon(n){var s='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';var p={route:'<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>',visits:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.3"/>',reports:'<path d="M4 20V11M10 20V4M16 20v-6M21.5 20h-19"/>',targets:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.7" fill="var(--acc)"/>',newcust:'<circle cx="9.5" cy="8" r="3.3"/><path d="M3.6 20a6.4 6.4 0 0 1 11.8 0M19 8v6M22 11h-6"/>',broadcast:'<path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/>',admin:'<path d="M3 4h7v7H3zM14 4h7v7h-7zM14 15h7v5h-7zM3 15h7v5H3z"/>',stats:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/>'};return s+(p[n]||'')+'</svg>';}
+function svgIcon(n){var s='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';var p={route:'<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>',visits:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.3"/>',reports:'<path d="M4 20V11M10 20V4M16 20v-6M21.5 20h-19"/>',targets:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.7" fill="var(--acc)"/>',newcust:'<circle cx="9.5" cy="8" r="3.3"/><path d="M3.6 20a6.4 6.4 0 0 1 11.8 0M19 8v6M22 11h-6"/>',broadcast:'<path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/>',admin:'<path d="M3 4h7v7H3zM14 4h7v7h-7zM14 15h7v5h-7zM3 15h7v5H3z"/>',stats:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'};return s+(p[n]||'')+'</svg>';}
 // agent-only personal dashboard (moved off the customer-facing home)
-function actRow(a){
+function actRow(a,showAgent){
  var m={order:['🧾','הזמנה'],visit:['📝','ביקור'],payment:['💰','גבייה'],customer_new:['➕','לקוח חדש'],customer_upd:['✏️','עדכון פרטי לקוח']}[a.kind]||['•','פעולה'];
  var extra='';
  if((a.kind==='order'||a.kind==='payment')&&a.amount_agorot!=null)extra=' · '+ils(a.amount_agorot);
  else if(a.kind==='visit'&&a.extra)extra=' · '+esc(a.extra);
  var dt=a.ts?new Date(a.ts).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'}):'';
- return '<div style="display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin:5px 0"><span style="font-size:17px;flex:none">'+m[0]+'</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--head)">'+m[1]+extra+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(a.customer_name||'')+'</div></div><div style="font-size:11px;color:var(--mut);text-align:left;flex:none">'+dt+'</div></div>';
+ var sub=esc(a.customer_name||'');
+ if(showAgent&&a.agent_name)sub+=' · <span style="color:var(--acc);font-weight:700">'+esc(a.agent_name)+'</span>';
+ return '<div class="actrow" data-kind="'+esc(a.kind)+'" data-ref="'+esc(a.ref_id||'')+'" data-cust="'+esc(a.customer_id||'')+'" style="display:flex;align-items:center;gap:10px;background:var(--sur);border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin:5px 0;cursor:pointer"><span style="font-size:17px;flex:none">'+m[0]+'</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--head)">'+m[1]+extra+'</div><div style="font-size:11.5px;color:var(--mut)">'+sub+'</div></div><div style="font-size:11px;color:var(--mut);text-align:left;flex:none">'+dt+'</div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg></div>';
+}
+function renderActChips(elId,onpick){
+ var chips=[['','הכל'],['visit','ביקורים'],['order','הזמנות'],['payment','גבייה']];
+ var el=$(elId);if(!el)return;
+ var h='';chips.forEach(function(c,i){h+='<button class="chip actchip'+(i===0?' on':'')+'" data-k="'+c[0]+'" style="flex:none">'+c[1]+'</button>';});
+ el.innerHTML=h;
+ var bs=el.querySelectorAll('.actchip');for(var i=0;i<bs.length;i++){bs[i].onclick=function(){for(var j=0;j<bs.length;j++)bs[j].classList.remove('on');this.classList.add('on');onpick(this.getAttribute('data-k'));};}
+}
+function loadActs(elId,opts){
+ opts=opts||{};
+ var q=sb.from('liberty_team_activity').select('ts,kind,ref_id,customer_id,customer_name,agent_id,agent_name,amount_agorot,extra').order('ts',{ascending:false}).limit(opts.limit||60);
+ if(opts.agentId)q=q.eq('agent_id',opts.agentId);
+ if(opts.kind)q=q.eq('kind',opts.kind);
+ var el=$(elId);if(el)el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div>';
+ var key='acts:'+(opts.agentId||'all')+':'+(opts.kind||'all');
+ SQ(q,key,function(res){
+  var d=(res&&res.data)||[];var el=$(elId);if(!el)return;
+  if(!d.length){el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין פעולות להצגה.</div>';return;}
+  var hh='';d.forEach(function(a){hh+=actRow(a,opts.showAgent)});el.innerHTML=hh;
+  var rs=el.querySelectorAll('.actrow');for(var i=0;i<rs.length;i++){rs[i].onclick=function(){actDetail(this.getAttribute('data-kind'),this.getAttribute('data-ref'),this.getAttribute('data-cust'));};}
+ });
+}
+function actDetail(kind,ref,cust){
+ if(kind==='order')openActOrder(ref);
+ else if(kind==='visit')openActVisit(ref);
+ else if(kind==='payment')openActPayment(ref);
+ else openActCustomer(cust,kind);
+}
+function _actAgentName(id){return (_team&&_team.byId&&_team.byId[id])?_team.byId[id].name:'';}
+function actModal(title){
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+title+'</b><span class="amx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="amb list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};ov.querySelector('.amx').onclick=function(){ov.remove()};
+ return ov;
+}
+function openActOrder(id){
+ var ov=actModal('פירוט הזמנה');var body=ov.querySelector('.amb');
+ Promise.all([
+  sb.from('liberty_team_orders').select('id,customer_name,total_agorot,channel,created_at,agent_id').eq('id',id).single(),
+  sb.from('liberty_order_lines').select('sku,name,qty,unit_price_agorot,bonus_buy,bonus_get,line_total_agorot').eq('order_id',id)
+ ]).then(function(res){
+  var o=res[0].data;var lines=res[1].data||[];if(!o){body.innerHTML='<div style="padding:12px;color:var(--mut)">לא נמצא</div>';return;}
+  var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});
+  var an=_actAgentName(o.agent_id);
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:800">'+esc(o.customer_name||'')+'</div><div style="font-size:12px;color:var(--mut)">'+dt+' · '+lines.length+' פריטים'+(o.channel?(' · '+(o.channel==='phone'?'📞 טלפונית':'🤝 פיזי')):'')+'</div>'+(an?'<div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:2px">👤 '+esc(an)+'</div>':'')+'</div><div style="font-size:19px;font-weight:900;color:var(--acc)">'+ils(o.total_agorot)+'</div></div></div>';
+  lines.forEach(function(l){var free=freeUnits(l.qty,l.bonus_buy,l.bonus_get);h+='<div class="card" style="display:flex;align-items:center;gap:10px">'+thumb(l.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(l.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(l.sku)+' · '+l.qty+' × '+ils(l.unit_price_agorot)+(free>0?' · <span style="color:var(--warn);font-weight:700">🎁 '+free+' חינם</span>':'')+'</div></div><div style="font-size:14px;font-weight:800">'+ils(l.line_total_agorot)+'</div></div>'});
+  body.innerHTML=h;
+ },function(){body.innerHTML='<div style="padding:12px;color:var(--mut)">שגיאה בטעינה</div>';});
+}
+function openActVisit(id){
+ var ov=actModal('פירוט ביקור');var body=ov.querySelector('.amb');
+ sb.from('liberty_team_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date,agent_id').eq('id',id).single().then(function(res){
+  var v=res.data;if(!v){body.innerHTML='<div style="padding:12px;color:var(--mut)">לא נמצא</div>';return;}
+  var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'}):'';
+  var an=_actAgentName(v.agent_id);
+  var h='<div class="card"><div style="font-size:15px;font-weight:800">'+esc(v.customer_name||'')+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">📝 ביקור · '+dt+'</div>'+(an?'<div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:3px">👤 '+esc(an)+'</div>':'')+'<div style="margin-top:9px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span></div>'+(v.summary?'<div style="font-size:13px;margin-top:9px;line-height:1.5;color:var(--head)">'+esc(v.summary)+'</div>':'<div style="font-size:12.5px;color:var(--mut);margin-top:9px">אין סיכום.</div>')+(v.next_visit_date?'<div style="font-size:12px;color:var(--warn);margin-top:9px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>';
+  body.innerHTML=h;
+ },function(){body.innerHTML='<div style="padding:12px;color:var(--mut)">שגיאה בטעינה</div>';});
+}
+function openActPayment(id){
+ var ov=actModal('פירוט גבייה');var body=ov.querySelector('.amb');
+ sb.from('liberty_team_payments').select('customer_name,amount_agorot,method,status,reference,check_number,check_bank,check_due_date,photos,paid_date,created_at,agent_id').eq('id',id).single().then(function(res){
+  var p=res.data;if(!p){body.innerHTML='<div style="padding:12px;color:var(--mut)">לא נמצא</div>';return;}
+  var dt=(p.paid_date||p.created_at)?new Date(p.paid_date||p.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'}):'';
+  var an=_actAgentName(p.agent_id);
+  var pm=p.method?(PAYM[p.method]||p.method):'';
+  var ph='';var arr=p.photos||[];if(arr.length){ph='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">';arr.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';});ph+='</div>';}
+  var chk='';if(p.check_number||p.check_bank||p.check_due_date)chk='<div style="font-size:12px;color:var(--mut);margin-top:7px">🧾 שיק '+esc(p.check_number||'')+(p.check_bank?' · '+esc(p.check_bank):'')+(p.check_due_date?' · לפירעון '+p.check_due_date:'')+'</div>';
+  var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:800">'+esc(p.customer_name||'')+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">💰 גבייה · '+dt+(pm?' · '+pm:'')+'</div>'+(an?'<div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:2px">👤 '+esc(an)+'</div>':'')+'</div><div style="font-size:19px;font-weight:900;color:var(--bad)">'+ils(p.amount_agorot)+'</div></div>'+chk+(p.reference?'<div style="font-size:12px;color:var(--mut);margin-top:5px">אסמכתא: '+esc(p.reference)+'</div>':'')+ph+'</div>';
+  body.innerHTML=h;
+ },function(){body.innerHTML='<div style="padding:12px;color:var(--mut)">שגיאה בטעינה</div>';});
+}
+function openActCustomer(cust,kind){
+ var ov=actModal(kind==='customer_new'?'לקוח חדש':'עדכון פרטי לקוח');var body=ov.querySelector('.amb');
+ if(!cust){body.innerHTML='<div style="padding:12px;color:var(--mut)">אין פרטים להצגה</div>';return;}
+ sb.from('liberty_customers').select('name,city,address,lifecycle,area_name,agent_id').eq('id',cust).single().then(function(res){
+  var c=res.data;if(!c){body.innerHTML='<div style="padding:12px;color:var(--mut)">לא נמצא</div>';return;}
+  var an=_actAgentName(c.agent_id);
+  var lcm={active:'פעיל',potential:'פוטנציאלי',inactive:'לא פעיל'};
+  var h='<div class="card"><div style="font-size:15px;font-weight:800">'+esc(c.name||'')+'</div>'+((c.city||c.address)?'<div style="font-size:12.5px;color:var(--mut);margin-top:3px">📍 '+esc(c.city||'')+(c.address?' · '+esc(c.address):'')+'</div>':'')+(c.area_name?'<div style="font-size:12px;color:var(--mut);margin-top:3px">אזור '+esc(c.area_name)+'</div>':'')+(c.lifecycle?'<div style="margin-top:6px"><span class="badge b-mut">'+esc(lcm[c.lifecycle]||c.lifecycle)+'</span></div>':'')+(an?'<div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:6px">👤 '+esc(an)+'</div>':'')+(isMgr()?'':'<button class="cta" data-goc="'+esc(cust)+'" style="margin-top:11px;background:var(--accs);color:var(--accd);height:44px">פתיחת כרטיס הלקוח ›</button>')+'</div>';
+  body.innerHTML=h;
+  var b=body.querySelector('[data-goc]');if(b)b.onclick=function(){ov.remove();openCustomer(this.getAttribute('data-goc'));};
+ },function(){body.innerHTML='<div style="padding:12px;color:var(--mut)">שגיאה בטעינה</div>';});
 }
 function myStatsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">הנתונים שלי</div><div style="color:#cfe6e8;font-size:12px">מידע לעיניך בלבד</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -636,11 +717,12 @@ function myStatsView(){
    '</div>';
   h+='<button id="tgtcard" data-go="targets" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:14px;font-weight:700;color:var(--head)">יעד '+new Date().toLocaleDateString('he-IL',{month:'long'})+'</div><div id="tgtnum" style="font-size:12.5px;font-weight:700;color:var(--mut)">…</div></div><div class="bar" style="margin-top:9px"><div id="tgtbar" style="width:0%"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:11.5px"><span id="tgtpct" style="color:var(--acc);font-weight:700"></span><span id="tgtdays" style="color:var(--mut)"></span></div></button>';
   h+='<button data-go="targets" class="cta" style="background:var(--accs);color:var(--accd);margin-top:2px">פירוט יעדים ועמלות ›</button>';
-  h+='<div style="margin-top:8px"><div style="font-size:13.5px;font-weight:800;color:var(--head);padding:6px 2px 2px">🕘 היסטוריית פעולות</div><div style="font-size:11px;color:var(--mut);padding:0 2px 4px">תיעוד הפעולות האחרונות שביצעת</div><div id="actlist" style="padding:0"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div></div>';
+  h+='<div style="margin-top:8px"><div style="font-size:13.5px;font-weight:800;color:var(--head);padding:6px 2px 2px">🕘 היסטוריית פעולות</div><div style="font-size:11px;color:var(--mut);padding:0 2px 4px">לחצי על פעולה לצפייה בפירוט</div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px"></div><div id="actlist" style="padding:0"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div></div>';
   $('res').innerHTML=h;bindGo();
   var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
   SQ(sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart),'mystgt:'+mStart,function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
-  SQ(sb.from('liberty_my_activity').select('ts,kind,customer_name,amount_agorot,extra').order('ts',{ascending:false}).limit(40),'myact',function(res){var d2=(res&&res.data)||[];var hh='';if(!d2.length)hh='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין פעולות אחרונות לתיעוד.</div>';else d2.forEach(function(a){hh+=actRow(a)});if($('actlist'))$('actlist').innerHTML=hh;});
+  var _mak='';renderActChips('actchips',function(k){_mak=k;loadActs('actlist',{kind:k,showAgent:false});});
+  loadActs('actlist',{kind:'',showAgent:false});
  });
 }
 function qaBtn(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
@@ -659,7 +741,7 @@ function loadTeamData(cb){
 function mgrQa(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
 function mgrHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=mgrQa('team','צוות','stats')+mgrQa('agents','ניהול סוכנים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
+ var qa=mgrQa('team','צוות','stats')+mgrQa('teamacts','פעילות','clock')+mgrQa('agents','ניהול סוכנים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -690,6 +772,25 @@ function mgrHomeView(){
  });
 }
 function openAgentDash(id){_dashAgent=id;route='agentdash';render();}
+var _taAgent='',_taKind='';
+function teamActsView(){
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">פעילות הצוות</div><div style="color:#cfe6e8;font-size:12px">כל הפעולות בעסק · לחצי לפירוט</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ bindGo();
+ var h='<div class="card" style="padding:11px 13px"><label style="display:block"><span style="font-size:12px;color:var(--mut);font-weight:600">סינון לפי סוכן</span><select id="ta_agent" class="field" style="margin-top:5px"><option value="">כל הסוכנים</option></select></label></div>'+
+  '<div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px"></div>'+
+  '<div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
+ $('res').innerHTML=h;
+ _taAgent='';_taKind='';
+ var reload=function(){loadActs('actlist',{agentId:_taAgent,kind:_taKind,showAgent:true,limit:80});};
+ renderActChips('actchips',function(k){_taKind=k;reload();});
+ loadTeamData(function(t){
+  var sel=$('ta_agent');if(!sel)return;
+  var rows=(t.rows||[]).filter(function(x){return x.role==='agent';});
+  var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+x.agent_id+'">'+esc(x.name)+'</option>';});
+  sel.innerHTML=o;sel.value=_taAgent;sel.onchange=function(){_taAgent=this.value;reload();};
+ });
+ reload();
+}
 function agentsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">ניהול סוכנים</div><div style="color:#cfe6e8;font-size:12px">הוספה, השבתה, תפקיד ואיפוס קוד</div></div><button id="agnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ סוכן</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();
@@ -1937,6 +2038,7 @@ function renderRoute(){
  else if(route==='prodadmin')prodAdminView();
  else if(route==='team')teamView();
  else if(route==='agentdash')agentDashView();
+ else if(route==='teamacts')teamActsView();
  else if(route==='agents')agentsView();
  else if(route==='approvals')approvalsView();
  else if(route==='outbox')outboxView();
