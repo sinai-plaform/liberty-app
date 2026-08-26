@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-25';
+var APP_VERSION='2026-08-26-26';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -636,8 +636,10 @@ function loadActs(elId,opts){
  var q=sb.from('liberty_team_activity').select('ts,kind,ref_id,customer_id,customer_name,agent_id,agent_name,amount_agorot,extra').order('ts',{ascending:false}).limit(opts.limit||60);
  if(opts.agentId)q=q.eq('agent_id',opts.agentId);
  if(opts.kind)q=q.eq('kind',opts.kind);
+ if(opts.from)q=q.gte('ts',opts.from);
+ if(opts.to)q=q.lte('ts',opts.to);
  var el=$(elId);if(el)el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div>';
- var key='acts:'+(opts.agentId||'all')+':'+(opts.kind||'all');
+ var key='acts:'+(opts.agentId||'all')+':'+(opts.kind||'all')+':'+(opts.from||'')+':'+(opts.to||'');
  SQ(q,key,function(res){
   var d=(res&&res.data)||[];var el=$(elId);if(!el)return;
   if(!d.length){el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין פעולות להצגה.</div>';return;}
@@ -741,7 +743,7 @@ function loadTeamData(cb){
 function mgrQa(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
 function mgrHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=mgrQa('team','צוות','stats')+mgrQa('teamacts','פעילות','clock')+mgrQa('agents','ניהול סוכנים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
+ var qa=mgrQa('team','צוות','stats')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('reports','דוחות','reports');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -792,7 +794,7 @@ function teamActsView(){
  reload();
 }
 function agentsView(){
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">ניהול סוכנים</div><div style="color:#cfe6e8;font-size:12px">הוספה, השבתה, תפקיד ואיפוס קוד</div></div><button id="agnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ סוכן</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">ניהול עובדים</div><div style="color:#cfe6e8;font-size:12px">הוספה, השבתה, תפקיד, אזורים ואיפוס קוד</div></div><button id="agnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ עובד</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();
  if($('agnew'))$('agnew').onclick=function(){openAgentEditor(null);};
  loadAgents();
@@ -805,10 +807,49 @@ function loadAgents(){
   var h='';
   d.forEach(function(a){var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
    h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
-  $('res').innerHTML='<button id="aa_open" class="cta" style="background:var(--accs);color:var(--accd);margin-bottom:4px">🔗 שיוך אזור לסוכן</button><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' משתמשים · הקישי לעריכה</div>'+h;
-  if($('aa_open'))$('aa_open').onclick=openAreaAssign;
+  $('res').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' עובדים · הקישי לעריכה. שיוך אזורים נעשה מתוך כרטיס העובד (לתפקיד סוכן).</div>'+h;
   var it=document.querySelectorAll('.agedit');for(var i=0;i<it.length;i++){it[i].onclick=function(){openAgentEditor(window.__agentsById[this.getAttribute('data-id')]);};}
  },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה: '+esc((e&&e.message)||'')+'</div>';});
+}
+function _agLoadAreas(agentId){
+ var box=$('ag_areas');if(!box)return;
+ Promise.all([sb.from('areas').select('id,code,name').order('code'),sb.from('liberty_customers').select('area_id,agent_id').limit(5000),sb.from('liberty_agent_areas').select('agent_id,area_id').limit(5000)]).then(function(res){
+  var areas=(res[0]&&res[0].data)||[];
+  var cnt={},own={};((res[1]&&res[1].data)||[]).forEach(function(c){if(c.area_id==null)return;cnt[c.area_id]=(cnt[c.area_id]||0)+1;if(c.agent_id){(own[c.area_id]=own[c.area_id]||{})[c.agent_id]=(own[c.area_id][c.agent_id]||0)+1;}});
+  var cover={};((res[2]&&res[2].data)||[]).forEach(function(r){(cover[r.area_id]=cover[r.area_id]||{})[r.agent_id]=1;});
+  var byId=window.__agentsById||{};
+  var domOwner=function(aid){var m=own[aid]||{},best=null,bn=-1;for(var k in m){if(m[k]>bn){bn=m[k];best=k;}}return best;};
+  var h=areas.map(function(a){
+   var mine=cover[a.id]&&cover[a.id][agentId];
+   var otherAgent=null,cv=cover[a.id]||{};for(var k in cv){if(k!==agentId){otherAgent=k;break;}}
+   if(!otherAgent){var d=domOwner(a.id);if(d&&d!==agentId)otherAgent=d;}
+   var oname=otherAgent&&byId[otherAgent]?byId[otherAgent].name:'';
+   var hint=mine?'':(otherAgent?('משוייך ל'+esc(oname)):'');
+   return '<label class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;margin:4px 0"><input type="checkbox" class="agachk" data-id="'+a.id+'" data-name="'+esc(a.name||('אזור '+a.code))+'" data-was="'+(mine?'1':'0')+'" data-owner="'+esc(otherAgent||'')+'" data-ownername="'+esc(oname)+'"'+(mine?' checked':'')+' style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11px;color:var(--mut)">'+(cnt[a.id]||0)+' לקוחות'+(hint?' · '+hint:'')+'</div></div></label>';
+  }).join('');
+  box.innerHTML=h||'<div style="color:var(--mut);font-size:12.5px">אין אזורים.</div>';
+ },function(){box.innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינת אזורים</div>';});
+}
+function areaChoiceModal(areaName,otherName,agentName,cb){
+ var ov=document.createElement('div');ov.className='ovl';
+ ov.innerHTML='<div class="sheet" style="max-height:80vh"><div style="padding:16px"><div style="font-size:15px;font-weight:800;margin-bottom:6px">אזור '+esc(areaName)+' כבר משוייך ל'+esc(otherName||'סוכן אחר')+'</div><div style="font-size:12.5px;color:var(--mut);line-height:1.6;margin-bottom:14px">איך לשייך את '+esc(agentName)+' לאזור?</div><button class="cta acm" data-m="swap" style="margin-bottom:9px">החלפה — כל הלקוחות באזור יעברו ל'+esc(agentName)+'</button><button class="cta acm" data-m="both" style="background:var(--accs);color:var(--accd);margin-bottom:9px">צירוף — שני הסוכנים יכסו את האזור, בלי להזיז לקוחות קיימים</button><button class="cta acm" data-m="cancel" style="background:var(--sur);color:var(--mut);border:1px solid var(--line)">דילוג על האזור</button></div></div>';
+ document.body.appendChild(ov);
+ var bs=ov.querySelectorAll('.acm');for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var m=this.getAttribute('data-m');ov.remove();cb(m);};
+ ov.onclick=function(e){if(e.target===ov){ov.remove();cb('cancel');}};
+}
+function _agAreaApply(agentId,agentName,role,cb){
+ var box=$('ag_areas');var roleSel=$('ag_role');
+ if(!box||!roleSel||roleSel.value!=='agent'){cb();return;}
+ var chks=box.querySelectorAll('.agachk'),toAdd=[],ops=[];
+ for(var i=0;i<chks.length;i++){var c=chks[i],was=c.getAttribute('data-was')==='1',now=c.checked,aid=c.getAttribute('data-id');
+  if(now&&!was)toAdd.push({id:aid,name:c.getAttribute('data-name'),owner:c.getAttribute('data-owner'),ownerName:c.getAttribute('data-ownername')});
+  else if(!now&&was)ops.push({area:aid,mode:'remove'});
+ }
+ var conflicts=[];toAdd.forEach(function(a){if(a.owner&&a.owner!==agentId)conflicts.push(a);else ops.push({area:a.id,mode:'swap'});});
+ if(!ops.length&&!conflicts.length){cb();return;}
+ var run=function(){if(!ops.length){cb();return;}Promise.all(ops.map(function(o){return sb.rpc('liberty_area_assign',{p_area:o.area,p_agent:agentId,p_mode:o.mode});})).then(function(){cb();},function(){cb();});};
+ var qi=0,next=function(){if(qi>=conflicts.length){run();return;}var a=conflicts[qi++];areaChoiceModal(a.name,a.ownerName,agentName,function(mode){if(mode==='swap'||mode==='both')ops.push({area:a.id,mode:mode});next();});};
+ next();
 }
 function openAgentEditor(a){
  var isNew=!a;var mgrs=(window.__agents||[]).filter(function(x){return x.role==='manager'||x.role==='admin';});
@@ -818,11 +859,13 @@ function openAgentEditor(a){
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(isNew?'סוכן חדש':'עריכת '+esc(a.name))+'</b><span id="agx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
   '<div class="card"><label style="display:block"><span class="lbl">שם מלא</span><input id="ag_name" class="field" value="'+(a?esc(a.name):'')+'"></label><div style="display:flex;gap:9px;margin-top:10px"><label style="flex:1"><span class="lbl">קוד עובד'+(isNew?'':' (קבוע)')+'</span><input id="ag_code" class="field" inputmode="numeric" value="'+(a?esc(a.employee_code||''):'')+'"'+(isNew?'':' disabled')+'></label><label style="flex:1"><span class="lbl">טלפון</span><input id="ag_phone" class="field" inputmode="tel" value="'+(a?esc(a.phone||''):'')+'"></label></div></div>'+
   '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תפקיד</span><select id="ag_role" class="field">'+roleOpts+'</select></label><label style="flex:1"><span class="lbl">כפוף למנהל</span><select id="ag_mgr" class="field">'+mgrOpts+'</select></label></div></div>'+
+  (isNew?'':'<div class="card" id="ag_area_sec" style="display:'+(a.role==='agent'?'block':'none')+'"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:3px">🗺️ אזורים שהסוכן מכסה</div><div style="font-size:11px;color:var(--mut);margin-bottom:7px">סמני אזורים. אם אזור כבר משוייך לסוכן אחר תישאלי אם להחליף או לצרף.</div><div id="ag_areas"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
   '<div class="card"><label style="display:block"><span class="lbl">'+(isNew?'קוד אישי (PIN) — לפחות 4 ספרות':'איפוס קוד אישי (השאירי ריק לשמירה)')+'</span><input id="ag_pin" class="field" inputmode="numeric" placeholder="'+(isNew?'PIN לכניסה':'PIN חדש (אופציונלי)')+'"></label>'+(isNew?'':'<label style="display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag_active"'+(a.active?' checked':'')+'> סוכן פעיל</label>')+'</div>'+
   '<button class="cta" id="ag_save">'+(isNew?'יצירת סוכן':'שמירת שינויים')+'</button>'+
   '<div id="ag_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
   '</div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('agx').onclick=function(){ov.remove();};
+ if(!isNew){if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';};if(a.role==='agent')_agLoadAreas(a.id);}
  $('ag_save').onclick=function(){
   var name=$('ag_name').value.trim(),phone=$('ag_phone').value.trim()||null,role=$('ag_role').value,mgr=$('ag_mgr').value||null,pin=$('ag_pin').value.trim();
   var err=$('ag_err');err.textContent='';
@@ -839,7 +882,8 @@ function openAgentEditor(a){
    var upd={name:name,phone:phone,role:role,manager_id:mgr,active:$('ag_active').checked};
    sb.from('liberty_team_agents').update(upd).eq('id',a.id).then(function(r1){
     if(r1&&r1.error){err.textContent='שגיאה: '+r1.error.message;btn.disabled=false;btn.textContent='שמירת שינויים';return;}
-    var done=function(){toast('עודכן ✓');ov.remove();loadAgents();};
+    var fin=function(){toast('עודכן ✓');ov.remove();loadAgents();};
+    var done=function(){_agAreaApply(a.id,name,role,fin);};
     if(pin){sb.functions.invoke('manage-agent',{body:{action:'reset_pin',id:a.id,pin:pin}}).then(function(r2){if(r2.error||(r2.data&&r2.data.error)){err.textContent='הפרטים נשמרו אך איפוס ה-PIN נכשל: '+((r2.data&&r2.data.error)||r2.error.message);btn.disabled=false;btn.textContent='שמירת שינויים';return;}done();},function(){done();});}
     else done();
    },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='שמירת שינויים';});
@@ -900,24 +944,68 @@ function openAreaAssign(){
  };
 }
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
+var _teamTab='overview',_teamRange={mode:'today',from:null,to:null};
+function teamRangeBounds(){
+ var now=new Date();var y=now.getFullYear(),mo=now.getMonth(),d=now.getDate();var startToday=new Date(y,mo,d);var m=_teamRange.mode;
+ if(m==='custom'){var f=_teamRange.from?new Date(_teamRange.from+'T00:00:00'):startToday;var t=_teamRange.to?new Date(_teamRange.to+'T23:59:59'):new Date(y,mo,d,23,59,59);return {from:f.toISOString(),to:t.toISOString()};}
+ var from;if(m==='today')from=startToday;else if(m==='7')from=new Date(now.getTime()-7*86400000);else if(m==='30')from=new Date(now.getTime()-30*86400000);else if(m==='year')from=new Date(y,0,1);else from=startToday;
+ return {from:from.toISOString(),to:null};
+}
+function teamRangeLabel(){return {today:'היום','7':'7 ימים','30':'30 יום',year:'מתחילת השנה',custom:'טווח נבחר'}[_teamRange.mode]||'';}
 function teamView(){
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">סקירת צוות</div><div style="color:#cfe6e8;font-size:12px">בחרי סוכן לצפייה מפורטת</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">צוות</div><div style="color:#cfe6e8;font-size:12px">סקירה ופעילות · לפי טווח תאריכים</div></div></div></div><div class="list" id="res"></div>');
  bindGo();
+ var rng=[['today','היום'],['7','7 ימים'],['30','30 יום'],['year','השנה'],['custom','תאריכים']];
+ var rchips=rng.map(function(c){return '<button class="trchip chip'+(_teamRange.mode===c[0]?' on':'')+'" data-r="'+c[0]+'" style="white-space:nowrap;flex:none">'+c[1]+'</button>';}).join('');
+ var custom='<div id="tcustom" style="display:'+(_teamRange.mode==='custom'?'flex':'none')+';gap:8px;margin-top:2px"><label style="flex:1"><span class="lbl">מתאריך</span><input type="date" id="tc_from" class="field" value="'+(_teamRange.from||'')+'"></label><label style="flex:1"><span class="lbl">עד תאריך</span><input type="date" id="tc_to" class="field" value="'+(_teamRange.to||'')+'"></label></div>';
+ var tab=function(t,l){var on=_teamTab===t;return '<button class="ttab" data-t="'+t+'" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;background:'+(on?'#fff':'transparent')+';color:'+(on?'var(--accd)':'var(--acc)')+'">'+l+'</button>';};
+ var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('acts','פעילות')+'</div>';
+ $('res').innerHTML='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+rchips+'</div>'+custom+tabs+'<div id="tbody" style="margin-top:6px"><div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div></div>';
+ var rc=document.querySelectorAll('.trchip');for(var i=0;i<rc.length;i++)rc[i].onclick=function(){_teamRange.mode=this.getAttribute('data-r');if(_teamRange.mode!=='custom'){teamView();}else{var s=$('tcustom');if(s)s.style.display='flex';var all=document.querySelectorAll('.trchip');for(var j=0;j<all.length;j++)all[j].classList.toggle('on',all[j].getAttribute('data-r')==='custom');}};
+ var tc=document.querySelectorAll('.ttab');for(var k=0;k<tc.length;k++)tc[k].onclick=function(){_teamTab=this.getAttribute('data-t');teamView();};
+ if($('tc_from'))$('tc_from').onchange=function(){_teamRange.from=this.value;if(_teamRange.to)loadTeamTab();};
+ if($('tc_to'))$('tc_to').onchange=function(){_teamRange.to=this.value;if(_teamRange.from)loadTeamTab();};
+ loadTeamTab();
+}
+function loadTeamTab(){if(_teamTab==='acts')renderTeamActs();else renderTeamOverview();}
+function renderTeamActs(){
+ var el=$('tbody');if(!el)return;
+ el.innerHTML='<div class="card" style="padding:10px 12px"><label style="display:block"><span class="lbl">סינון לפי סוכן</span><select id="ta_agent" class="field"><option value="">כל הסוכנים</option></select></label></div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px"></div><div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
+ var b=teamRangeBounds();
+ var reload=function(){loadActs('actlist',{agentId:_taAgent,kind:_taKind,showAgent:true,limit:120,from:b.from,to:b.to});};
+ renderActChips('actchips',function(k){_taKind=k;reload();});
+ loadTeamData(function(t){var sel=$('ta_agent');if(!sel)return;var rows=(t.rows||[]).filter(function(x){return x.role==='agent';});var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+x.agent_id+'">'+esc(x.name)+'</option>';});sel.innerHTML=o;sel.value=_taAgent;sel.onchange=function(){_taAgent=this.value;reload();};});
+ reload();
+}
+function renderTeamOverview(){
+ var el=$('tbody');if(!el)return;el.innerHTML='<div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div>';
+ var b=teamRangeBounds();
  loadTeamData(function(t){
-  if(route!=='team')return;var rows=(t.rows||[]).filter(function(x){return x.role==='agent'||x.role==='manager';});
-  rows.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
-  var h='';
-  rows.forEach(function(x){h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(x.name)+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+esc(x.role)+'</span>'+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+x.cust_n+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'+
-   '<div style="font-size:10.5px;color:var(--mut);font-weight:800;margin:9px 2px 3px">היום</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+drPill('ביקורים',x.vis_today,'var(--good)')+drPill('הזמנות',x.ord_today_n,'var(--acc)')+drPill('סכום',ils(x.ord_today_sum),'var(--accd)')+drPill('נגבה',ils(x.coll_today),'var(--bad)')+'</div>'+
-   '<div style="font-size:10.5px;color:var(--mut);font-weight:800;margin:10px 2px 3px">החודש</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('הזמנות',x.ord_month_n,'var(--acc)')+drPill('סכום',ils(x.ord_month_sum),'var(--accd)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+'</div>'+
-   ((x.missed_cnt>0||x.aging_debt>0)?('<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">'+(x.missed_cnt>0?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div>'):'')+
-   '</div>';});
-  $('res').innerHTML=h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין סוכנים.</div>';
-  var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++){ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};}
+  if(route!=='team')return;
+  var agents=(t.rows||[]).filter(function(x){return x.role==='agent'||x.role==='manager';});
+  var oq=sb.from('liberty_team_orders').select('agent_id,total_agorot,created_at').gte('created_at',b.from);
+  var vq=sb.from('liberty_team_visits').select('agent_id,arrived_at').gte('arrived_at',b.from);
+  var pq=sb.from('liberty_team_payments').select('agent_id,amount_agorot,created_at').gte('created_at',b.from);
+  if(b.to){oq=oq.lte('created_at',b.to);vq=vq.lte('arrived_at',b.to);pq=pq.lte('created_at',b.to);}
+  Promise.all([oq,vq,pq]).then(function(res){
+   if(route!=='team')return;
+   var stat={},ensure=function(id){return stat[id]||(stat[id]={on:0,os:0,v:0,c:0});};
+   ((res[0]&&res[0].data)||[]).forEach(function(o){var s=ensure(o.agent_id);s.on++;s.os+=o.total_agorot||0;});
+   ((res[1]&&res[1].data)||[]).forEach(function(v){ensure(v.agent_id).v++;});
+   ((res[2]&&res[2].data)||[]).forEach(function(p){ensure(p.agent_id).c+=p.amount_agorot||0;});
+   var TON=0,TOS=0,TV=0,TC=0;for(var kk in stat){TON+=stat[kk].on;TOS+=stat[kk].os;TV+=stat[kk].v;TC+=stat[kk].c;}
+   var nag=agents.filter(function(a){return a.role==='agent';}).length;
+   var kpi='<div class="card" style="background:#fbfaf8"><div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">'+teamRangeLabel()+' · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',nag,'var(--acc)')+drPill('ביקורים',TV,'var(--good)')+drPill('הזמנות',TON,'var(--acc)')+drPill('סכום',ils(TOS),'var(--accd)')+drPill('נגבה',ils(TC),'var(--bad)')+'</div></div>';
+   agents.sort(function(a,b2){return ((stat[b2.agent_id]&&stat[b2.agent_id].os)||0)-((stat[a.agent_id]&&stat[a.agent_id].os)||0);});
+   var h='';agents.forEach(function(x){var s=stat[x.agent_id]||{on:0,os:0,v:0,c:0};
+    h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(x.name)+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.cust_n||0)+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('ביקורים',s.v,'var(--good)')+drPill('הזמנות',s.on,'var(--acc)')+drPill('סכום',ils(s.os),'var(--accd)')+drPill('נגבה',ils(s.c),'var(--bad)')+((x.missed_cnt>0)?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+((x.aging_debt>0)?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div></div>';});
+   $('tbody').innerHTML=kpi+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין סוכנים.</div>');
+   var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++)ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};
+  },function(){if($('tbody'))$('tbody').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
  });
 }
 var _dashRange='month';
-function adRangeFrom(r){var now=new Date();if(r==='today')return new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();if(r==='7')return new Date(now.getTime()-7*86400000).toISOString();if(r==='30')return new Date(now.getTime()-30*86400000).toISOString();return new Date(now.getFullYear(),now.getMonth(),1).toISOString();}
+function adRangeFrom(r){var now=new Date();if(r==='today')return new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();if(r==='7')return new Date(now.getTime()-7*86400000).toISOString();if(r==='30')return new Date(now.getTime()-30*86400000).toISOString();if(r==='year')return new Date(now.getFullYear(),0,1).toISOString();return new Date(now.getFullYear(),now.getMonth(),1).toISOString();}
 function agentDashView(){
  var id=_dashAgent;if(!id){route='team';render();return;}
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">‹</button><div style="flex:1"><div id="adname" style="color:#fff;font-size:19px;font-weight:700">כרטיס סוכן</div><div style="color:#cfe6e8;font-size:12px">סקירת ביצועים</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -925,8 +1013,8 @@ function agentDashView(){
   if(route!=='agentdash')return;var x=(t.byId||{})[id];if(!x){$('res').innerHTML='<div class="card">סוכן לא נמצא</div>';return;}
   if($('adname'))$('adname').textContent=x.name;
   var ach=+x.comm_month||0;var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));
-  var lbl={today:'היום','7':'7 ימים','30':'30 יום',month:'החודש'};
-  var chipHtml=['today','7','30','month'].map(function(c){return '<button class="adrange chip'+(_dashRange===c?' on':'')+'" data-r="'+c+'" style="white-space:nowrap">'+lbl[c]+'</button>';}).join('');
+  var lbl={today:'היום','7':'7 ימים','30':'30 יום',month:'החודש',year:'השנה'};
+  var chipHtml=['today','7','30','month','year'].map(function(c){return '<button class="adrange chip'+(_dashRange===c?' on':'')+'" data-r="'+c+'" style="white-space:nowrap">'+lbl[c]+'</button>';}).join('');
   var h='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+chipHtml+'</div>';
   h+='<div id="ad_kpi" class="card" style="background:#fbfaf8"><div style="color:var(--mut);font-size:12px">טוען…</div></div>';
   if(x.missed_cnt>0||x.aging_debt>0)h+='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;display:flex;gap:9px;flex-wrap:wrap">'+(x.missed_cnt>0?drPill('ביקורים שפוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב מזדקן >90',ils(x.aging_debt)+' · '+x.aging_cnt,'var(--bad)'):'')+'</div>';
