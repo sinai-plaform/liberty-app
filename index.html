@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-19';
+var APP_VERSION='2026-08-25-20';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -662,9 +662,9 @@ function mgrHomeView(){
  loadTeamData(function(t){
   if(route!=='home')return;
   var rows=t.rows||[];var agents=rows.filter(function(x){return x.role==='agent';});
-  var tOrdN=0,tOrdSum=0,tVis=0,tColl=0,activeN=0;
-  rows.forEach(function(x){tOrdN+=+x.ord_today_n||0;tOrdSum+=+x.ord_today_sum||0;tVis+=+x.vis_today||0;tColl+=+x.coll_month||0;if(x.active&&x.role==='agent')activeN++;});
-  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('ביקורים',tVis,'var(--good)')+drPill('סוכנים',activeN,'var(--acc)')+drPill('נגבה (חודש)',ils(tColl),'var(--bad)')+'</div>';
+  var tOrdN=0,tOrdSum=0,tVis=0,tCollToday=0,activeN=0;
+  rows.forEach(function(x){tOrdN+=+x.ord_today_n||0;tOrdSum+=+x.ord_today_sum||0;tVis+=+x.vis_today||0;tCollToday+=+x.coll_today||0;if(x.active&&x.role==='agent')activeN++;});
+  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',activeN,'var(--acc)')+drPill('ביקורים',tVis,'var(--good)')+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('נגבה (יומי)',ils(tCollToday),'var(--bad)')+'</div>';
   agents.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
   var h='';
   if(!agents.length)h='<div class="card" style="color:var(--mut);font-size:12.5px;text-align:center;padding:16px">אין סוכנים להצגה.</div>';
@@ -687,7 +687,8 @@ function loadAgents(){
   var h='';
   d.forEach(function(a){var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
    h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
-  $('res').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' משתמשים · הקישי לעריכה</div>'+h;
+  $('res').innerHTML='<button id="aa_open" class="cta" style="background:var(--accs);color:var(--accd);margin-bottom:4px">🔗 שיוך אזור לסוכן</button><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' משתמשים · הקישי לעריכה</div>'+h;
+  if($('aa_open'))$('aa_open').onclick=openAreaAssign;
   var it=document.querySelectorAll('.agedit');for(var i=0;i<it.length;i++){it[i].onclick=function(){openAgentEditor(window.__agentsById[this.getAttribute('data-id')]);};}
  },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה: '+esc((e&&e.message)||'')+'</div>';});
 }
@@ -726,6 +727,34 @@ function openAgentEditor(a){
    },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='שמירת שינויים';});
   }
  };
+}
+function approvalsView(){
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">אישורים · החזרות</div><div style="color:#cfe6e8;font-size:12px">אישור או דחייה של החזרות ממתינות</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ bindGo();loadApprovals();
+}
+function loadApprovals(){
+ sb.from('liberty_returns_admin').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(100).then(function(r){
+  if(route!=='approvals')return;var d=(r&&r.data)||[];
+  if(!d.length){$('res').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px">✔ אין החזרות הממתינות לאישור.</div>';return;}
+  var h='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' ממתינות</div>';
+  d.forEach(function(x){var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';});ph+='</div>';}
+   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+esc(x.customer_name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.return_date||'')+(x.agent_name?' · ע״י '+esc(x.agent_name):'')+'</div><div style="font-size:12.5px;margin-top:5px">'+esc(x.reason||'')+'</div></div>'+(x.credit_agorot?'<div style="font-size:16px;font-weight:800;color:var(--bad);white-space:nowrap">'+ils(x.credit_agorot)+'</div>':'')+'</div>'+ph+'<div style="display:flex;gap:8px;margin-top:11px"><button class="apok cta" data-id="'+x.id+'" style="height:42px;background:var(--good)">✓ אישור</button><button class="apno cta" data-id="'+x.id+'" style="height:42px;background:var(--bads);color:var(--bad)">✕ דחייה</button></div></div>';});
+  $('res').innerHTML=h;
+  var setStatus=function(id,st){sb.from('returns').update({status:st,approved_by:me?me.id:null}).eq('id',id).then(function(rr){if(rr&&rr.error){toast('שגיאה: '+rr.error.message);return;}toast(st==='approved'?'ההחזרה אושרה ✓':'ההחזרה נדחתה');loadApprovals();},function(){toast('שגיאה');});};
+  var ok=document.querySelectorAll('.apok');for(var i=0;i<ok.length;i++)ok[i].onclick=function(){var id=this.getAttribute('data-id');this.disabled=true;setStatus(id,'approved');};
+  var no=document.querySelectorAll('.apno');for(var j=0;j<no.length;j++)no[j].onclick=function(){var id=this.getAttribute('data-id');this.disabled=true;setStatus(id,'rejected');};
+ },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה: '+esc((e&&e.message)||'')+'</div>';});
+}
+function openAreaAssign(){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ var agents=(window.__agents||[]).filter(function(a){return a.role==='agent'&&a.active;});
+ var agOpts=agents.map(function(a){return '<option value="'+a.id+'">'+esc(a.name)+'</option>';}).join('');
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🔗 שיוך אזור לסוכן</b><span id="aax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div class="card"><div style="font-size:12px;color:var(--warn);line-height:1.6;margin-bottom:8px">כל הלקוחות באזור שייבחר יועברו לסוכן הנבחר. פעולה זו משנה שיוך לקוחות.</div><label style="display:block"><span class="lbl">אזור</span><select id="aa_area" class="field"><option value="">טוען אזורים…</option></select></label><label style="display:block;margin-top:10px"><span class="lbl">סוכן יעד</span><select id="aa_agent" class="field">'+(agOpts||'<option value="">אין סוכנים פעילים</option>')+'</select></label></div><div id="aa_info" style="font-size:12.5px;color:var(--mut);text-align:center;padding:2px 0"></div><button class="cta" id="aa_go">שייך לקוחות</button><div id="aa_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('aax').onclick=function(){ov.remove();};
+ sb.from('areas').select('id,code,name').order('code').then(function(r){var a=(r&&r.data)||[];var sel=$('aa_area');if(sel)sel.innerHTML='<option value="">— בחרי אזור —</option>'+a.map(function(x){return '<option value="'+x.id+'">'+esc(x.name||('אזור '+x.code))+'</option>';}).join('');});
+ var updInfo=function(){var area=$('aa_area').value;if(!area){$('aa_info').textContent='';return;}sb.from('liberty_customers').select('id',{count:'exact',head:true}).eq('area_id',area).then(function(r){if($('aa_info'))$('aa_info').textContent='באזור זה '+(r.count!=null?r.count:'?')+' לקוחות';},function(){});};
+ $('aa_area').onchange=updInfo;
+ $('aa_go').onclick=function(){var area=$('aa_area').value,agent=$('aa_agent').value;var err=$('aa_err');err.textContent='';if(!area||!agent){err.textContent='בחרי אזור וסוכן';return;}var an=(agents.filter(function(a){return a.id===agent;})[0]||{}).name||'';confirmModal('להעביר את כל הלקוחות באזור הנבחר לסוכן '+an+'?',function(){var b=$('aa_go');b.disabled=true;b.textContent='משייך…';sb.rpc('liberty_reassign_area',{p_area:area,p_agent:agent}).then(function(r){if(r.error){err.textContent='שגיאה: '+r.error.message;b.disabled=false;b.textContent='שייך לקוחות';return;}toast(r.data+' לקוחות שויכו ל'+an+' ✓');ov.remove();},function(e){err.textContent='שגיאה: '+((e&&e.message)||'');b.disabled=false;b.textContent='שייך לקוחות';});},'העברה');};
 }
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 function teamView(){
@@ -1830,7 +1859,7 @@ function renderRoute(){
  else if(route==='team')teamView();
  else if(route==='agentdash')agentDashView();
  else if(route==='agents')agentsView();
- else if(route==='approvals')soonView('אישורים','אישור החזרות והרשאות הטבה לכל סוכן — בבנייה (שלב הבא).');
+ else if(route==='approvals')approvalsView();
  else if(route==='outbox')outboxView();
  else homeView();
 }
