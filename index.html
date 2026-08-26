@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-20';
+var APP_VERSION='2026-08-25-21';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -635,8 +635,9 @@ var _team=null,_teamTs=0,_dashAgent=null;
 function loadTeamData(cb){
  if(_team&&(Date.now()-_teamTs<60000)){cb(_team);return;}
  if(navigator.onLine===false){cb(_team||{rows:[],byId:{}});return;}
- sb.from('liberty_team_summary').select('*').then(function(r){
-  var rows=(r&&r.data)||[];var byId={};rows.forEach(function(x){byId[x.agent_id]=x;});
+ Promise.all([sb.from('liberty_team_summary').select('*'),sb.from('liberty_team_extra').select('*')]).then(function(res){
+  var rows=(res[0]&&res[0].data)||[];var ex={};((res[1]&&res[1].data)||[]).forEach(function(e){ex[e.agent_id]=e;});
+  var byId={};rows.forEach(function(x){var e=ex[x.agent_id]||{};x.aging_debt=+e.aging_debt||0;x.aging_cnt=+e.aging_cnt||0;x.missed_cnt=+e.missed_cnt||0;byId[x.agent_id]=x;});
   _team={rows:rows,byId:byId};_teamTs=Date.now();cb(_team);
  },function(){cb(_team||{rows:[],byId:{}});});
 }
@@ -662,9 +663,10 @@ function mgrHomeView(){
  loadTeamData(function(t){
   if(route!=='home')return;
   var rows=t.rows||[];var agents=rows.filter(function(x){return x.role==='agent';});
-  var tOrdN=0,tOrdSum=0,tVis=0,tCollToday=0,activeN=0;
-  rows.forEach(function(x){tOrdN+=+x.ord_today_n||0;tOrdSum+=+x.ord_today_sum||0;tVis+=+x.vis_today||0;tCollToday+=+x.coll_today||0;if(x.active&&x.role==='agent')activeN++;});
-  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',activeN,'var(--acc)')+drPill('ביקורים',tVis,'var(--good)')+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('נגבה (יומי)',ils(tCollToday),'var(--bad)')+'</div>';
+  var tOrdN=0,tOrdSum=0,tVis=0,tCollToday=0,activeN=0,tMissed=0,tAging=0;
+  rows.forEach(function(x){tOrdN+=+x.ord_today_n||0;tOrdSum+=+x.ord_today_sum||0;tVis+=+x.vis_today||0;tCollToday+=+x.coll_today||0;tMissed+=+x.missed_cnt||0;tAging+=+x.aging_debt||0;if(x.active&&x.role==='agent')activeN++;});
+  var alertRow=(tMissed>0||tAging>0)?('<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)">'+(tMissed>0?drPill('ביקורים שפוספסו',tMissed,'var(--warn)'):'')+(tAging>0?drPill('חוב מזדקן >90 יום',ils(tAging),'var(--bad)'):'')+'</div>'):'';
+  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',activeN,'var(--acc)')+drPill('ביקורים',tVis,'var(--good)')+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('נגבה (יומי)',ils(tCollToday),'var(--bad)')+'</div>'+alertRow;
   agents.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
   var h='';
   if(!agents.length)h='<div class="card" style="color:var(--mut);font-size:12.5px;text-align:center;padding:16px">אין סוכנים להצגה.</div>';
@@ -764,29 +766,49 @@ function teamView(){
   if(route!=='team')return;var rows=(t.rows||[]).filter(function(x){return x.role==='agent'||x.role==='manager';});
   rows.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
   var h='';
-  rows.forEach(function(x){h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(x.name)+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+esc(x.role)+'</span>'+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+x.cust_n+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('היום',x.ord_today_n+' · '+ils(x.ord_today_sum),'var(--acc)')+drPill('הזמנות חודש',x.ord_month_n,'var(--acc)')+drPill('סכום חודש',ils(x.ord_month_sum),'var(--accd)')+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+'</div></div>';});
+  rows.forEach(function(x){h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(x.name)+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+esc(x.role)+'</span>'+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+x.cust_n+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('היום',x.ord_today_n+' · '+ils(x.ord_today_sum),'var(--acc)')+drPill('הזמנות חודש',x.ord_month_n,'var(--acc)')+drPill('סכום חודש',ils(x.ord_month_sum),'var(--accd)')+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+(x.missed_cnt>0?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div></div>';});
   $('res').innerHTML=h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין סוכנים.</div>';
   var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++){ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};}
  });
 }
+var _dashRange='month';
+function adRangeFrom(r){var now=new Date();if(r==='today')return new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();if(r==='7')return new Date(now.getTime()-7*86400000).toISOString();if(r==='30')return new Date(now.getTime()-30*86400000).toISOString();return new Date(now.getFullYear(),now.getMonth(),1).toISOString();}
 function agentDashView(){
  var id=_dashAgent;if(!id){route='team';render();return;}
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">‹</button><div style="flex:1"><div id="adname" style="color:#fff;font-size:19px;font-weight:700">כרטיס סוכן</div><div style="color:#cfe6e8;font-size:12px">נתוני החודש הנוכחי</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">‹</button><div style="flex:1"><div id="adname" style="color:#fff;font-size:19px;font-weight:700">כרטיס סוכן</div><div style="color:#cfe6e8;font-size:12px">סקירת ביצועים</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  loadTeamData(function(t){
   if(route!=='agentdash')return;var x=(t.byId||{})[id];if(!x){$('res').innerHTML='<div class="card">סוכן לא נמצא</div>';return;}
   if($('adname'))$('adname').textContent=x.name;
   var ach=+x.comm_month||0;var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));
-  var h='<div class="card" style="display:flex;gap:9px;flex-wrap:wrap;background:#fbfaf8">'+drPill('הזמנות',x.ord_month_n,'var(--acc)')+drPill('סכום',ils(x.ord_month_sum),'var(--accd)')+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+drPill('לקוחות',x.cust_n,'var(--acc)')+'</div>';
+  var lbl={today:'היום','7':'7 ימים','30':'30 יום',month:'החודש'};
+  var chipHtml=['today','7','30','month'].map(function(c){return '<button class="adrange chip'+(_dashRange===c?' on':'')+'" data-r="'+c+'" style="white-space:nowrap">'+lbl[c]+'</button>';}).join('');
+  var h='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+chipHtml+'</div>';
+  h+='<div id="ad_kpi" class="card" style="background:#fbfaf8"><div style="color:var(--mut);font-size:12px">טוען…</div></div>';
+  if(x.missed_cnt>0||x.aging_debt>0)h+='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;display:flex;gap:9px;flex-wrap:wrap">'+(x.missed_cnt>0?drPill('ביקורים שפוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב מזדקן >90',ils(x.aging_debt)+' · '+x.aging_cnt,'var(--bad)'):'')+'</div>';
   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13.5px;font-weight:800">עמלה מזכה · יעד חודשי</div><div style="font-size:12.5px;font-weight:700;color:var(--mut)">'+ils(ach)+' / '+ils(tgt)+'</div></div><div class="bar" style="margin-top:8px"><div style="width:'+pct+'%;background:var(--good)"></div></div><div style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:6px">'+pct+'% מהיעד</div></div>';
   h+='<div id="ad_debt"></div>';
-  h+='<div style="font-size:13.5px;font-weight:800;color:var(--head);padding:4px 2px 2px">🧾 הזמנות אחרונות</div><div id="ad_ord"><div style="color:var(--mut);font-size:12px;padding:6px 2px">טוען…</div></div>';
-  h+='<div style="font-size:13.5px;font-weight:800;color:var(--head);padding:8px 2px 2px">📝 ביקורים אחרונים</div><div id="ad_vis"><div style="color:var(--mut);font-size:12px;padding:6px 2px">טוען…</div></div>';
+  h+='<div style="font-size:13.5px;font-weight:800;color:var(--head);padding:4px 2px 2px">🧾 הזמנות בטווח</div><div id="ad_ord"><div style="color:var(--mut);font-size:12px;padding:6px 2px">טוען…</div></div>';
+  h+='<div style="font-size:13.5px;font-weight:800;color:var(--head);padding:8px 2px 2px">📝 ביקורים בטווח</div><div id="ad_vis"><div style="color:var(--mut);font-size:12px;padding:6px 2px">טוען…</div></div>';
   $('res').innerHTML=h;
-  // open debt of this agent's customers
   sb.from('liberty_customers').select('debt_agorot').eq('agent_id',id).then(function(r){var tot=0,cnt=0;(r&&r.data||[]).forEach(function(c){if(c.debt_agorot>0){tot+=c.debt_agorot;cnt++;}});if($('ad_debt'))$('ad_debt').innerHTML=tot>0?('<div class="card" style="background:var(--bads);display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:800;color:var(--bad)">💰 חוב פתוח בלקוחות הסוכן</span><b style="color:var(--bad)">'+ils(tot)+' · '+cnt+' לקוחות</b></div>'):'';},function(){});
-  sb.from('liberty_team_orders').select('customer_name,total_agorot,channel,created_at').eq('agent_id',id).order('created_at',{ascending:false}).limit(15).then(function(r){var d=(r&&r.data)||[],hh='';d.forEach(function(o){var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});hh+='<div class="card" style="display:flex;align-items:center;gap:10px;padding:9px 12px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(o.customer_name||'')+'</div><div style="font-size:11px;color:var(--mut)">'+dt+(o.channel==='phone'?' · 📞':(o.channel==='inperson'?' · 🤝':''))+'</div></div><div style="font-size:15px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>';});if($('ad_ord'))$('ad_ord').innerHTML=hh||'<div style="color:var(--mut);font-size:12.5px;padding:6px 2px">אין הזמנות החודש.</div>';},function(){});
-  sb.from('liberty_team_visits').select('customer_name,outcome,summary,arrived_at').eq('agent_id',id).order('arrived_at',{ascending:false}).limit(15).then(function(r){var d=(r&&r.data)||[],hh='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';hh+='<div class="card" style="padding:10px 12px"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">'+esc(v.customer_name||'')+'</b><span style="font-size:11px;color:var(--mut)">'+dt+'</span></div><div style="font-size:11.5px;margin-top:2px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div></div>';});if($('ad_vis'))$('ad_vis').innerHTML=hh||'<div style="color:var(--mut);font-size:12.5px;padding:6px 2px">אין ביקורים.</div>';},function(){});
+  var rc=document.querySelectorAll('.adrange');for(var i=0;i<rc.length;i++){rc[i].onclick=function(){_dashRange=this.getAttribute('data-r');var all=document.querySelectorAll('.adrange');for(var j=0;j<all.length;j++)all[j].classList.toggle('on',all[j].getAttribute('data-r')===_dashRange);adLoadRange(id);};}
+  adLoadRange(id);
  });
+}
+function adLoadRange(id){
+ var from=adRangeFrom(_dashRange);
+ Promise.all([
+  sb.from('liberty_team_orders').select('customer_name,total_agorot,channel,created_at').eq('agent_id',id).gte('created_at',from).order('created_at',{ascending:false}),
+  sb.from('liberty_team_visits').select('customer_name,outcome,summary,arrived_at').eq('agent_id',id).gte('arrived_at',from).order('arrived_at',{ascending:false}),
+  sb.from('payments').select('amount_agorot,created_at').eq('collected_by',id).gte('created_at',from)
+ ]).then(function(res){
+  if(route!=='agentdash')return;
+  var ords=(res[0]&&res[0].data)||[],viss=(res[1]&&res[1].data)||[],pays=(res[2]&&res[2].data)||[];
+  var oSum=0,cSum=0;ords.forEach(function(o){oSum+=o.total_agorot||0;});pays.forEach(function(p){cSum+=p.amount_agorot||0;});
+  if($('ad_kpi'))$('ad_kpi').innerHTML='<div style="font-size:11.5px;color:var(--mut);font-weight:700;margin-bottom:7px">בטווח הנבחר</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('הזמנות',ords.length,'var(--acc)')+drPill('סכום',ils(oSum),'var(--accd)')+drPill('ביקורים',viss.length,'var(--good)')+drPill('נגבה',ils(cSum),'var(--bad)')+'</div>';
+  var hh='';ords.slice(0,25).forEach(function(o){var dt=new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'});hh+='<div class="card" style="display:flex;align-items:center;gap:10px;padding:9px 12px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(o.customer_name||'')+'</div><div style="font-size:11px;color:var(--mut)">'+dt+(o.channel==='phone'?' · 📞':(o.channel==='inperson'?' · 🤝':''))+'</div></div><div style="font-size:15px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot)+'</div></div>';});if($('ad_ord'))$('ad_ord').innerHTML=hh||'<div style="color:var(--mut);font-size:12.5px;padding:6px 2px">אין הזמנות בטווח.</div>';
+  var hv='';viss.slice(0,25).forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';hv+='<div class="card" style="padding:10px 12px"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">'+esc(v.customer_name||'')+'</b><span style="font-size:11px;color:var(--mut)">'+dt+'</span></div><div style="font-size:11.5px;margin-top:2px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div></div>';});if($('ad_vis'))$('ad_vis').innerHTML=hv||'<div style="color:var(--mut);font-size:12.5px;padding:6px 2px">אין ביקורים בטווח.</div>';
+ },function(){});
 }
 function homeView(){
  if(isMgr()){mgrHomeView();return;}
