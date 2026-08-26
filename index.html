@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-26';
+var APP_VERSION='2026-08-26-27';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -832,10 +832,38 @@ function _agLoadAreas(agentId){
 }
 function areaChoiceModal(areaName,otherName,agentName,cb){
  var ov=document.createElement('div');ov.className='ovl';
- ov.innerHTML='<div class="sheet" style="max-height:80vh"><div style="padding:16px"><div style="font-size:15px;font-weight:800;margin-bottom:6px">אזור '+esc(areaName)+' כבר משוייך ל'+esc(otherName||'סוכן אחר')+'</div><div style="font-size:12.5px;color:var(--mut);line-height:1.6;margin-bottom:14px">איך לשייך את '+esc(agentName)+' לאזור?</div><button class="cta acm" data-m="swap" style="margin-bottom:9px">החלפה — כל הלקוחות באזור יעברו ל'+esc(agentName)+'</button><button class="cta acm" data-m="both" style="background:var(--accs);color:var(--accd);margin-bottom:9px">צירוף — שני הסוכנים יכסו את האזור, בלי להזיז לקוחות קיימים</button><button class="cta acm" data-m="cancel" style="background:var(--sur);color:var(--mut);border:1px solid var(--line)">דילוג על האזור</button></div></div>';
+ var on=esc(otherName||'סוכן אחר'),an=esc(agentName);
+ ov.innerHTML='<div class="sheet" style="max-height:88vh"><div style="padding:16px;overflow:auto"><div style="font-size:15px;font-weight:800;margin-bottom:6px">אזור '+esc(areaName)+' כבר משוייך ל'+on+'</div><div style="font-size:12.5px;color:var(--mut);line-height:1.6;margin-bottom:14px">איך לשייך את '+an+' לאזור?</div>'+
+  '<button class="cta acm" data-m="swap" style="margin-bottom:9px;text-align:right;line-height:1.4;height:auto;padding:11px 13px">🔄 החלפה מלאה<div style="font-size:11px;font-weight:500;opacity:.9">כל הלקוחות באזור עוברים ל'+an+' ('+on+' מאבד אותם)</div></button>'+
+  '<button class="cta acm" data-m="shared" style="background:var(--accs);color:var(--accd);margin-bottom:9px;text-align:right;line-height:1.4;height:auto;padding:11px 13px">🤝 עבודה משותפת<div style="font-size:11px;font-weight:500;opacity:.85">שני הסוכנים על אותם עסקים · הלקוחות משותפים, לא זזים</div></button>'+
+  '<button class="cta acm" data-m="partial" style="background:var(--accs);color:var(--accd);margin-bottom:9px;text-align:right;line-height:1.4;height:auto;padding:11px 13px">✂️ העברת חלק מהלקוחות<div style="font-size:11px;font-weight:500;opacity:.85">בחירה ידנית של לקוחות שיעברו מ'+on+' אליו</div></button>'+
+  '<button class="cta acm" data-m="scratch" style="background:var(--accs);color:var(--accd);margin-bottom:9px;text-align:right;line-height:1.4;height:auto;padding:11px 13px">🌱 מתחיל מאפס<div style="font-size:11px;font-weight:500;opacity:.85">מכסה את האזור, צובר לקוחות חדשים · קיימים נשארים אצל '+on+'</div></button>'+
+  '<button class="cta acm" data-m="cancel" style="background:var(--sur);color:var(--mut);border:1px solid var(--line)">דילוג על האזור</button></div></div>';
  document.body.appendChild(ov);
  var bs=ov.querySelectorAll('.acm');for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var m=this.getAttribute('data-m');ov.remove();cb(m);};
  ov.onclick=function(e){if(e.target===ov){ov.remove();cb('cancel');}};
+}
+function areaPartialPicker(areaId,areaName,newAgentId,newAgentName,cb){
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">העברת לקוחות · '+esc(areaName)+'</b><span class="ppx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div style="font-size:12px;color:var(--mut);padding:2px 2px 6px">סמני את הלקוחות שיעברו ל'+esc(newAgentName)+'.</div><div id="pp_list"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div><div id="pp_sum" style="font-size:12.5px;color:var(--acc);font-weight:700;text-align:center;padding:6px 0"></div><button class="cta" id="pp_go" disabled>העברת הנבחרים</button></div></div>';
+ document.body.appendChild(ov);
+ var closed=false,fin=function(moved){if(closed)return;closed=true;ov.remove();cb(moved||0);};
+ ov.querySelector('.ppx').onclick=function(){fin(0);};ov.onclick=function(e){if(e.target===ov)fin(0);};
+ var byId=window.__agentsById||{};
+ sb.from('liberty_customers').select('id,name,agent_id').eq('area_id',areaId).order('name').then(function(r){
+  var d=(r&&r.data||[]).filter(function(c){return c.agent_id!==newAgentId;});
+  if(!d.length){$('pp_list').innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין לקוחות להעברה באזור זה.</div>';return;}
+  var h=d.map(function(c){var own=c.agent_id&&byId[c.agent_id]?byId[c.agent_id].name:'';return '<label class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;margin:4px 0"><input type="checkbox" class="ppchk" data-id="'+c.id+'" style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(c.name||'')+'</div>'+(own?'<div style="font-size:11px;color:var(--mut)">כרגע: '+esc(own)+'</div>':'')+'</div></label>';}).join('');
+  $('pp_list').innerHTML=h;
+  var chks=document.querySelectorAll('.ppchk');
+  var refresh=function(){var n=0;for(var i=0;i<chks.length;i++)if(chks[i].checked)n++;if($('pp_sum'))$('pp_sum').textContent=n?('נבחרו '+n+' לקוחות'):'';if($('pp_go'))$('pp_go').disabled=n===0;};
+  for(var i=0;i<chks.length;i++)chks[i].onchange=refresh;
+  $('pp_go').onclick=function(){var ids=[];for(var j=0;j<chks.length;j++)if(chks[j].checked)ids.push(chks[j].getAttribute('data-id'));if(!ids.length)return;var b=$('pp_go');b.disabled=true;b.textContent='מעביר…';
+   Promise.all(ids.map(function(id){return sb.rpc('liberty_reassign_customer',{p_customer:id,p_agent:newAgentId});})).then(function(){
+    sb.rpc('liberty_area_assign',{p_area:areaId,p_agent:newAgentId,p_mode:'cover'}).then(function(){fin(ids.length);},function(){fin(ids.length);});
+   },function(){b.disabled=false;b.textContent='העברת הנבחרים';toast('שגיאה בהעברה');});
+  };
+ },function(){if($('pp_list'))$('pp_list').innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינת לקוחות</div>';});
 }
 function _agAreaApply(agentId,agentName,role,cb){
  var box=$('ag_areas');var roleSel=$('ag_role');
@@ -848,7 +876,16 @@ function _agAreaApply(agentId,agentName,role,cb){
  var conflicts=[];toAdd.forEach(function(a){if(a.owner&&a.owner!==agentId)conflicts.push(a);else ops.push({area:a.id,mode:'swap'});});
  if(!ops.length&&!conflicts.length){cb();return;}
  var run=function(){if(!ops.length){cb();return;}Promise.all(ops.map(function(o){return sb.rpc('liberty_area_assign',{p_area:o.area,p_agent:agentId,p_mode:o.mode});})).then(function(){cb();},function(){cb();});};
- var qi=0,next=function(){if(qi>=conflicts.length){run();return;}var a=conflicts[qi++];areaChoiceModal(a.name,a.ownerName,agentName,function(mode){if(mode==='swap'||mode==='both')ops.push({area:a.id,mode:mode});next();});};
+ var qi=0,next=function(){
+  if(qi>=conflicts.length){run();return;}
+  var a=conflicts[qi++];
+  areaChoiceModal(a.name,a.ownerName,agentName,function(mode){
+   if(mode==='swap')ops.push({area:a.id,mode:'swap'});
+   else if(mode==='shared'||mode==='scratch')ops.push({area:a.id,mode:'cover'});
+   else if(mode==='partial'){areaPartialPicker(a.id,a.name,agentId,agentName,function(){next();});return;}
+   next();
+  });
+ };
  next();
 }
 function openAgentEditor(a){
@@ -1616,7 +1653,7 @@ function saveOrder(force){
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
  var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;route='myorders';render()};
  var oid=editingOrderId||uuid();
- var orow={id:oid,customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel,payment_method:cartPayMethod,payment_terms:(cartPaidOnSpot?null:cartPayTerms)};
+ var orow={id:oid,customer_id:cart.cust.id,agent_id:(me?me.id:null),subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel,payment_method:cartPayMethod,payment_terms:(cartPaidOnSpot?null:cartPayTerms)};
  var _payFile=cartPayPhotoFile;
  if(t.disc>0)orow.note=discLabel();
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
