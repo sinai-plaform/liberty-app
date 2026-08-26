@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-23';
+var APP_VERSION='2026-08-25-24';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -802,7 +802,11 @@ function teamView(){
   if(route!=='team')return;var rows=(t.rows||[]).filter(function(x){return x.role==='agent'||x.role==='manager';});
   rows.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
   var h='';
-  rows.forEach(function(x){h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(x.name)+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+esc(x.role)+'</span>'+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+x.cust_n+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('היום',x.ord_today_n+' · '+ils(x.ord_today_sum),'var(--acc)')+drPill('הזמנות חודש',x.ord_month_n,'var(--acc)')+drPill('סכום חודש',ils(x.ord_month_sum),'var(--accd)')+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+(x.missed_cnt>0?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div></div>';});
+  rows.forEach(function(x){h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(x.name)+' <span style="font-size:11px;color:var(--mut);font-weight:600">· '+esc(x.role)+'</span>'+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+x.cust_n+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'+
+   '<div style="font-size:10.5px;color:var(--mut);font-weight:800;margin:9px 2px 3px">היום</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+drPill('ביקורים',x.vis_today,'var(--good)')+drPill('הזמנות',x.ord_today_n,'var(--acc)')+drPill('סכום',ils(x.ord_today_sum),'var(--accd)')+drPill('נגבה',ils(x.coll_today),'var(--bad)')+'</div>'+
+   '<div style="font-size:10.5px;color:var(--mut);font-weight:800;margin:10px 2px 3px">החודש</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+drPill('ביקורים',x.vis_month,'var(--good)')+drPill('הזמנות',x.ord_month_n,'var(--acc)')+drPill('סכום',ils(x.ord_month_sum),'var(--accd)')+drPill('נגבה',ils(x.coll_month),'var(--bad)')+'</div>'+
+   ((x.missed_cnt>0||x.aging_debt>0)?('<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">'+(x.missed_cnt>0?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+(x.aging_debt>0?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div>'):'')+
+   '</div>';});
   $('res').innerHTML=h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:20px">אין סוכנים.</div>';
   var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++){ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};}
  });
