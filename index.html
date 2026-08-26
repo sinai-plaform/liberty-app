@@ -102,7 +102,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-25-22';
+var APP_VERSION='2026-08-25-23';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -119,8 +119,8 @@ var COMM_TIERS=[{min:8500000,pct:3},{min:7500000,pct:2}]; // 85K->3%, 75K->2%, e
 function commRate(s){for(var i=0;i<COMM_TIERS.length;i++){if(s>=COMM_TIERS[i].min)return COMM_TIERS[i].pct}return 0}
 var cart={cust:null,items:[]};
 // ---- in-progress order auto-saved as a local draft (survives reload/offline/app-close) ----
-function saveCart(){try{localStorage.setItem('lib_cart',JSON.stringify({cust:cart.cust,items:cart.items,paid:cartPaidOnSpot,channel:cartChannel,editing:editingOrderId||null,discount:cart.discount||null,ts:Date.now()}))}catch(e){}}
-function loadCart(){try{var s=localStorage.getItem('lib_cart');if(!s)return;var c=JSON.parse(s);if(c&&c.items&&c.items.length){cart={cust:c.cust||null,items:c.items};if(c.discount)cart.discount=c.discount;if(typeof c.paid==='boolean')cartPaidOnSpot=c.paid;if(c.channel)cartChannel=c.channel;if(c.editing)editingOrderId=c.editing;}}catch(e){}}
+function saveCart(){try{localStorage.setItem('lib_cart',JSON.stringify({cust:cart.cust,items:cart.items,paid:cartPaidOnSpot,channel:cartChannel,paym:cartPayMethod,payt:cartPayTerms,editing:editingOrderId||null,discount:cart.discount||null,ts:Date.now()}))}catch(e){}}
+function loadCart(){try{var s=localStorage.getItem('lib_cart');if(!s)return;var c=JSON.parse(s);if(c&&c.items&&c.items.length){cart={cust:c.cust||null,items:c.items};if(c.discount)cart.discount=c.discount;if(typeof c.paid==='boolean')cartPaidOnSpot=c.paid;if(c.channel)cartChannel=c.channel;if(c.paym)cartPayMethod=c.paym;if(c.payt)cartPayTerms=c.payt;if(c.editing)editingOrderId=c.editing;}}catch(e){}}
 function clearCartDraft(){try{localStorage.removeItem('lib_cart')}catch(e){}}
 var editingOrderId=null;
 function confirmModal(msg,onYes,yesLabel){
@@ -135,12 +135,18 @@ var ORDER_EMAILS='sales3@libertyisrael.co.il';
 var ORDER_WA='972545030607';
 var cartPaidOnSpot=true;
 var cartChannel='inperson';   // 'inperson' = ביקור פיזי · 'phone' = טלפונית
+var cartPayMethod='cash';     // מזומן/אשראי/שיק/העברה (בתשלום במקום)
+var cartPayTerms='net30';     // immediate/net30/net60/net90 (בחיוב/חוב)
+var cartPayPhotoData=null;    // preview data URL (documentation photo)
+var cartPayPhotoFile=null;    // File to upload on save
+var PAYM={cash:'💵 מזומן',credit:'💳 אשראי',check:'🧾 שיק',transfer:'🏦 העברה'};
+var PAYT={immediate:'מיידי',net30:'שוטף+30',net60:'שוטף+60',net90:'שוטף+90'};
 function buildOrderText(custName,items,t,isUpdate){
  var s=(isUpdate?'*עדכון הזמנה* ⚠️\n':'*הזמנה חדשה* 🧾\n')+'לקוח: '+custName+'\nתאריך: '+new Date().toLocaleDateString('he-IL')+'\n\n';
  items.forEach(function(it){var f=freeUnits(it.qty,it.bonus_buy,it.bonus_get);s+='• '+it.name+' ('+it.sku+') — '+it.qty+' × '+ils(it.price)+' = '+ils(it.price*it.qty)+(f>0?' (+'+f+' חינם)':'')+'\n'});
  s+='\nסכום ביניים: '+ils(t.sub)+(t.disc>0?'\n'+discLabel()+': −'+ils(t.disc):'')+'\nמע״מ 18%: '+ils(t.vat)+'\nסה״כ לתשלום: '+ils(t.total);
  s+='\nאופן: '+(cartChannel==='phone'?'טלפונית':'ביקור פיזי');
- s+='\nתשלום: '+(cartPaidOnSpot?'שולם במקום':'לתשלום / חוב');
+ s+='\nתשלום: '+(cartPaidOnSpot?('שולם במקום · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')):('לתשלום / חוב · '+(PAYT[cartPayTerms]||'')+' · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')));
  return s;
 }
 function orderSentModal(custName,items,t,isUpdate,done){
@@ -448,12 +454,17 @@ function sendOp(op,cb){
     sb.from('order_items').insert(p.items).then(fin,boom);
    },boom);
   };
-  if(op.kind==='order_update'){
-   var patch={};for(var k in p.order){if(k!=='id')patch[k]=p.order[k]}
-   sb.from('orders').update(patch).eq('id',oid).then(function(r){if(r&&r.error){cb(false,r.error);return}items()},boom);
-  }else{
-   sb.from('orders').insert(p.order).then(function(r){if(r&&r.error&&!isDupErr(r.error)){cb(false,r.error);return}items()},boom);
-  }
+  var writeOrder=function(){
+   if(op.kind==='order_update'){
+    var patch={};for(var k in p.order){if(k!=='id')patch[k]=p.order[k]}
+    sb.from('orders').update(patch).eq('id',oid).then(function(r){if(r&&r.error){cb(false,r.error);return}items()},boom);
+   }else{
+    sb.from('orders').insert(p.order).then(function(r){if(r&&r.error&&!isDupErr(r.error)){cb(false,r.error);return}items()},boom);
+   }
+  };
+  if((op.files||[]).length){
+   upFiles(op,'payment-photos',function(urls,err){if(err){cb(false,err);return}if(urls&&urls.length)p.order.payment_photo=urls[0];writeOrder();});
+  }else writeOrder();
   return}
  cb(false,{message:'סוג פעולה לא מוכר'});
 }
@@ -753,15 +764,19 @@ function openAreaAssign(){
  var agOpts=agents.map(function(a){return '<option value="'+a.id+'">'+esc(a.name)+'</option>';}).join('');
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🔗 שיוך אזורים לסוכן</b><span id="aax" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto"><div class="card"><div style="font-size:12px;color:var(--warn);line-height:1.6;margin-bottom:8px">כל הלקוחות באזורים שתסמני יועברו לסוכן הנבחר. סוכן יכול לכסות כמה אזורים — סמני כמה שצריך.</div><label style="display:block"><span class="lbl">סוכן יעד</span><select id="aa_agent" class="field">'+(agOpts||'<option value="">אין סוכנים פעילים</option>')+'</select></label></div><div style="font-size:12px;color:var(--mut);font-weight:700;padding:2px 2px 4px">בחרי אזורים</div><div id="aa_areas"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div><div id="aa_sum" style="font-size:12.5px;color:var(--acc);font-weight:700;text-align:center;padding:6px 0"></div><button class="cta" id="aa_go" disabled>שייך לקוחות</button><div id="aa_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('aax').onclick=function(){ov.remove();};
- var areasList=[],countByCode={};
- Promise.all([sb.from('areas').select('id,code,name').order('code'),sb.from('liberty_customers').select('area_code').limit(5000)]).then(function(res){
+ var areasList=[],countByCode={},ownersByCode={};
+ Promise.all([sb.from('areas').select('id,code,name').order('code'),sb.from('liberty_customers').select('area_code,agent_id').limit(5000)]).then(function(res){
   areasList=(res[0]&&res[0].data)||[];
-  ((res[1]&&res[1].data)||[]).forEach(function(c){if(c.area_code!=null)countByCode[c.area_code]=(countByCode[c.area_code]||0)+1;});
+  ((res[1]&&res[1].data)||[]).forEach(function(c){if(c.area_code==null)return;countByCode[c.area_code]=(countByCode[c.area_code]||0)+1;if(c.agent_id){(ownersByCode[c.area_code]=ownersByCode[c.area_code]||{})[c.agent_id]=(ownersByCode[c.area_code][c.agent_id]||0)+1;}});
+  var domAgent=function(code){var m=ownersByCode[code]||{},best=null,bn=-1;for(var k in m){if(m[k]>bn){bn=m[k];best=k;}}return best;};
   var h=areasList.map(function(a){var n=countByCode[a.code]||0;return '<label class="card aarea" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 13px"><input type="checkbox" class="aachk" data-id="'+a.id+'" data-code="'+a.code+'" data-n="'+n+'" style="width:20px;height:20px;flex:none"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(a.name||('אזור '+a.code))+'</div><div style="font-size:11px;color:var(--mut)">'+n+' לקוחות</div></div></label>';}).join('');
   if($('aa_areas'))$('aa_areas').innerHTML=h||'<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין אזורים.</div>';
   var chks=document.querySelectorAll('.aachk');
   var refresh=function(){var tot=0,cnt=0;for(var i=0;i<chks.length;i++){if(chks[i].checked){cnt++;tot+=+chks[i].getAttribute('data-n')||0;}}if($('aa_sum'))$('aa_sum').textContent=cnt?('נבחרו '+cnt+' אזורים · '+tot+' לקוחות'):'';if($('aa_go'))$('aa_go').disabled=(cnt===0);};
+  var precheck=function(){var ag=$('aa_agent')?$('aa_agent').value:'';for(var i=0;i<chks.length;i++){chks[i].checked=(ag&&domAgent(chks[i].getAttribute('data-code'))===ag);}refresh();};
   for(var i=0;i<chks.length;i++)chks[i].onchange=refresh;
+  if($('aa_agent'))$('aa_agent').onchange=precheck;
+  precheck();
  },function(){if($('aa_areas'))$('aa_areas').innerHTML='<div style="color:var(--bad);font-size:12.5px">שגיאה בטעינת אזורים</div>';});
  $('aa_go').onclick=function(){
   var agent=$('aa_agent').value,err=$('aa_err');err.textContent='';
@@ -1346,12 +1361,22 @@ function ordersView(){
   (cart.items.length?'<button id="discbtn" style="width:100%;height:42px;background:#fff;border:1px dashed var(--acc);color:var(--acc);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">🎁 '+(cart.discount&&cart.discount.value?'שינוי הטבת סוכן':'הטבת סוכן / הנחה')+'</button>':'')+
   '<div class="card" style="background:var(--surq)"><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">סכום ביניים · '+_units+' יח׳</span><b>'+ils(t.sub)+'</b></div>'+(t.disc>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--good)"><span style="font-weight:700">🎁 '+esc(discLabel())+'</span><b>−'+ils(t.disc)+'</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(t.vat)+'</b></div>'+(t.freeq>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--warnd)"><span>🎁 יח׳ בונוס חינם</span><b>'+t.freeq+' יח׳</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:18px;padding:9px 0 2px;border-top:1px solid var(--line);margin-top:5px"><span style="font-weight:700;color:var(--head)">סה״כ לתשלום</span><b style="color:var(--acc);letter-spacing:-.01em">'+ils(t.total)+'</b></div></div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">אופן ביצוע ההזמנה</div><div style="display:flex;gap:8px"><button class="chip chan'+(cartChannel==='inperson'?' on':'')+'" data-ch="inperson" style="flex:1">🤝 ביקור פיזי</button><button class="chip chan'+(cartChannel==='phone'?' on':'')+'" data-ch="phone" style="flex:1">📞 טלפונית</button></div></div>'+
-  '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">תשלום</div><div style="display:flex;gap:8px"><button class="chip pos'+(cartPaidOnSpot?' on':'')+'" data-p="1" style="flex:1">✅ שולם במקום</button><button class="chip pos'+(cartPaidOnSpot?'':' on')+'" data-p="0" style="flex:1">🧾 לחיוב / חוב</button></div>'+(cartPaidOnSpot?'':'<div style="font-size:11.5px;color:var(--warn);margin-top:7px;font-weight:600">ההזמנה תירשם כחוב על הלקוח</div>')+'</div>'+
+  '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">תשלום</div><div style="display:flex;gap:8px"><button class="chip pos'+(cartPaidOnSpot?' on':'')+'" data-p="1" style="flex:1">✅ שולם במקום</button><button class="chip pos'+(cartPaidOnSpot?'':' on')+'" data-p="0" style="flex:1">🧾 לחיוב / חוב</button></div>'+
+   (cartPaidOnSpot?(
+     '<div style="font-size:11.5px;color:var(--mut);font-weight:600;margin:10px 0 6px">אמצעי תשלום</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+Object.keys(PAYM).map(function(m){return '<button class="chip paym'+(cartPayMethod===m?' on':'')+'" data-m="'+m+'" style="flex:1;min-width:70px">'+PAYM[m]+'</button>';}).join('')+'</div>'+
+     '<div style="margin-top:10px"><div style="font-size:11.5px;color:var(--mut);font-weight:600;margin-bottom:6px">📷 צילום תיעוד (קבלה/שיק) — לא חובה</div><input id="payphoto" type="file" accept="image/*" capture="environment" style="font-size:12px;width:100%"><div id="payphotoprev" style="margin-top:7px">'+(cartPayPhotoData?'<img src="'+cartPayPhotoData+'" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">':'')+'</div></div>'
+    ):(
+     '<div style="font-size:11.5px;color:var(--warn);margin:9px 0 6px;font-weight:600">ההזמנה תירשם כחוב על הלקוח · בסיס תשלום:</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+Object.keys(PAYT).map(function(tk){return '<button class="chip payt'+(cartPayTerms===tk?' on':'')+'" data-t="'+tk+'" style="flex:1;min-width:66px">'+PAYT[tk]+'</button>';}).join('')+'</div>'+
+     '<div style="margin-top:10px"><div style="font-size:11.5px;color:var(--mut);font-weight:600;margin-bottom:6px">אמצעי תשלום עתידי</div><div style="display:flex;gap:7px;flex-wrap:wrap">'+Object.keys(PAYM).map(function(m){return '<button class="chip paym'+(cartPayMethod===m?' on':'')+'" data-m="'+m+'" style="flex:1;min-width:70px">'+PAYM[m]+'</button>';}).join('')+'</div></div>'
+    ))+'</div>'+
   (belowMin?'<div class="card" style="background:#fff4e5;border:1px solid #f0c98a;padding:12px 14px"><div style="font-size:13.5px;font-weight:800;color:var(--warnd)">⚠️ מתחת למינימום הזמנה</div><div style="font-size:12.5px;color:var(--warn);margin-top:4px;font-weight:600">מינימום להזמנה הוא ₪600 (לפני מע״מ). חסרים עוד '+ils(missMin)+'.</div></div>':'')+
   '<button class="cta" id="saveord"'+((!cart.cust||!cart.items.length)?' disabled':'')+'>'+(editingOrderId?'עדכון הזמנה · ':'שמירת הזמנה · ')+ils(t.total)+'</button>'+
   '</div>');
  var pos=document.querySelectorAll('.pos');for(var pi=0;pi<pos.length;pi++){pos[pi].onclick=function(){cartPaidOnSpot=this.getAttribute('data-p')==='1';render()}}
  var chn=document.querySelectorAll('.chan');for(var ci2=0;ci2<chn.length;ci2++){chn[ci2].onclick=function(){cartChannel=this.getAttribute('data-ch');saveCart();render()}}
+ var paym=document.querySelectorAll('.paym');for(var pm=0;pm<paym.length;pm++){paym[pm].onclick=function(){cartPayMethod=this.getAttribute('data-m');saveCart();render()}}
+ var payt=document.querySelectorAll('.payt');for(var pt=0;pt<payt.length;pt++){payt[pt].onclick=function(){cartPayTerms=this.getAttribute('data-t');saveCart();render()}}
+ if($('payphoto'))$('payphoto').onchange=function(){var f=this.files&&this.files[0];if(!f)return;cartPayPhotoFile=f;compressImg(f,function(u){cartPayPhotoData=u;if($('payphotoprev'))$('payphotoprev').innerHTML='<img src="'+u+'" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">';});};
  if($('discbtn'))$('discbtn').onclick=openDiscountSheet;
  $('myord').onclick=function(e){e.preventDefault();if(editingOrderId){editingOrderId=null;cart={cust:null,items:[]}}route='myorders';render()};
  if($('pickcust'))$('pickcust').onclick=openCustPicker;
@@ -1392,12 +1417,13 @@ function saveOrder(force){
  $('saveord').disabled=true;$('saveord').textContent='שומר…';
  var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
- var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';route='myorders';render()};
+ var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;route='myorders';render()};
  var oid=editingOrderId||uuid();
- var orow={id:oid,customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel};
+ var orow={id:oid,customer_id:cart.cust.id,subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel,payment_method:cartPayMethod,payment_terms:(cartPaidOnSpot?null:cartPayTerms)};
+ var _payFile=cartPayPhotoFile;
  if(t.disc>0)orow.note=discLabel();
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
- obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,created_at:new Date().toISOString()},null,function(){
+ obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){
   if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
   orderSentModal(snapName,snapItems,t,isUpd,finishOrder);
  });
@@ -1408,7 +1434,7 @@ function openOrderDetail(id){
  ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">פירוט הזמנה</b><span id="odx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div id="odbody" class="list" style="overflow:auto"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('odx').onclick=function(){ov.remove()};
  Promise.all([
-  sb.from('liberty_my_orders').select('id,customer_id,customer_name,total_agorot,commissionable_agorot,discount_agorot,created_at,status,channel').eq('id',id).single(),
+  sb.from('liberty_my_orders').select('id,customer_id,customer_name,total_agorot,commissionable_agorot,discount_agorot,created_at,status,channel,payment_method,payment_terms,payment_photo').eq('id',id).single(),
   sb.from('liberty_order_lines').select('product_id,sku,name,qty,unit_price_agorot,bonus_buy,bonus_get,is_commissionable,line_total_agorot').eq('order_id',id)
  ]).then(function(res){
   var o=res[0].data;var lines=res[1].data||[];if(!o){$('odbody').innerHTML='לא נמצא';return}
@@ -1417,11 +1443,13 @@ function openOrderDetail(id){
   var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:800">'+esc(o.customer_name||'')+'</div><div style="font-size:12px;color:var(--mut)">'+dt+' · '+lines.length+' פריטים</div></div><div style="font-size:19px;font-weight:900;color:var(--acc)">'+ils(o.total_agorot)+'</div></div></div>';
   lines.forEach(function(l){var free=freeUnits(l.qty,l.bonus_buy,l.bonus_get);h+='<div class="card" style="display:flex;align-items:center;gap:10px">'+thumb(l.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25">'+esc(l.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(l.sku)+' · '+l.qty+' × '+ils(l.unit_price_agorot)+(free>0?' · <span style="color:var(--warn);font-weight:700">🎁 '+free+' חינם</span>':'')+'</div></div><div style="font-size:14px;font-weight:800">'+ils(l.line_total_agorot)+'</div></div>'});
   h+='<div class="card" style="background:#fbfaf8"><div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span style="color:var(--mut)">סכום ביניים</span><b>'+ils(sub)+'</b></div>'+(disc>0?'<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;color:var(--good)"><span style="font-weight:700">🎁 הטבת סוכן</span><b>−'+ils(disc)+'</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(vat)+'</b></div><div style="display:flex;justify-content:space-between;font-size:16px;padding:6px 0 0;border-top:1px solid var(--line);margin-top:4px"><span style="font-weight:800">סה״כ</span><b style="color:var(--acc)">'+ils(o.total_agorot)+'</b></div></div>';
+  var _onspot=!o.payment_terms;var _pm=o.payment_method?(PAYM[o.payment_method]||o.payment_method):'';
+  h+='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">תשלום</div><div style="font-size:13.5px;font-weight:700">'+(_onspot?('✅ שולם במקום'+(_pm?' · '+_pm:'')):('🧾 לחיוב / חוב'+(o.payment_terms?' · '+(PAYT[o.payment_terms]||o.payment_terms):'')+(_pm?' · '+_pm:'')))+'</div>'+(o.channel?'<div style="font-size:11.5px;color:var(--mut);margin-top:3px">'+(o.channel==='phone'?'📞 טלפונית':'🤝 ביקור פיזי')+'</div>':'')+(o.payment_photo?'<a href="'+esc(o.payment_photo)+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px"><img src="'+esc(o.payment_photo)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>':'')+'</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="od_edit" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">✏️ עריכה</button><button id="od_del" class="cta" style="height:46px;background:var(--bads);color:var(--bad)">🗑️ מחיקה</button></div>';
   $('odbody').innerHTML=h;
   $('od_edit').onclick=function(){
    cart={cust:{id:o.customer_id,name:o.customer_name},items:lines.map(function(l){return {id:l.product_id,sku:l.sku,name:l.name,price:l.unit_price_agorot,comm:l.is_commissionable===true,bonus_buy:l.bonus_buy,bonus_get:l.bonus_get,qty:l.qty}})};if(o.discount_agorot>0)cart.discount={mode:'order',kind:'amt',value:o.discount_agorot};
-   cartChannel=o.channel||'inperson';editingOrderId=o.id;ov.remove();route='orders';render();
+   cartChannel=o.channel||'inperson';cartPayMethod=o.payment_method||'cash';cartPayTerms=o.payment_terms||'net30';cartPayPhotoData=null;cartPayPhotoFile=null;editingOrderId=o.id;ov.remove();route='orders';render();
   };
   $('od_del').onclick=function(){confirmModal('למחוק את ההזמנה של '+(o.customer_name||'')+' על '+ils(o.total_agorot)+'? הפעולה אינה הפיכה.',function(){
    sb.from('order_items').delete().eq('order_id',o.id).then(function(){sb.from('orders').delete().eq('id',o.id).then(function(rd){if(rd.error){toast('שגיאה במחיקה: '+rd.error.message)}else{toast('ההזמנה נמחקה ✓');ov.remove();render()}})})
