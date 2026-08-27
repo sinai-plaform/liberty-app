@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-30';
+var APP_VERSION='2026-08-26-31';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -573,7 +573,9 @@ function boot(){
   if(started)return;started=true;_booting=false;
   if(!me){noMeView();return}
   loadCart();
-  route='home';render();
+  route='home';
+  try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.cust&&cart.items&&cart.items.length){route='orders';}}catch(e){}
+  render();
   obCount();obFlush();
   restoreDailyRoute();
   SQ(sb.from('liberty_me').select('id,name,role').single(),null,function(r){
@@ -1678,6 +1680,7 @@ function cartTotals(){var sub=0,comm=0;for(var i=0;i<cart.items.length;i++){var 
  return {sub:sub,disc:disc,netsub:netsub,vat:vat,total:netsub+vat,comm:comm2,freeq:bi.total,bi:bi}}
 function discLabel(){var D=cart.discount;if(!D||!D.value)return '';var v=D.kind==='pct'?(D.value+'%'):ils(Math.round(D.value));var scope=D.mode==='line'?('על '+(D.lineName||D.sku)):'על כל ההזמנה';return 'הטבת סוכן '+v+' '+scope;}
 function ordersView(){
+ saveCart();
  var t=cartTotals();
  var _units=0;for(var _u=0;_u<cart.items.length;_u++)_units+=cart.items[_u].qty;
  var belowMin=cart.items.length>0&&t.sub<MIN_ORDER;var missMin=MIN_ORDER-t.sub;
@@ -1720,7 +1723,7 @@ function ordersView(){
  var payt=document.querySelectorAll('.payt');for(var pt=0;pt<payt.length;pt++){payt[pt].onclick=function(){cartPayTerms=this.getAttribute('data-t');saveCart();render()}}
  if($('payphoto'))$('payphoto').onchange=function(){var f=this.files&&this.files[0];if(!f)return;cartPayPhotoFile=f;compressImg(f,function(u){cartPayPhotoData=u;if($('payphotoprev'))$('payphotoprev').innerHTML='<img src="'+u+'" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">';});};
  if($('discbtn'))$('discbtn').onclick=openDiscountSheet;
- $('myord').onclick=function(e){e.preventDefault();if(editingOrderId){editingOrderId=null;cart={cust:null,items:[]}}route='myorders';render()};
+ $('myord').onclick=function(e){e.preventDefault();if(editingOrderId){editingOrderId=null;cart={cust:null,items:[]};clearCartDraft();}route='myorders';render()};
  if($('pickcust'))$('pickcust').onclick=openCustPicker;
  if($('chgcust'))$('chgcust').onclick=openCustPicker;
  if($('saveord'))$('saveord').onclick=function(){saveOrder();};
@@ -1759,7 +1762,7 @@ function saveOrder(force){
  $('saveord').disabled=true;$('saveord').textContent='שומר…';
  var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
- var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;route='myorders';render()};
+ var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;clearCartDraft();route='myorders';render()};
  var oid=editingOrderId||uuid();
  var orow={id:oid,customer_id:cart.cust.id,agent_id:(me?me.id:null),subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel,payment_method:cartPayMethod,payment_terms:(cartPaidOnSpot?null:cartPayTerms)};
  var _payFile=cartPayPhotoFile;
