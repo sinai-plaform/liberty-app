@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-32';
+var APP_VERSION='2026-08-26-33';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -126,9 +126,10 @@ var imgMap={};       // sku -> data_url
 var COMM_TIERS=[{min:8500000,pct:3},{min:7500000,pct:2}]; // 85K->3%, 75K->2%, else 0
 function commRate(s){for(var i=0;i<COMM_TIERS.length;i++){if(s>=COMM_TIERS[i].min)return COMM_TIERS[i].pct}return 0}
 var cart={cust:null,items:[]};
+var _cartReady=false; // becomes true only after loadCart() has run — prevents the initial empty render() from clobbering a saved draft
 // ---- in-progress order auto-saved as a local draft (survives reload/offline/app-close) ----
-function saveCart(){try{localStorage.setItem('lib_cart',JSON.stringify({cust:cart.cust,items:cart.items,paid:cartPaidOnSpot,channel:cartChannel,paym:cartPayMethod,payt:cartPayTerms,editing:editingOrderId||null,discount:cart.discount||null,ts:Date.now()}))}catch(e){}}
-function loadCart(){try{var s=localStorage.getItem('lib_cart');if(!s)return;var c=JSON.parse(s);if(c&&c.items&&c.items.length){cart={cust:c.cust||null,items:c.items};if(c.discount)cart.discount=c.discount;if(typeof c.paid==='boolean')cartPaidOnSpot=c.paid;if(c.channel)cartChannel=c.channel;if(c.paym)cartPayMethod=c.paym;if(c.payt)cartPayTerms=c.payt;if(c.editing)editingOrderId=c.editing;}}catch(e){}}
+function saveCart(){if(!_cartReady)return;try{localStorage.setItem('lib_cart',JSON.stringify({cust:cart.cust,items:cart.items,paid:cartPaidOnSpot,channel:cartChannel,paym:cartPayMethod,payt:cartPayTerms,editing:editingOrderId||null,discount:cart.discount||null,ts:Date.now()}))}catch(e){}}
+function loadCart(){try{var s=localStorage.getItem('lib_cart');if(s){var c=JSON.parse(s);if(c&&c.items&&c.items.length){cart={cust:c.cust||null,items:c.items};if(c.discount)cart.discount=c.discount;if(typeof c.paid==='boolean')cartPaidOnSpot=c.paid;if(c.channel)cartChannel=c.channel;if(c.paym)cartPayMethod=c.paym;if(c.payt)cartPayTerms=c.payt;if(c.editing)editingOrderId=c.editing;}}}catch(e){}_cartReady=true;}
 function clearCartDraft(){try{localStorage.removeItem('lib_cart')}catch(e){}}
 var editingOrderId=null;
 function confirmModal(msg,onYes,yesLabel){
@@ -574,7 +575,7 @@ function boot(){
   if(!me){noMeView();return}
   loadCart();
   route='home';
-  try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.cust&&cart.items&&cart.items.length){route='orders';}}catch(e){}
+  try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.items&&cart.items.length){route='orders';}}catch(e){}
   render();
   obCount();obFlush();
   restoreDailyRoute();
