@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-36';
+var APP_VERSION='2026-08-26-37';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -284,7 +284,7 @@ function restoreDailyRoute(){
  },function(e){netMark(false,e);archiveStaleRoutes(function(){});});
 }
 // proportional bonus: 20+4 at qty 10 -> 2 free
-function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty*get/buy)}
+function freeUnits(qty,buy,get){if(!buy||!get)return 0;return Math.floor(qty/buy)*get}
 // group-aware bonus: products sharing a bonus_group pool their qty (mix-and-match)
 function bonusInfo(items){
  var byG={},gB={},gG={},total=0,perLine=[],shown={};
