@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-34';
+var APP_VERSION='2026-08-26-35';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -158,16 +158,27 @@ function buildOrderText(custName,items,t,isUpdate){
  s+='\nתשלום: '+(cartPaidOnSpot?('שולם במקום · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')):('לתשלום / חוב · '+(PAYT[cartPayTerms]||'')+' · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')));
  return s;
 }
+// Email body: business name + SKUs + quantities (incl. free bonus units). No prices/totals.
+function buildOrderEmail(custName,items){
+ var bi=bonusInfo(items);
+ var s='עסק: '+custName+'\nתאריך: '+new Date().toLocaleDateString('he-IL')+'\n\n';
+ items.forEach(function(it,i){var f=bi.perLine[i]||0;s+='• '+it.sku+' — '+it.name+' — '+it.qty+' יח׳'+(f>0?' (+'+f+' בונוס חינם)':'')+'\n';});
+ return s;
+}
 function orderSentModal(custName,items,t,isUpdate,done){
  var text=buildOrderText(custName,items,t,isUpdate);
+ var emailBody=buildOrderEmail(custName,items);
  var subj=(isUpdate?'עדכון הזמנה — ':'הזמנה חדשה — ')+custName;
- var mailto='mailto:'+ORDER_EMAILS+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(text);
+ var mailto='mailto:'+ORDER_EMAILS+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(emailBody);
  var wa='https://wa.me/'+ORDER_WA+'?text='+encodeURIComponent(text);
  var ov=document.createElement('div');ov.className='ovl';
  ov.innerHTML='<div class="sheet" style="max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(isUpdate?'ההזמנה עודכנה ✓':'ההזמנה נשמרה ✓')+'</b><span id="osx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
   '<div class="card" style="background:var(--accs)"><div style="font-size:12.5px;color:var(--accd);font-weight:700;line-height:1.6">שליחת סיכום ההזמנה'+(isUpdate?' המעודכן':'')+' — לחצי לשליחה מהחשבון שלך:</div></div>'+
   '<a href="'+mailto+'" class="cta" style="height:48px;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none">📧 שליחת מייל (2 נמענים)</a>'+
+  '<div style="font-size:11px;color:var(--mut);font-weight:700;padding:2px 2px 0">תצוגת המייל — מק״טים וכמויות בלבד</div>'+
+  '<div class="card" style="white-space:pre-wrap;font-size:12.5px;color:#5b564e;line-height:1.6;background:#fbfaf8">'+esc(emailBody)+'</div>'+
   '<a href="'+wa+'" target="_blank" rel="noopener" class="cta" style="height:48px;background:#25d366;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none">💬 שליחת וואטסאפ</a>'+
+  '<div style="font-size:11px;color:var(--mut);font-weight:700;padding:2px 2px 0">תצוגת וואטסאפ — סיכום מלא</div>'+
   '<div class="card" style="white-space:pre-wrap;font-size:12.5px;color:#5b564e;line-height:1.6;background:#fbfaf8">'+esc(text)+'</div>'+
   '<button class="cta" id="osdone" style="background:#efece7;color:var(--ink)">סיום</button></div></div>';
  document.body.appendChild(ov);
