@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-37';
+var APP_VERSION='2026-08-26-38';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -158,11 +158,12 @@ function buildOrderText(custName,items,t,isUpdate){
  s+='\nתשלום: '+(cartPaidOnSpot?('שולם במקום · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')):('לתשלום / חוב · '+(PAYT[cartPayTerms]||'')+' · '+(PAYM[cartPayMethod]||'').replace(/^[^ ]+ /,'')));
  return s;
 }
-// Email body: business name + SKUs + quantities (incl. free bonus units). No prices/totals.
+// Email body: business name + SKU + quantity only. No product name, no price.
+// When a bonus tier is reached -> "<qty>+<free> * SKU"; otherwise "<qty> יח׳ * SKU".
 function buildOrderEmail(custName,items){
  var bi=bonusInfo(items);var R='‏'; // RLM forces right-to-left alignment in mail clients
- var s=R+'עסק: '+custName+'\n'+R+'תאריך: '+new Date().toLocaleDateString('he-IL')+'\n\n';
- items.forEach(function(it,i){var f=bi.perLine[i]||0;s+=R+it.qty+' יח׳ — '+it.name+' ('+it.sku+')'+(f>0?' (+'+f+' בונוס חינם)':'')+'\n';});
+ var s=R+'עסק: '+custName+'\n'+R+'תאריך: '+new Date().toLocaleDateString('he-IL')+'\n';
+ items.forEach(function(it,i){var f=bi.perLine[i]||0;var q=(f>0?(it.qty+'+'+f):(it.qty+' יח׳'));s+=R+q+' * '+it.sku+'\n';});
  return s;
 }
 function orderSentModal(custName,items,t,isUpdate,done){
