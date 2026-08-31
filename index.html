@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-39';
+var APP_VERSION='2026-08-26-40';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -601,6 +601,7 @@ function boot(){
   },function(){});
   setTimeout(checkUpdate,8000);setInterval(checkUpdate,5*60*1000);
   loadReminders(startReminderScheduler);
+  setTimeout(autoPushSubscribe,4000);
  };
  locLoad(function(){
   kvGet('snap:ts',function(ts){if(ts)OFF.lastSync=ts;
@@ -2244,6 +2245,31 @@ function targetsView(){
 // ---------- WORK REPORTS ----------
 // ================= REMINDERS / NOTES =================
 var _reminders=[],_remFired={},_remTimer=null,_actx=null;
+var _remTab='active',_remDone=[],_pushOn=false;
+var VAPID_PUBLIC='BFCuJGbdxfXBdhBh_POsidiVQFPX6D6ZCrsJGUIbynVAi5uufn8v5IEKdQr2LohNj8NnAd3tFQVu3MET9U1bsSU';
+function pushSupported(){return ('serviceWorker'in navigator)&&('PushManager'in window)&&('Notification'in window);}
+function urlB64ToUint8Array(b64){var pad='='.repeat((4-b64.length%4)%4);var base=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');var raw=atob(base);var arr=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);return arr;}
+function _saveSub(s){try{var j=s.toJSON();return sb.rpc('save_push_subscription',{p_endpoint:s.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_ua:navigator.userAgent});}catch(e){return Promise.reject(e);}}
+function enablePush(cb){
+ if(!pushSupported()){toast('הדפדפן לא תומך בהתראות דחיפה');cb&&cb(false);return;}
+ Notification.requestPermission().then(function(perm){
+  if(perm!=='granted'){toast('לא ניתן אישור להתראות במכשיר');cb&&cb(false);return;}
+  navigator.serviceWorker.ready.then(function(reg){
+   reg.pushManager.getSubscription().then(function(sub){
+    (sub?Promise.resolve(sub):reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC)})).then(function(s){
+     _saveSub(s).then(function(){_pushOn=true;toast('התראות דחיפה הופעלו ✓');cb&&cb(true);},function(){toast('שגיאה בשמירת ההרשמה');cb&&cb(false);});
+    },function(){toast('לא ניתן להירשם להתראות');cb&&cb(false);});
+   });
+  }).catch(function(){cb&&cb(false);});
+ }).catch(function(){cb&&cb(false);});
+}
+function disablePush(cb){
+ if(!pushSupported()){cb&&cb();return;}
+ navigator.serviceWorker.ready.then(function(reg){reg.pushManager.getSubscription().then(function(sub){if(sub){var ep=sub.endpoint;sub.unsubscribe().then(function(){sb.rpc('delete_push_subscription',{p_endpoint:ep}).then(function(){},function(){});});}_pushOn=false;toast('התראות דחיפה כובו');cb&&cb();});}).catch(function(){cb&&cb();});
+}
+function refreshPushState(cb){if(!pushSupported()){_pushOn=false;cb&&cb();return;}navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(sub){_pushOn=!!sub&&window.Notification&&Notification.permission==='granted';cb&&cb();}).catch(function(){_pushOn=false;cb&&cb();});}
+function autoPushSubscribe(){if(!pushSupported()||!window.Notification||Notification.permission!=='granted'||!me)return;navigator.serviceWorker.ready.then(function(reg){reg.pushManager.getSubscription().then(function(sub){(sub?Promise.resolve(sub):reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8Array(VAPID_PUBLIC)})).then(function(s){_saveSub(s).then(function(){_pushOn=true;},function(){});},function(){});});}).catch(function(){});}
+function loadRemDone(cb){if(!me){cb&&cb();return;}sb.from('liberty_reminders').select('*').eq('agent_id',me.id).eq('done',true).order('due_at',{ascending:false}).limit(60).then(function(r){_remDone=(r&&r.data)||[];cb&&cb();},function(){cb&&cb();});}
 function _audioCtx(){try{if(!_actx)_actx=new (window.AudioContext||window.webkitAudioContext)();return _actx;}catch(e){return null;}}
 function unlockAudio(){var ac=_audioCtx();if(ac&&ac.state==='suspended'){try{ac.resume();}catch(e){}}}
 document.addEventListener('click',unlockAudio);document.addEventListener('touchstart',unlockAudio);
@@ -2273,24 +2299,55 @@ function remSnooze(rm,mins){var nd=new Date(Date.now()+mins*60000).toISOString()
 function remCount(){var n=0,now=Date.now();for(var i=0;i<_reminders.length;i++){if(new Date(_reminders[i].due_at).getTime()<=now+3600000)n++;}return n;}
 function remindersView(){
  reqNotify();
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">תזכורות ופתקים</div><div style="color:#cfe6e8;font-size:12px">יקפצו לך עם צליל בזמן</div></div><button id="rmnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ חדשה</button></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 12px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">תזכורות ופתקים</div><div style="color:#cfe6e8;font-size:12px">יקפצו לך עם צליל בזמן</div></div><button id="rmnew" class="chip" style="background:#fff;color:var(--accd);font-weight:800">＋ חדשה</button></div><div id="rmtabs" style="display:flex;gap:8px;margin-top:12px"></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();
  if($('rmnew'))$('rmnew').onclick=function(){openReminderSheet({});};
- loadReminders(renderRemList);
+ renderRemTabs();
+ refreshPushState(function(){ loadReminders(function(){ renderRemTabs(); if(_remTab==='active')renderRemList(); else loadRemDone(renderRemArchive); }); });
+}
+function renderRemTabs(){
+ var el=$('rmtabs');if(!el)return;var now=Date.now();var act=_reminders.length;
+ function tb(t,lbl){var on=_remTab===t;return '<button class="rmtab" data-t="'+t+'" style="flex:1;height:38px;border:none;border-radius:11px;font-weight:800;font-size:12.5px;cursor:pointer;background:'+(on?'#fff':'rgba(255,255,255,.16)')+';color:'+(on?'var(--accd)':'#fff')+'">'+lbl+'</button>';}
+ el.innerHTML=tb('active','🔔 פעילות'+(act?' ('+act+')':''))+tb('done','✓ בוצעו');
+ var b=el.querySelectorAll('.rmtab');for(var i=0;i<b.length;i++)b[i].onclick=function(){remSetTab(this.getAttribute('data-t'));};
+}
+function remSetTab(t){_remTab=t;renderRemTabs();if(t==='active')renderRemList();else{ $('res').innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';loadRemDone(renderRemArchive);}}
+function pushCardHtml(){
+ if(!pushSupported())return '';
+ if(_pushOn)return '<div class="card" style="background:var(--goods);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--goodd);font-weight:700">✅ התראות דחיפה פעילות — יקפצו גם כשהאפליקציה סגורה<button id="pushoff" style="margin-inline-start:auto;border:none;background:transparent;color:var(--goodd);font-size:11px;text-decoration:underline;cursor:pointer;flex:none">כיבוי</button></div>';
+ return '<div class="card" style="background:var(--accs);border:1px dashed var(--acc)"><div style="font-size:12.5px;color:var(--accd);font-weight:700;line-height:1.5">🔔 הפעילי התראות דחיפה כדי לקבל תזכורות גם כשהאפליקציה סגורה או ברקע</div><button id="pushon" class="cta" style="height:40px;margin-top:8px;font-size:13px">הפעלת התראות</button></div>';
+}
+function bindPushCard(el){
+ var on=el.querySelector('#pushon');if(on)on.onclick=function(){this.disabled=true;this.textContent='מפעילה…';enablePush(function(){renderRemList();});};
+ var off=el.querySelector('#pushoff');if(off)off.onclick=function(){disablePush(function(){renderRemList();});};
 }
 function renderRemList(){
- var el=$('res');if(!el)return;
- if(!_reminders.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px;line-height:1.6">אין תזכורות פעילות.<br>הוסיפי תזכורת ותקפוץ לך בזמן שקבעת.</div>';return;}
- var now=Date.now();var h='';
+ var el=$('res');if(!el)return;renderRemTabs();
+ var pc=pushCardHtml();
+ if(!_reminders.length){el.innerHTML=pc+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px;line-height:1.6">אין תזכורות פעילות.<br>הוסיפי תזכורת ותקפוץ לך בזמן שקבעת.</div>';bindPushCard(el);return;}
+ var now=Date.now();var h=pc;
  _reminders.slice().sort(function(a,b){return new Date(a.due_at)-new Date(b.due_at);}).forEach(function(rm){
   var due=new Date(rm.due_at);var over=due.getTime()<=now;var cn=remCustName(rm.customer_id);
   var col=rm.kind==='collection'?'var(--bad)':'var(--acc)';var ic=rm.kind==='collection'?'💰':'🔔';
   var dt=due.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})+' · '+due.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
-  h+='<div class="card" style="border-inline-start:4px solid '+col+';'+(over?'background:var(--warns)':'')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span style="font-size:18px;flex:none">'+ic+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head);line-height:1.4">'+esc(rm.text)+'</div>'+(cn?'<div style="font-size:11.5px;color:'+col+';font-weight:700;margin-top:2px">'+esc(cn)+'</div>':'')+'<div style="font-size:11.5px;color:'+(over?'var(--warn)':'var(--mut)')+';font-weight:'+(over?'700':'400')+';margin-top:2px">'+(over?'⏰ הגיע · ':'')+dt+'</div></div></div><div style="display:flex;gap:8px;margin-top:9px"><button class="rmdone cta" data-id="'+rm.id+'" style="height:38px;font-size:12.5px;background:var(--good)">✓ בוצע</button><button class="rmdel cta" data-id="'+rm.id+'" style="height:38px;font-size:12.5px;background:var(--bads);color:var(--bad);flex:none;width:52px">🗑</button></div></div>';
+  h+='<div class="card" style="border-inline-start:4px solid '+col+';'+(over?'background:var(--warns)':'')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span style="font-size:18px;flex:none">'+ic+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head);line-height:1.4">'+esc(rm.text)+'</div>'+(cn?'<div style="font-size:11.5px;color:'+col+';font-weight:700;margin-top:2px">'+esc(cn)+'</div>':'')+'<div style="font-size:11.5px;color:'+(over?'var(--warn)':'var(--mut)')+';font-weight:'+(over?'700':'400')+';margin-top:2px">'+(over?'⏰ הגיע · ':'')+dt+'</div></div></div><div style="display:flex;gap:8px;margin-top:9px"><button class="rmdone cta" data-id="'+rm.id+'" style="height:38px;font-size:12.5px;background:var(--good)">✓ בוצע</button><button class="rmsnz cta" data-id="'+rm.id+'" style="height:38px;font-size:12.5px;background:#efece7;color:var(--ink);flex:none;width:82px">⏰ +שעה</button><button class="rmdel cta" data-id="'+rm.id+'" style="height:38px;font-size:12.5px;background:var(--bads);color:var(--bad);flex:none;width:48px">🗑</button></div></div>';
+ });
+ el.innerHTML=h;bindPushCard(el);
+ var dn=el.querySelectorAll('.rmdone');for(var i=0;i<dn.length;i++)dn[i].onclick=function(){remMarkDone(this.getAttribute('data-id'));renderRemList();};
+ var sz=el.querySelectorAll('.rmsnz');for(var s=0;s<sz.length;s++)sz[s].onclick=function(){var id=this.getAttribute('data-id');var rm=_reminders.filter(function(r){return r.id===id})[0];if(rm){remSnooze(rm,60);toast('נדחתה בשעה');renderRemList();}};
+ var dl=el.querySelectorAll('.rmdel');for(var j=0;j<dl.length;j++)dl[j].onclick=function(){var id=this.getAttribute('data-id');_reminders=_reminders.filter(function(r){return r.id!==id});sb.from('liberty_reminders').delete().eq('id',id).then(function(){},function(){});renderRemList();};
+}
+function remRestore(id){var rm=null;_remDone=_remDone.filter(function(r){if(r.id===id){rm=r;return false;}return true;});if(rm){rm.done=false;delete _remFired[id];_reminders.push(rm);}sb.from('liberty_reminders').update({done:false}).eq('id',id).then(function(){},function(){});renderRemArchive();}
+function renderRemArchive(){
+ var el=$('res');if(!el)return;renderRemTabs();
+ if(!_remDone.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px;line-height:1.6">אין תזכורות שבוצעו עדיין.</div>';return;}
+ var h='<div class="card" style="background:var(--goods);font-size:12px;color:var(--goodd);font-weight:700">✓ '+_remDone.length+' תזכורות שבוצעו · ארכיון</div>';
+ _remDone.forEach(function(rm){var due=new Date(rm.due_at);var cn=remCustName(rm.customer_id);var ic=rm.kind==='collection'?'💰':'🔔';var dt=due.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})+' · '+due.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  h+='<div class="card" style="border-inline-start:4px solid var(--good)"><div style="display:flex;align-items:flex-start;gap:9px"><span style="font-size:16px;flex:none;opacity:.7">'+ic+'</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#7c766c;line-height:1.4;text-decoration:line-through;text-decoration-color:#c9c3b8">'+esc(rm.text)+'</div>'+(cn?'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(cn)+'</div>':'')+'<div style="font-size:11px;color:var(--good);font-weight:700;margin-top:2px">✓ בוצע · '+dt+'</div></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="rmrestore cta" data-id="'+rm.id+'" style="height:34px;font-size:12px;background:var(--accs);color:var(--accd)">↩︎ החזרה לפעילות</button><button class="rmpurge cta" data-id="'+rm.id+'" style="height:34px;font-size:12px;background:var(--bads);color:var(--bad);flex:none;width:48px">🗑</button></div></div>';
  });
  el.innerHTML=h;
- var dn=el.querySelectorAll('.rmdone');for(var i=0;i<dn.length;i++)dn[i].onclick=function(){remMarkDone(this.getAttribute('data-id'));renderRemList();};
- var dl=el.querySelectorAll('.rmdel');for(var j=0;j<dl.length;j++)dl[j].onclick=function(){var id=this.getAttribute('data-id');_reminders=_reminders.filter(function(r){return r.id!==id});sb.from('liberty_reminders').delete().eq('id',id).then(function(){},function(){});renderRemList();};
+ var rs=el.querySelectorAll('.rmrestore');for(var i=0;i<rs.length;i++)rs[i].onclick=function(){remRestore(this.getAttribute('data-id'));};
+ var pg=el.querySelectorAll('.rmpurge');for(var k=0;k<pg.length;k++)pg[k].onclick=function(){var id=this.getAttribute('data-id');_remDone=_remDone.filter(function(r){return r.id!==id});sb.from('liberty_reminders').delete().eq('id',id).then(function(){},function(){});renderRemArchive();};
 }
 function remPickCustomer(cb){
  var o=document.createElement('div');o.className='ovl';o.style.cssText='justify-content:flex-start;z-index:60';
@@ -2303,20 +2360,24 @@ function openReminderSheet(pre){
  pre=pre||{};reqNotify();
  var due=pre.due?new Date(pre.due):new Date(Date.now()+3600000);
  var dstr=due.getFullYear()+'-'+String(due.getMonth()+1).padStart(2,'0')+'-'+String(due.getDate()).padStart(2,'0');
- var tstr=pre.hasTime?(String(due.getHours()).padStart(2,'0')+':'+String(due.getMinutes()).padStart(2,'0')):'';
+ var selH=pre.hasTime?String(due.getHours()).padStart(2,'0'):'';
+ var selM=pre.hasTime?String(Math.round(due.getMinutes()/5)*5%60).padStart(2,'0'):'00';
+ var hopts='<option value=""'+(selH===''?' selected':'')+'>— ללא —</option>';
+ for(var _h=0;_h<24;_h++){var _hh=String(_h).padStart(2,'0');hopts+='<option value="'+_hh+'"'+(_hh===selH?' selected':'')+'>'+_hh+'</option>';}
+ var mopts='';for(var _m=0;_m<60;_m+=5){var _mm=String(_m).padStart(2,'0');mopts+='<option value="'+_mm+'"'+(_mm===selM?' selected':'')+'>'+_mm+'</option>';}
  var kind=pre.kind||'general';var custId=pre.customer_id||null,custName=pre.customer_name||remCustName(custId);
  var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(pre.source==='visit'?'🔔 לקבוע תזכורת?':'תזכורת חדשה')+'</b><span id="rsx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
   (pre.source==='visit'?'<div class="card" style="background:var(--accs);font-size:12px;color:var(--accd);line-height:1.6">זוהתה בקשה לחזור/לבדוק בסיכום הביקור. אשרי או ערכי את התזכורת.</div>':'')+
   '<div class="card"><label style="display:block"><span class="lbl">תוכן התזכורת</span><textarea id="rs_text" class="field" style="margin-top:5px;min-height:60px" placeholder="למשל: לחזור עם הצעת מחיר">'+esc(pre.text||'')+'</textarea></label></div>'+
-  '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תאריך</span><input id="rs_date" type="date" class="field" style="margin-top:5px" value="'+dstr+'"></label><label style="flex:1"><span class="lbl">שעה (לא חובה)</span><input id="rs_time" type="time" class="field" style="margin-top:5px" value="'+tstr+'"></label></div><div style="margin-top:10px"><span class="lbl">סוג</span><div style="display:flex;gap:8px;margin-top:5px"><button class="chip rskind'+(kind==='general'?' on':'')+'" data-k="general" style="flex:1">🔔 רגילה</button><button class="chip rskind'+(kind==='collection'?' on':'')+'" data-k="collection" style="flex:1">💰 גבייה</button></div></div></div>'+
+  '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תאריך</span><input id="rs_date" type="date" class="field" style="margin-top:5px" value="'+dstr+'"></label><label style="flex:1"><span class="lbl">שעה (לא חובה)</span><div style="display:flex;gap:6px;margin-top:5px"><select id="rs_hour" class="field" style="text-align:center;padding:0 6px">'+hopts+'</select><select id="rs_min" class="field" style="text-align:center;padding:0 6px">'+mopts+'</select></div></label></div><div style="margin-top:10px"><span class="lbl">סוג</span><div style="display:flex;gap:8px;margin-top:5px"><button class="chip rskind'+(kind==='general'?' on':'')+'" data-k="general" style="flex:1">🔔 רגילה</button><button class="chip rskind'+(kind==='collection'?' on':'')+'" data-k="collection" style="flex:1">💰 גבייה</button></div></div></div>'+
   '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח מקושר (לא חובה)</div><div id="rs_custname" style="font-size:14px;font-weight:700;color:var(--head)">'+(custName?esc(custName):'— ללא —')+'</div></div><button id="rs_pick" class="chip" style="background:var(--accs);color:var(--accd)">שינוי</button></div></div>'+
   '<button class="cta" id="rs_save">שמירת תזכורת</button><div id="rs_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};$('rsx').onclick=function(){ov.remove()};
  var kk=ov.querySelectorAll('.rskind');for(var i=0;i<kk.length;i++)kk[i].onclick=function(){kind=this.getAttribute('data-k');for(var j=0;j<kk.length;j++)kk[j].classList.toggle('on',kk[j]===this);};
  $('rs_pick').onclick=function(){remPickCustomer(function(id,nm){custId=id;custName=nm;if($('rs_custname'))$('rs_custname').textContent=nm||'— ללא —';});};
  $('rs_save').onclick=function(){
-  var txt=$('rs_text').value.trim();var dv=$('rs_date').value;var tv=$('rs_time').value||'09:00';
+  var txt=$('rs_text').value.trim();var dv=$('rs_date').value;var _hv=$('rs_hour')?$('rs_hour').value:'';var _mv=($('rs_min')&&$('rs_min').value)||'00';var tv=_hv?(_hv+':'+_mv):'09:00';
   if(!txt){$('rs_err').textContent='נא למלא תוכן';return;}if(!dv){$('rs_err').textContent='נא לבחור תאריך';return;}
   var dueAt=new Date(dv+'T'+tv+':00').toISOString();
   var b=$('rs_save');b.disabled=true;b.textContent='שומר…';
@@ -2375,7 +2436,7 @@ function genReport(){
   var vh='';
   visits.forEach(function(v){var amt=ordMap[dk(v.customer_id,v.arrived_at)]||0;var isPot=(!amt&&(v.outcome==='פוטנציאלי'||v.outcome==='ללא הזמנה'));if(isPot)potential++;
    var badge=amt>0?'<span class="badge b-good">נמכר '+ils(amt)+'</span>':(isPot?'<span class="badge b-warn">פוטנציאל</span>':'<span class="badge b-mut">'+esc(v.outcome||'—')+'</span>');
-   vh+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(v.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+fmtDate(v.arrived_at)+' · '+esc(v.outcome||'')+'</div></div>'+badge+'</div>'+(v.summary?'<div style="margin-top:7px;font-size:12.5px;color:#6b655c;line-height:1.5">'+esc(v.summary)+'</div>':'')+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>';
+   vh+='<div class="card vcard" data-id="'+v.id+'" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(v.customer_name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+fmtDate(v.arrived_at)+' · '+esc(v.outcome||'')+'</div></div>'+badge+'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg></div>'+(v.summary?'<div style="margin-top:7px;font-size:12.5px;color:#6b655c;line-height:1.5">'+esc(v.summary)+'</div>':'')+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>';
   });
   // orders without a matching visit (direct)
   var stat='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"><button class="stat rdrill" data-d="visits" style="background:var(--accs);border:none;cursor:pointer;text-align:right;color:inherit"><div style="font-size:11px;color:var(--accd);font-weight:700">ביקורים ›</div><div style="font-size:22px;font-weight:700;color:var(--accd);letter-spacing:-.01em">'+visits.length+'</div></button><button class="stat rdrill" data-d="orders" style="background:var(--accs);border:none;cursor:pointer;text-align:right;color:inherit"><div style="font-size:11px;color:var(--accd);font-weight:700">הזמנות ›</div><div style="font-size:22px;font-weight:700;color:var(--accd);letter-spacing:-.01em">'+orders.length+'</div></button><button class="stat rdrill" data-d="orders" style="background:var(--goods);border:none;cursor:pointer;text-align:right;color:inherit"><div style="font-size:11px;color:var(--goodd);font-weight:700">נמכר ›</div><div style="font-size:22px;font-weight:700;color:var(--goodd);letter-spacing:-.01em">'+ils(sold)+'</div></button><button class="stat rdrill" data-d="potential" style="background:var(--warns);border:none;cursor:pointer;text-align:right;color:inherit"><div style="font-size:11px;color:var(--warnd);font-weight:700">פוטנציאל ›</div><div style="font-size:22px;font-weight:700;color:var(--warnd);letter-spacing:-.01em">'+potential+'</div></button></div><div style="margin-top:9px;font-size:12px;color:var(--mut)">מזכה בעמלה בטווח: <b style="color:var(--good);font-weight:700">'+ils(commTot)+'</b></div></div>';
@@ -2385,6 +2446,7 @@ function genReport(){
   $('rprint').onclick=function(){window.print()};
   $('rshare').onclick=function(){window.open('https://wa.me/?text='+encodeURIComponent(window.__reportText),'_blank')};
   var rd=document.querySelectorAll('.rdrill');for(var i=0;i<rd.length;i++)rd[i].onclick=function(){reportDrill(this.getAttribute('data-d'),visits,orders,ordMap,dk);};
+  var vc=document.querySelectorAll('.vcard');for(var vci=0;vci<vc.length;vci++)vc[vci].onclick=function(){openActVisit(this.getAttribute('data-id'));};
  });
 }
 function reportDrill(kind,visits,orders,ordMap,dk){
