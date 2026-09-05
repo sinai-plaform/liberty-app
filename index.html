@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-40';
+var APP_VERSION='2026-08-26-41';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -1930,18 +1930,20 @@ function fetchPlannedRoutes(from,to,cb){var map={};if(navigator.onLine===false||
   (r&&r.data||[]).forEach(function(row){map[row.route_date]={n:(row.selected_ids||[]).length,built:!!row.built}});cb(map);
  },function(){cb(map)});}
 // follow-ups: next-visit-due map + missed-stop map (cached ~2 min)
-var _fuMap=null,_msMap=null,_fuTs=0;
+var _fuMap=null,_msMap=null,_ltMap=null,_fuTs=0;
 function loadFollowups(cb){
  if(_fuMap&&(Date.now()-_fuTs<120000)){cb&&cb();return}
- if(navigator.onLine===false||!me){if(!_fuMap){_fuMap={};_msMap={}}cb&&cb();return}
+ if(navigator.onLine===false||!me){if(!_fuMap){_fuMap={};_msMap={};_ltMap={}}cb&&cb();return}
  Promise.all([
   sb.from('liberty_my_next_visits').select('customer_id,next_visit_date'),
-  sb.from('liberty_my_missed').select('customer_id,last_planned')
+  sb.from('liberty_my_missed').select('customer_id,last_planned'),
+  sb.from('liberty_my_last_touch').select('customer_id,last_visit_at,last_order_at')
  ]).then(function(res){
   var fu={};(res[0]&&res[0].data||[]).forEach(function(x){fu[x.customer_id]=x.next_visit_date});
   var ms={};(res[1]&&res[1].data||[]).forEach(function(x){ms[x.customer_id]=x.last_planned});
-  _fuMap=fu;_msMap=ms;_fuTs=Date.now();cb&&cb();
- },function(){if(!_fuMap){_fuMap={};_msMap={}}cb&&cb();});
+  var lt={};(res[2]&&res[2].data||[]).forEach(function(x){lt[x.customer_id]={v:x.last_visit_at,o:x.last_order_at}});
+  _fuMap=fu;_msMap=ms;_ltMap=lt;_fuTs=Date.now();cb&&cb();
+ },function(){if(!_fuMap){_fuMap={};_msMap={};_ltMap={}}cb&&cb();});
 }
 function pendVisitSet(){var s={};try{pendOf('visit').forEach(function(o){var r=o.payload&&o.payload.row;if(r&&r.customer_id)s[r.customer_id]=true})}catch(e){}return s;}
 // urgency of a next-visit due date -> {lvl(0..3),label,color} or null
@@ -2017,6 +2019,120 @@ function openMonthPlan(base){
  }
  draw();
 }
+/* ---------- AUTO ROUTE SUGGESTION ---------- */
+var _sugCap=9;
+function sugCtaHtml(title,sub){return '<button id="autosug" style="width:100%;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accd),var(--acc));border:none;border-radius:13px;padding:12px 14px;margin:4px 0 8px;cursor:pointer;text-align:right;box-shadow:0 4px 14px rgba(15,107,116,.22)"><span style="font-size:20px">&#10024;</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:#fff">'+title+'</div><div style="font-size:11.5px;color:#cfe6e8;line-height:1.4">'+sub+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button>';}
+function lastTouchTs(id){var lt=(_ltMap||{})[id];if(!lt)return null;var a=lt.v?new Date(lt.v).getTime():0;var b=lt.o?new Date(lt.o).getTime():0;var m=Math.max(a,b);return m||null;}
+function routeScore(c){
+ var sc=0,rs=[];
+ var due=(_fuMap||{})[c.id];
+ if(due){var dd=Math.round((parseYmd(due)-parseYmd(todayStr()))/86400000);
+  if(dd<=0){sc+=130+Math.min(70,(-dd)*4);rs.push({t:(dd===0?'ביקור מתוכנן להיום':'ביקור באיחור '+(-dd)+' ימים'),c:'var(--bad)'});}
+  else if(dd<=3){sc+=75;rs.push({t:'ביקור צפוי בעוד '+dd+' ימים',c:'var(--warn)'});}
+ }
+ if((_msMap||{})[c.id]){sc+=95;rs.push({t:'פוספס בפעם שעברה',c:'var(--bad)'});}
+ var ts=lastTouchTs(c.id);
+ if(_ltMap){
+  if(!ts){sc+=60;rs.push({t:'אין ביקור/הזמנה מתועדים',c:'var(--mut)'});}
+  else{var ds=Math.floor((Date.now()-ts)/86400000);
+   if(ds>=21){sc+=55+Math.min(75,ds-21);rs.push({t:'ללא פעילות '+ds+' ימים',c:'var(--warn)'});}
+   var vf=c.visit_frequency_days;if(vf&&ds>=vf&&ds<21){sc+=40;rs.push({t:'עברה תדירות הביקור ('+vf+' ימים)',c:'var(--acc)'});}
+  }
+ }
+ if(c.debt_agorot>0){var ag=collAge(c);
+  if(ag!=null&&ag>90){sc+=90;rs.push({t:'חוב מזדקן '+ag+' ימים · '+ils(c.debt_agorot),c:'var(--bad)'});}
+  else{sc+=35;rs.push({t:'חוב '+ils(c.debt_agorot),c:'var(--warn)'});}
+ }
+ return {c:c,score:sc,reasons:rs};
+}
+function sugList(list){return list.map(routeScore).filter(function(x){return x.score>0}).sort(function(a,b){return b.score-a.score});}
+function openAreaSuggest(){
+ var run=function(){
+  var byArea={};
+  (LOC.customers||[]).forEach(function(c){
+   if(c.lifecycle==='disqualified'||c.area_code==null)return;
+   var s=routeScore(c);if(s.score<=0)return;
+   if(!byArea[c.area_code])byArea[c.area_code]={code:c.area_code,name:c.area_name||('אזור '+c.area_code),n:0,top:[]};
+   var a=byArea[c.area_code];a.n++;a.top.push(s);
+  });
+  var arr=[];for(var k in byArea){var a=byArea[k];a.top.sort(function(x,y){return y.score-x.score});a.topScore=a.top.slice(0,_sugCap).reduce(function(t,x){return t+x.score},0);arr.push(a);}
+  arr.sort(function(x,y){return y.topScore-x.topScore});
+  var ov=actModal('הצעת אזור להיום');var body=ov.querySelector('.amb');
+  if(!arr.length){body.innerHTML='<div style="padding:14px;color:var(--mut);font-size:13px;line-height:1.6">לא נמצאו יעדים דחופים כרגע בשום אזור.</div>';return;}
+  var h='<div class="card" style="background:var(--accs);font-size:12px;color:var(--accd);line-height:1.6;font-weight:600">האזורים מדורגים לפי כמות היעדים ודחיפותם — ביקורים שצריכים להתקיים, לקוחות מוזנחים וחוב מזדקן. בחרי אזור וקבלי הצעת מסלול.</div>';
+  arr.slice(0,6).forEach(function(a,i){
+   h+='<div class="card asug" data-a="'+a.code+'" style="cursor:pointer;'+(i===0?'border:2px solid var(--acc);':'')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:10px;background:'+(i===0?'var(--acc)':'var(--accs)')+';color:'+(i===0?'#fff':'var(--accd)')+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none">'+a.code+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(a.name)+(i===0?' <span class="badge b-good">מומלץ</span>':'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+a.n+' יעדים דורשים טיפול</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';
+  });
+  body.innerHTML=h;
+  var el=body.querySelectorAll('.asug');
+  for(var i=0;i<el.length;i++)el[i].onclick=function(){
+   var code=+this.getAttribute('data-a');ov.remove();
+   routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute();render();
+   setTimeout(function(){openRouteSuggest((LOC.customers||[]).filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'}));},260);
+  };
+ };
+ if(_fuMap===null||_ltMap===null){toast('טוען נתונים…');loadFollowups(run);}else run();
+}
+function openRouteSuggest(d){
+ var run=function(){
+  var scored=sugList(d);
+  var ov=actModal('הצעת מסלול אוטומטית');var body=ov.querySelector('.amb');
+  if(!scored.length){body.innerHTML='<div style="padding:14px;color:var(--mut);font-size:13px;line-height:1.6">אין כרגע יעדים דחופים באזור הזה — כל הלקוחות בוקרו לאחרונה ואין חוב פתוח.</div>';return;}
+  var pick={};scored.slice(0,_sugCap).forEach(function(x){pick[x.c.id]=true;});
+  var draw=function(){
+   var n=0;for(var q in pick)if(pick[q])n++;
+   var h='<div class="card" style="background:var(--accs)"><div style="font-size:12px;color:var(--accd);font-weight:700">כמה עצירות ביום?</div><div style="display:flex;gap:7px;margin-top:7px">'+[6,9,12].map(function(v){return '<button class="chip sugn'+(_sugCap===v?' on':'')+'" data-n="'+v+'" style="flex:1">'+v+'</button>';}).join('')+'</div><div style="font-size:12px;color:var(--accd);font-weight:800;margin-top:9px">נבחרו '+n+' יעדים · הקישי על לקוח כדי להוסיף או להוריד</div></div>';
+   scored.forEach(function(x){
+    var on=!!pick[x.c.id];
+    var rh=x.reasons.map(function(r){return '<span style="display:inline-block;font-size:10.5px;font-weight:700;color:'+r.c+';background:#fbfaf8;border:1px solid var(--line);border-radius:20px;padding:2px 8px;margin:3px 0 0 4px">'+r.t+'</span>';}).join('');
+    h+='<div class="card sugi" data-id="'+x.c.id+'" style="cursor:pointer;'+(on?'border:2px solid var(--acc);background:var(--accs)':'')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span style="font-size:15px;flex:none">'+(on?'✅':'⬜')+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:var(--head)">'+esc(x.c.name)+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(x.c.city||'')+'</div><div>'+rh+'</div></div></div></div>';
+   });
+   h+='<button class="cta" id="sugapply">הוספת '+n+' יעדים למסלול</button>';
+   body.innerHTML=h;
+   var sn=body.querySelectorAll('.sugn');for(var i=0;i<sn.length;i++)sn[i].onclick=function(){_sugCap=+this.getAttribute('data-n');pick={};scored.slice(0,_sugCap).forEach(function(x){pick[x.c.id]=true;});draw();};
+   var si=body.querySelectorAll('.sugi');for(var j=0;j<si.length;j++)si[j].onclick=function(){var id=this.getAttribute('data-id');pick[id]=!pick[id];draw();};
+   var ap=document.getElementById('sugapply');
+   if(ap)ap.onclick=function(){var cnt=0;for(var q in pick){if(pick[q]){routeSel[q]=true;cnt++;}}saveDailyRoute();ov.remove();toast(cnt+' יעדים נוספו למסלול ✓');render();};
+  };
+  draw();
+ };
+ if(_fuMap===null||_ltMap===null){toast('טוען נתונים…');loadFollowups(run);}else run();
+}
+/* ---------- VOICE DICTATION ---------- */
+function sttSupported(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function openDictation(title,hint,initial,onDone){
+ if(!sttSupported()){toast('המכשיר לא תומך בהקלטה — אפשר להקליד ידנית');return;}
+ var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec;
+ try{rec=new SR();}catch(e){toast('לא ניתן להפעיל הקלטה');return;}
+ rec.lang='he-IL';rec.continuous=true;rec.interimResults=true;
+ var finalTxt=(initial||'').trim(),stopped=false;
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:380px;margin:auto;border-radius:18px;padding:20px 18px 16px;text-align:center"><div id="dmic" style="font-size:42px;line-height:1;transition:opacity .3s">🎙️</div><div style="font-size:15.5px;font-weight:800;margin-top:4px">'+title+'</div><div id="dstat" style="font-size:12px;color:var(--acc);font-weight:700;margin-top:3px">מקשיבה… דברי עכשיו</div><div id="dtxt" style="min-height:86px;max-height:34vh;overflow:auto;text-align:right;font-size:14px;line-height:1.65;background:#fbfaf8;border:1px solid var(--line);border-radius:12px;padding:11px;margin-top:12px;color:var(--head)"></div><button class="cta" id="dstop" style="margin-top:12px">⏹ סיום וניתוח</button><button id="dcancel" style="width:100%;height:42px;margin-top:8px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">ביטול</button></div>';
+ document.body.appendChild(ov);
+ var pulse=setInterval(function(){var m=document.getElementById('dmic');if(m)m.style.opacity=(m.style.opacity==='0.35'?'1':'0.35');},600);
+ var paint=function(interim){var e=document.getElementById('dtxt');if(!e)return;var t=esc(finalTxt);if(interim)t+=(t?' ':'')+'<span style="color:var(--mut)">'+esc(interim)+'</span>';e.innerHTML=t||'<span style="color:var(--mut)">'+hint+'</span>';e.scrollTop=e.scrollHeight;};
+ paint('');
+ rec.onresult=function(ev){var interim='';for(var i=ev.resultIndex;i<ev.results.length;i++){var r=ev.results[i];if(r.isFinal)finalTxt=(finalTxt+' '+r[0].transcript).trim();else interim+=r[0].transcript;}paint(interim);};
+ rec.onerror=function(ev){var st=document.getElementById('dstat');if(!st)return;var m=(ev&&ev.error)||'';st.style.color='var(--bad)';
+  if(m==='not-allowed'||m==='service-not-allowed')st.textContent='אין הרשאת מיקרופון — צריך לאשר בהגדרות הדפדפן';
+  else if(m==='no-speech')st.textContent='לא נקלט קול — נסי לדבר שוב';
+  else if(m==='network')st.textContent='אין חיבור לרשת — התמלול דורש אינטרנט';
+  else st.textContent='שגיאה בהקלטה';};
+ rec.onend=function(){if(stopped)return;try{rec.start();}catch(e){}};
+ var finish=function(apply){stopped=true;clearInterval(pulse);try{rec.stop();}catch(e){}ov.remove();if(apply)onDone((finalTxt||'').trim());};
+ document.getElementById('dstop').onclick=function(){finish(true);};
+ document.getElementById('dcancel').onclick=function(){finish(false);};
+ ov.onclick=function(e){if(e.target===ov)finish(false);};
+ try{rec.start();}catch(e){toast('לא ניתן להתחיל הקלטה');finish(false);}
+}
+function parseVisitOutcome(t){
+ if(!t)return null;
+ if(/(לא נכח|לא היה במקום|היה סגור|סגור היום|לא נמצא|לא פתוח|לא הגיע|לא היה שם)/.test(t))return 'לא נכח';
+ if(/(לא הזמין|בלי הזמנה|ללא הזמנה|לא רצה להזמין|לא לקח|לא קנה)/.test(t))return 'ללא הזמנה';
+ if(/(פוטנציאל|מתעניין|שוקל|לחשוב על זה|סיור|לקוח חדש)/.test(t))return 'פוטנציאלי';
+ if(/(הזמין|הזמנה|לקח|קנה|רכש|מזמין)/.test(t))return 'הזמנה';
+ return null;
+}
 function routeView(){
  var o=getOrigin();
  if(_fuMap===null&&navigator.onLine!==false&&me){loadFollowups(function(){if(route==='route')render();});}
@@ -2035,7 +2151,13 @@ function routeView(){
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
  if(!window.__arealist&&LOC.areas.length){window.__arealist=LOC.areas.map(function(a){return {code:a.code,name:a.name}})}
- if(!routeArea){if(curRouteDate()!==todayStr()&&$('res')){$('res').innerHTML='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday3" class="chip" style="background:#fff">היום</button></div><div style="color:var(--mut);font-size:13px;padding:14px 2px">בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.</div>';if($('backtoday3'))$('backtoday3').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};}return;}
+ if(!routeArea){if($('res')){var _na=(curRouteDate()!==todayStr())?('<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday3" class="chip" style="background:#fff">היום</button></div>'):'';
+  _na+=sugCtaHtml('איזה אזור הכי דחוף היום?','המערכת תדרג את האזורים ותציע מסלול מוכן');
+  _na+='<div style="color:var(--mut);font-size:13px;padding:6px 2px;line-height:1.6">או בחרי אזור למעלה — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.</div>';
+  $('res').innerHTML=_na;
+  if($('backtoday3'))$('backtoday3').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};
+  if($('autosug'))$('autosug').onclick=function(){openAreaSuggest();};
+ }return;}
  locTouch();LQ(function(){return LOC.customers.filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'})}).then(function(r){
   var d=r.data||[];
   var debtCust=d.filter(function(c){return c.debt_agorot>0}).length;
@@ -2134,6 +2256,7 @@ function routeView(){
   var selCount=function(){return d.filter(function(c){return routeSel[c.id]}).length};
   var h=(curRouteDate()!==todayStr())?('<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday2" class="chip" style="background:#fff">היום</button></div>'):'';
   h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לקוחות באזור</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+d.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">נבחרו</div><div id="selc" style="font-size:20px;font-weight:700;color:var(--acc)">'+selCount()+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+debtCust+'</div></div></div>';
+  h+=sugCtaHtml('הצעת מסלול אוטומטית','לפי ביקורים שצריכים להתקיים, לקוחות מוזנחים וחוב מזדקן');
   h+='<div style="display:flex;gap:7px;flex-wrap:wrap;margin:2px 0"><button id="selall" class="chip">בחר הכל</button><button id="selnone" class="chip">נקה בחירה</button><button id="seldebt" class="chip">רק לגבייה</button></div>';
   h+='<div style="font-size:12.5px;color:var(--mut);padding:0 2px 6px;line-height:1.5">סמני את הלקוחות שתגיעי אליהם, ואז לחצי <b>בנה מסלול</b> — המערכת תסדר אותם למסלול נסיעה יעיל מנקודת המוצא.</div>';
   // ---- highlight: due for next visit (by urgency) + missed last time ----
@@ -2171,6 +2294,7 @@ function routeView(){
   var rc=document.querySelectorAll('.rsel');for(var k=0;k<rc.length;k++){(function(card){var box=card.querySelector('.rselbox');if(box)box.onclick=function(e){e.stopPropagation();toggle(card)};card.onclick=function(){openCustomer(card.getAttribute('data-id'))}})(rc[k])}
   var rq=document.querySelectorAll('.rquick');for(var rqi=0;rqi<rq.length;rqi++){rq[rqi].onclick=function(e){e.stopPropagation();routeSel[this.getAttribute('data-id')]=true;saveDailyRoute();render()}}
   if($('backtoday2'))$('backtoday2').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;routeArea=null;routeSel={};routeBuilt=false;restoreDailyRoute();render()};
+  if($('autosug'))$('autosug').onclick=function(){openRouteSuggest(d);};
   $('selall').onclick=function(){d.forEach(function(c){routeSel[c.id]=true});saveDailyRoute();render()};
   $('selnone').onclick=function(){routeSel={};saveDailyRoute();render()};
   $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});saveDailyRoute();render()};
@@ -2195,12 +2319,22 @@ function visitsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">רישום ביקור</div></div><div class="list">'+
   '<div class="card">'+cust+'</div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">תוצאת הביקור</div><div id="outc" style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip oc on" data-v="הזמנה">הזמנה</button><button class="chip oc" data-v="ללא הזמנה">ללא הזמנה</button><button class="chip oc" data-v="לא נכח">לא נכח</button><button class="chip oc" data-v="פוטנציאלי">סיור/פוטנציאלי</button></div>'+
-  '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סיכום ביקור</div><textarea id="vsum" class="field" placeholder="מה סוכם, מה להביא בפעם הבאה…"></textarea></div>'+
+  '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:12px;color:var(--mut);font-weight:600">סיכום ביקור</div><button id="vmic" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🎙️ הקלטה</button></div><textarea id="vsum" class="field" placeholder="מה סוכם, מה להביא בפעם הבאה…"></textarea><div id="vdet" style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:5px;line-height:1.5"></div></div>'+
   '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">ביקור הבא (לא חובה)</div><input id="vnext" type="date" class="field"></div></div>'+
   '<button class="cta" id="savevis"'+(visitTarget?'':' disabled')+'>שמירת ביקור</button>'+
   '<div style="margin-top:6px"><div class="h1" style="font-size:15px">ביקורים אחרונים</div><div id="vhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>'+
   '</div>');
  var outcome='הזמנה';var oc=document.querySelectorAll('.oc');for(var i=0;i<oc.length;i++){oc[i].onclick=function(){for(var j=0;j<oc.length;j++)oc[j].classList.remove('on');this.classList.add('on');outcome=this.getAttribute('data-v')}}
+ var setOutcome=function(v){for(var j=0;j<oc.length;j++){var on2=oc[j].getAttribute('data-v')===v;oc[j].classList.toggle('on',on2);if(on2)outcome=v;}};
+ if($('vmic')){ if(!sttSupported())$('vmic').style.display='none'; else $('vmic').onclick=function(){
+  openDictation('סיכום ביקור בהקלטה','למשל: היה סגור, לחזור מחר בעשר עם הצעת מחיר',$('vsum').value,function(txt){
+   if(!txt)return;$('vsum').value=txt;var det=[];
+   var oo=parseVisitOutcome(txt);if(oo){setOutcome(oo);det.push('תוצאה: '+oo);}
+   var w=parseWhen(txt);
+   if(w&&/(ביקור|לחזור|לעבור|להגיע)/.test(txt)){var dd=w.due;$('vnext').value=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');det.push('ביקור הבא: '+$('vnext').value);}
+   if(parseVisitReminder(txt))det.push('תיווצר תזכורת אחרי השמירה');
+   if($('vdet'))$('vdet').innerHTML=det.length?('זוהה אוטומטית — '+det.join(' · ')):'';
+  });};}
  if($('vpick'))$('vpick').onclick=openVisitPicker;
  if($('vchg'))$('vchg').onclick=openVisitPicker;
  $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;var _vcid=visitTarget.id,_vsum=rec.summary;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render();maybeVisitReminder(_vsum,_vcid,vn);})};
@@ -2369,13 +2503,21 @@ function openReminderSheet(pre){
  var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(pre.source==='visit'?'🔔 לקבוע תזכורת?':'תזכורת חדשה')+'</b><span id="rsx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
   (pre.source==='visit'?'<div class="card" style="background:var(--accs);font-size:12px;color:var(--accd);line-height:1.6">זוהתה בקשה לחזור/לבדוק בסיכום הביקור. אשרי או ערכי את התזכורת.</div>':'')+
-  '<div class="card"><label style="display:block"><span class="lbl">תוכן התזכורת</span><textarea id="rs_text" class="field" style="margin-top:5px;min-height:60px" placeholder="למשל: לחזור עם הצעת מחיר">'+esc(pre.text||'')+'</textarea></label></div>'+
+  '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="lbl">תוכן התזכורת</span><button id="rs_mic" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🎙️ הקלטה</button></div><textarea id="rs_text" class="field" style="margin-top:5px;min-height:60px" placeholder="למשל: לחזור עם הצעת מחיר">'+esc(pre.text||'')+'</textarea><div id="rs_det" style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:5px"></div></div>'+
   '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תאריך</span><input id="rs_date" type="date" class="field" style="margin-top:5px" value="'+dstr+'"></label><label style="flex:1"><span class="lbl">שעה (לא חובה)</span><div style="display:flex;gap:6px;margin-top:5px"><select id="rs_hour" class="field" style="text-align:center;padding:0 6px">'+hopts+'</select><select id="rs_min" class="field" style="text-align:center;padding:0 6px">'+mopts+'</select></div></label></div><div style="margin-top:10px"><span class="lbl">סוג</span><div style="display:flex;gap:8px;margin-top:5px"><button class="chip rskind'+(kind==='general'?' on':'')+'" data-k="general" style="flex:1">🔔 רגילה</button><button class="chip rskind'+(kind==='collection'?' on':'')+'" data-k="collection" style="flex:1">💰 גבייה</button></div></div></div>'+
   '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--mut);font-weight:600">לקוח מקושר (לא חובה)</div><div id="rs_custname" style="font-size:14px;font-weight:700;color:var(--head)">'+(custName?esc(custName):'— ללא —')+'</div></div><button id="rs_pick" class="chip" style="background:var(--accs);color:var(--accd)">שינוי</button></div></div>'+
   '<button class="cta" id="rs_save">שמירת תזכורת</button><div id="rs_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};$('rsx').onclick=function(){ov.remove()};
  var kk=ov.querySelectorAll('.rskind');for(var i=0;i<kk.length;i++)kk[i].onclick=function(){kind=this.getAttribute('data-k');for(var j=0;j<kk.length;j++)kk[j].classList.toggle('on',kk[j]===this);};
  $('rs_pick').onclick=function(){remPickCustomer(function(id,nm){custId=id;custName=nm;if($('rs_custname'))$('rs_custname').textContent=nm||'— ללא —';});};
+ if($('rs_mic')){ if(!sttSupported())$('rs_mic').style.display='none'; else $('rs_mic').onclick=function(){
+  openDictation('תזכורת בהקלטה','למשל: מחר בארבע להתקשר לבית מרקחת הכרמל בנושא החוב',$('rs_text').value,function(txt){
+   if(!txt)return;$('rs_text').value=txt;var det=[];var w=parseWhen(txt);
+   if(w){var dd=w.due;$('rs_date').value=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-'+String(dd.getDate()).padStart(2,'0');det.push('תאריך: '+$('rs_date').value);
+    if(w.hasTime&&$('rs_hour')){$('rs_hour').value=String(dd.getHours()).padStart(2,'0');$('rs_min').value=String(Math.round(dd.getMinutes()/5)*5%60).padStart(2,'0');det.push('שעה: '+$('rs_hour').value+':'+$('rs_min').value);}
+    if(w.kind==='collection'){kind='collection';for(var j=0;j<kk.length;j++)kk[j].classList.toggle('on',kk[j].getAttribute('data-k')==='collection');det.push('סוג: גבייה');}}
+   if($('rs_det'))$('rs_det').innerHTML=det.length?('זוהה — '+det.join(' · ')):'';
+  });};}
  $('rs_save').onclick=function(){
   var txt=$('rs_text').value.trim();var dv=$('rs_date').value;var _hv=$('rs_hour')?$('rs_hour').value:'';var _mv=($('rs_min')&&$('rs_min').value)||'00';var tv=_hv?(_hv+':'+_mv):'09:00';
   if(!txt){$('rs_err').textContent='נא למלא תוכן';return;}if(!dv){$('rs_err').textContent='נא לבחור תאריך';return;}
@@ -2388,24 +2530,46 @@ function openReminderSheet(pre){
   },function(e){$('rs_err').textContent='שגיאה: '+((e&&e.message)||'');b.disabled=false;b.textContent='שמירת תזכורת';});
  };
 }
-function parseVisitReminder(text){
+var HE_HOUR={'אחת':1,'שתיים':2,'שתים':2,'שלוש':3,'ארבע':4,'חמש':5,'שש':6,'שבע':7,'שמונה':8,'תשע':9,'עשר':10,'אחת עשרה':11,'שתים עשרה':12,'שתיים עשרה':12};
+var HE_NUM={'שניים':2,'שנים':2,'שלושה':3,'ארבעה':4,'חמישה':5,'שישה':6,'שבעה':7,'שמונה':8,'תשעה':9,'עשרה':10};
+function parseWhen(text){
  if(!text)return null;
- if(!/(לחזור|לחזר|להתקשר|לצלצל|לטלפן|לשלוח|לבדוק|לתאם|לוודא|להעביר|תזכורת|להזכיר)/.test(text))return null;
  var now=new Date();var d=null,hasTime=false,hh=9,mm=0;
- var tm=text.match(/(\d{1,2}):(\d{2})/);if(tm){hh=+tm[1];mm=+tm[2];hasTime=true;}else{var t2=text.match(/בשעה\s*(\d{1,2})/);if(t2){hh=+t2[1];hasTime=true;}}
+ var tm=text.match(/(\d{1,2}):(\d{2})/);
+ if(tm){hh=+tm[1];mm=+tm[2];hasTime=true;}
+ else{var t2=text.match(/בשעה\s*(\d{1,2})/);
+  if(t2){hh=+t2[1];hasTime=true;}
+  else{var hw=text.match(/(?:^|[\s,.])ב?(שתיים עשרה|שתים עשרה|אחת עשרה|אחת|שתיים|שתים|שלוש|ארבע|חמש|שש|שבע|שמונה|תשע|עשר)(?![א-ת])/);
+   if(hw&&HE_HOUR[hw[1]]){hh=HE_HOUR[hw[1]];hasTime=true;}}}
+ if(hasTime){
+  if(/וחצי/.test(text))mm=30;else if(/ורבע/.test(text))mm=15;
+  if(/(אחר הצהריים|אחהצ|בצהריים|בערב|בלילה)/.test(text)){if(hh<12)hh+=12;}
+  else if(!/בבוקר/.test(text)&&hh>=1&&hh<=6)hh+=12;
+  if(hh>23)hh=23;}
  if(/מחרתיים/.test(text)){d=new Date(now);d.setDate(d.getDate()+2);}
  else if(/מחר/.test(text)){d=new Date(now);d.setDate(d.getDate()+1);}
  else if(/היום/.test(text)){d=new Date(now);}
+ else if(/יומיים/.test(text)){d=new Date(now);d.setDate(d.getDate()+2);}
+ else if(/שבועיים/.test(text)){d=new Date(now);d.setDate(d.getDate()+14);}
+ else if(/(בעוד\s*שבוע|שבוע\s*הבא)/.test(text)){d=new Date(now);d.setDate(d.getDate()+7);}
+ else if(/(בעוד\s*חודש|חודש\s*הבא)/.test(text)){d=new Date(now);d.setDate(d.getDate()+30);}
  else{var bd=text.match(/בעוד\s*(\d{1,2})\s*ימים?/);
   if(bd){d=new Date(now);d.setDate(d.getDate()+(+bd[1]));}
-  else{var wd=text.match(/יום\s*(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)/);
-   if(wd){var mp={'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'שבת':6};var tgt=mp[wd[1]];d=new Date(now);var add=(tgt-d.getDay()+7)%7;if(add===0)add=7;d.setDate(d.getDate()+add);}
-   else{var dm=text.match(/(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?/);
-    if(dm){var day=+dm[1],mon=+dm[2]-1,yr=dm[3]?(+dm[3]<100?2000+(+dm[3]):+dm[3]):now.getFullYear();d=new Date(yr,mon,day);if(!dm[3]&&d.getTime()<now.getTime()-86400000)d=new Date(yr+1,mon,day);}}}}
+  else{var bw=text.match(/בעוד\s*(שניים|שנים|שלושה|ארבעה|חמישה|שישה|שבעה|שמונה|תשעה|עשרה)\s*ימים?/);
+   if(bw&&HE_NUM[bw[1]]){d=new Date(now);d.setDate(d.getDate()+HE_NUM[bw[1]]);}
+   else{var wd=text.match(/יום\s*(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)/);
+    if(wd){var mp={'ראשון':0,'שני':1,'שלישי':2,'רביעי':3,'חמישי':4,'שישי':5,'שבת':6};var tgt=mp[wd[1]];d=new Date(now);var add=(tgt-d.getDay()+7)%7;if(add===0)add=7;d.setDate(d.getDate()+add);}
+    else{var dm=text.match(/(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?/);
+     if(dm){var day=+dm[1],mon=+dm[2]-1,yr=dm[3]?(+dm[3]<100?2000+(+dm[3]):+dm[3]):now.getFullYear();d=new Date(yr,mon,day);if(!dm[3]&&d.getTime()<now.getTime()-86400000)d=new Date(yr+1,mon,day);}}}}}
  if(!d||isNaN(d.getTime()))return null;
  d.setHours(hh,mm,0,0);
  var kind=/(גבייה|גביה|חוב|תשלום|לגבות|שיק|לשלם|כסף)/.test(text)?'collection':'general';
  return {due:d,hasTime:hasTime,kind:kind};
+}
+function parseVisitReminder(text){
+ if(!text)return null;
+ if(!/(לחזור|לחזר|להתקשר|לצלצל|לטלפן|לשלוח|לבדוק|לתאם|לוודא|להעביר|תזכורת|להזכיר)/.test(text))return null;
+ return parseWhen(text);
 }
 function maybeVisitReminder(summary,custId,custName){
  var p=parseVisitReminder(summary);if(!p)return;
