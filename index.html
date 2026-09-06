@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-41';
+var APP_VERSION='2026-08-26-42';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -2133,6 +2133,38 @@ function parseVisitOutcome(t){
  if(/(הזמין|הזמנה|לקח|קנה|רכש|מזמין)/.test(t))return 'הזמנה';
  return null;
 }
+/* ---------- ROUTE SHARE (view-only link for the manager) ---------- */
+var ROUTE_SHARE_BASE='https://ooxdupeihzvbzudibaoi.supabase.co/functions/v1/route-share?t=';
+function showRouteShare(tok,ds,n){
+ var url=ROUTE_SHARE_BASE+tok;
+ var msg='מסלול העבודה שלי · '+heDateFull(ds)+' ('+n+' עצירות):\n'+url;
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:380px;margin:auto;border-radius:18px;padding:20px 18px 16px"><div style="text-align:center"><div style="font-size:34px">🔗</div><div style="font-size:16px;font-weight:800;margin-top:3px">שיתוף המסלול</div><div style="font-size:12px;color:var(--mut);margin-top:5px;line-height:1.6">קישור לצפייה בלבד. המנהל לא צריך להתקין כלום — והעמוד מתעדכן לבד ככל שאת מתקדמת ביום.</div></div><div style="background:#fbfaf8;border:1px solid var(--line);border-radius:11px;padding:9px;margin-top:12px;font-size:10.5px;color:var(--mut);word-break:break-all;direction:ltr;text-align:left">'+esc(url)+'</div><button class="cta" id="sh_wa" style="margin-top:11px;background:#25d366">💬 שליחה בוואטסאפ</button><button class="cta" id="sh_sys" style="margin-top:8px;background:var(--accs);color:var(--accd)">📤 שיתוף…</button><button id="sh_cp" style="width:100%;height:42px;margin-top:8px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">📋 העתקת הקישור</button><button id="sh_rv" style="width:100%;height:40px;margin-top:10px;background:var(--bads);color:var(--bad);border:none;border-radius:12px;font-weight:700;cursor:pointer">ביטול השיתוף</button><button id="sh_x" style="width:100%;height:38px;margin-top:4px;background:transparent;border:none;color:var(--mut);font-weight:700;cursor:pointer">סגירה</button></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};
+ document.getElementById('sh_x').onclick=function(){ov.remove()};
+ document.getElementById('sh_wa').onclick=function(){window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank')};
+ document.getElementById('sh_sys').onclick=function(){if(navigator.share){navigator.share({title:'מסלול יומי',text:msg}).catch(function(){});}else{toast('שיתוף ישיר לא נתמך במכשיר — שלחי בוואטסאפ או העתיקי');}};
+ document.getElementById('sh_cp').onclick=function(){var b=this;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(function(){b.textContent='✓ הקישור הועתק';setTimeout(function(){if(b)b.textContent='📋 העתקת הקישור'},1800);},function(){toast('לא ניתן להעתיק');});}else toast('לא ניתן להעתיק במכשיר הזה');};
+ document.getElementById('sh_rv').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';sb.rpc('route_share_revoke',{p_date:ds}).then(function(){toast('השיתוף בוטל — הקישור כבר לא פעיל');ov.remove();},function(){toast('שגיאה בביטול');b.disabled=false;b.textContent='ביטול השיתוף';});};
+}
+function openRouteShare(seq){
+ if(!me){toast('צריך להתחבר');return;}
+ if(!seq||!seq.length){toast('אין עצירות במסלול');return;}
+ if(navigator.onLine===false){toast('אין חיבור לרשת — שיתוף דורש אינטרנט');return;}
+ var ds=curRouteDate();var ids=seq.map(function(c){return c.id});
+ toast('מכינה קישור…');
+ saveDailyRoute();
+ var attempt=0;
+ var pub=function(){
+  attempt++;
+  sb.rpc('route_share_publish',{p_date:ds,p_ordered:ids}).then(function(r){
+   if(r&&!r.error&&r.data){showRouteShare(r.data,ds,seq.length);return;}
+   if(attempt<3){setTimeout(pub,900);return;}
+   toast('שגיאה ביצירת הקישור');
+  },function(){if(attempt<3){setTimeout(pub,900);return;}toast('שגיאה ביצירת הקישור');});
+ };
+ setTimeout(pub,450);
+}
 function routeView(){
  var o=getOrigin();
  if(_fuMap===null&&navigator.onLine!==false&&me){loadFollowups(function(){if(route==='route')render();});}
@@ -2215,7 +2247,7 @@ function routeView(){
     var currentId=null;for(var si=0;si<seq.length;si++){if(!doneSet[seq[si].id]){currentId=seq[si].id;break}}
     var h='';
     if(planningFuture)h+='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מסלול מתוכנן · '+heDateFull(curRouteDate())+'</div><button id="backtoday" class="chip" style="background:#fff">היום</button></div>';
-    h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button></div>';
+    h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button><button id="shareroute" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🔗 שיתוף עם המנהל</button></div>';
     if(planningFuture){
      h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+sel.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+selDebt+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:700;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
     }else{
@@ -2244,6 +2276,7 @@ function routeView(){
     $('res').innerHTML=h+'<div style="height:20px"></div>';
     if($('backtoday'))$('backtoday').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};
     $('editsel').onclick=function(){routeBuilt=false;saveDailyRoute();render()};
+    if($('shareroute'))$('shareroute').onclick=function(){openRouteShare(seq);};
     bindStops();
     var pa=document.querySelectorAll('.paddp');for(var pi=0;pi<pa.length;pi++){pa[pi].onclick=function(e){e.stopPropagation();routeSel[this.getAttribute('data-id')]=true;saveDailyRoute();render()}}
     if($('endday')){var armed=false;$('endday').onclick=function(){var b=this;if(!armed){armed=true;b.textContent='בטוח? לחצי שוב לסיום היום';setTimeout(function(){armed=false;if(b)b.textContent='🏁 סיום יום ויצירת דוח'},3000);return}b.disabled=true;b.textContent='מסכם…';var _endFin=function(){endDayNow(curRouteDate(),sel.length,function(rep){_routeReport=rep||{planned:sel.length};routeEnded=true;render()})};if(curRouteDate()===todayStr())endWorkday(_endFin);else _endFin();}}
