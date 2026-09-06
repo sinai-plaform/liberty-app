@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-48';
+var APP_VERSION='2026-08-26-49';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -2207,7 +2207,9 @@ var IMP_TYPES={
    {k:'name',l:'שם העסק',req:true,h:['שם','לקוח','עסק','name','בית מרקחת']},
    {k:'city',l:'עיר',req:false,h:['עיר','city','ישוב','יישוב']},
    {k:'address',l:'כתובת',req:false,h:['כתובת','address','רחוב']},
-   {k:'legal_id',l:'ח.פ / ע.מ',req:false,h:['ח.פ','חפ','ע.מ','עוסק','legal','ח״פ']}]}
+   {k:'legal_id',l:'ח.פ / ע.מ',req:false,h:['ח.פ','חפ','ע.מ','עוסק','legal','ח״פ']},
+   {k:'phone',l:'טלפון',req:false,h:['טלפון','נייד','פלאפון','סלולרי','phone','mobile']},
+   {k:'contact_name',l:'איש קשר',req:false,h:['איש קשר','נציג','contact']}]}
 };
 function impNum(v){if(v==null)return null;var t=String(v).replace(/[₪,\s]/g,'').replace(/[^\d.\-]/g,'');if(t===''||t==='-')return null;var n=parseFloat(t);return isNaN(n)?null:n;}
 function impAgorot(v){var n=impNum(v);return n==null?null:Math.round(n*100);}
@@ -2399,6 +2401,7 @@ function impStep3(){
   impStep4();};}
 function impVal(row,k){var i=_imp.map[k];if(i===''||i==null)return '';var v=row[+i];return v==null?'':String(v).trim();}
 function impStep4(){
+ if(_imp.type==='customers'&&!window.__impGeoReady&&typeof loadAreaPts==='function'){loadAreaPts(function(){window.__impGeoReady=1;impStep4();});return;}
  var type=_imp.type,rows=_imp.body,out=[],h='';
  if(type==='prices'){
   var bySku={};(LOC.products||[]).forEach(function(p){bySku[String(p.sku).toUpperCase().trim()]=p;});
@@ -2445,19 +2448,56 @@ function impStep4(){
   if(un.length)h+='<div class="card" style="background:var(--bads)"><div style="font-size:12px;color:var(--bad);font-weight:700">לקוחות שלא זוהו:</div><div style="font-size:11.5px;color:var(--bad);margin-top:5px;line-height:1.6">'+esc(un.slice(0,30).join(' · '))+(un.length>30?' …':'')+'</div></div>';
  }
  else {
-  var byL={},byNC={};
-  (LOC.customers||[]).forEach(function(c){if(c.legal_id)byL[String(c.legal_id).trim()]=c;byNC[String(c.name).trim().toLowerCase()+'|'+String(c.city||'').trim().toLowerCase()]=c;});
-  var nw=0,up=0;
+  var byL={},byK={},byKC={};
+  (LOC.customers||[]).forEach(function(c){
+   if(c.legal_id)byL[String(c.legal_id).trim()]=c;
+   var k=impKey(c.name);if(k){byKC[k+'|'+impKey(c.city||'')]=c;if(!byK[k])byK[k]=c;}});
+  var nw=0,up=0,same=0,noArea=0,dups=0,phones=0,seen={};
   rows.forEach(function(r){
    var nm=impVal(r,'name');if(!nm)return;
-   var ct=impVal(r,'city'),lg=impVal(r,'legal_id');
-   var ex=(lg&&byL[lg])||byNC[nm.toLowerCase()+'|'+ct.toLowerCase()]||null;
-   if(ex)up++;else nw++;
-   out.push({name:nm,city:ct,address:impVal(r,'address'),legal_id:lg,_new:!ex});});
-  h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">לקוחות חדשים</div><div style="font-size:22px;font-weight:800;color:var(--goodd)">'+nw+'</div></div><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">עדכון קיימים</div><div style="font-size:22px;font-weight:800;color:var(--accd)">'+up+'</div></div></div><div style="font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.6">זיהוי כפילויות לפי ח.פ, ואם אין — לפי שם + עיר. אזור משויך אוטומטית לפי העיר.</div></div>';
-  out.slice(0,60).forEach(function(rec){
-   h+='<div class="card" style="border-inline-start:4px solid '+(rec._new?'var(--good)':'var(--acc)')+'"><div style="font-size:13.5px;font-weight:800">'+esc(rec.name)+' <span class="badge '+(rec._new?'b-good':'b-mut')+'">'+(rec._new?'חדש':'עדכון')+'</span></div><div style="font-size:11.5px;color:var(--mut)">'+esc([rec.city,rec.address].filter(Boolean).join(' · '))+'</div></div>';});
-  if(out.length>60)h+='<div style="text-align:center;font-size:12px;color:var(--mut);padding:6px">…ועוד '+(out.length-60)+' שורות</div>';
+   var ct=impVal(r,'city'),lg=impVal(r,'legal_id'),ad=impVal(r,'address');
+   var ph=impVal(r,'phone'),cn=impVal(r,'contact_name');
+   var k=impKey(nm),kc=k+'|'+impKey(ct);
+   var ex=(lg&&byL[lg])||byKC[kc]||byK[k]||null;
+   var fk=lg||kc,isDup=!!seen[fk];seen[fk]=1;if(isDup)dups++;
+   var pt=[null,null];try{pt=geocodeCity(ct)||[null,null];}catch(e){}
+   var ac=null;try{ac=cityToArea(ct);}catch(e){}
+   if(ex&&ex.area_code!=null)ac=ex.area_code;
+   var chg=[];
+   if(ex){
+    if(ct&&impKey(ct)!==impKey(ex.city||''))chg.push(['עיר',ex.city||'—',ct]);
+    if(ad&&impKey(ad)!==impKey(ex.address||''))chg.push(['כתובת',ex.address||'—',ad]);
+    if(lg&&lg!==String(ex.legal_id||''))chg.push(['ח.פ',ex.legal_id||'—',lg]);
+    if(ph)chg.push(['טלפון','',ph]);
+    if(ex.area_code==null&&ac!=null)chg.push(['אזור','—','אזור '+ac]);
+   }
+   if(ph)phones++;
+   if(ac==null)noArea++;
+   var rec={name:nm,city:ct,address:ad,legal_id:lg,phone:ph,contact_name:cn,
+            lat:pt[0],lng:pt[1],area_code:ac,_new:!ex,_chg:chg,_dup:isDup,_ex:ex?ex.name:''};
+   if(isDup){rec._off=true;}
+   else if(ex&&!chg.length){rec._off=true;same++;}
+   else if(ex)up++; else nw++;
+   out.push(rec);});
+  var tile=function(bg,fg,l,v){return '<div class="stat" style="background:'+bg+'"><div style="font-size:11px;color:'+fg+';font-weight:700">'+l+'</div><div style="font-size:20px;font-weight:800;color:'+fg+'">'+v+'</div></div>';};
+  h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px">'
+   +tile('var(--goods)','var(--goodd)','לקוחות חדשים',nw)
+   +tile('var(--accs)','var(--accd)','עדכון פרטים',up)
+   +tile('#f2efe9','var(--mut)','ללא שינוי',same)
+   +tile('var(--bads)','var(--bad)','כפולים בקובץ',dups)
+   +'</div><div style="font-size:11.5px;color:var(--mut);margin-top:9px;line-height:1.6">זיהוי כפילויות מתעלם מרווחים ופיסוק — <b>בע"מ</b> ו-<b>בעמ</b> נחשבים אותו לקוח.<br>שורות ללא שינוי וכפילויות <b>מסומנות לא־לייבוא</b> מראש. הקישי על שורה כדי לשנות.</div></div>';
+  if(phones)h+='<div class="card" style="background:var(--goods);font-size:12px;color:var(--goodd);font-weight:700;line-height:1.6">📞 '+phones+' מספרי טלפון ייווספו לאנשי הקשר של הלקוחות</div>';
+  if(noArea)h+='<div class="card" style="background:var(--warns);font-size:12px;color:var(--warn);line-height:1.6"><b>⚠️ '+noArea+' לקוחות בלי אזור</b><br>העיר לא זוהתה, ולכן הם לא יופיעו בתכנון מסלול עד ששיוך האזור יושלם ידנית בכרטיס הלקוח.</div>';
+  out.forEach(function(rec,i){
+   if(i>=80)return;
+   var badge=rec._dup?'<span class="badge b-bad">כפול בקובץ</span>':(rec._new?'<span class="badge b-good">חדש</span>':(rec._chg.length?'<span class="badge b-acc">עדכון</span>':'<span class="badge b-mut">ללא שינוי</span>'));
+   var det='';
+   rec._chg.forEach(function(c){det+='<div style="font-size:11.5px;margin-top:3px"><span style="color:var(--mut)">'+esc(c[0])+':</span> '+(c[1]?'<span style="color:var(--mut);text-decoration:line-through">'+esc(c[1])+'</span> ← ':'')+'<span style="color:var(--acc);font-weight:700">'+esc(c[2])+'</span></div>';});
+   if(rec._new){var loc=[rec.city,rec.address].filter(Boolean).join(' · ');
+    det='<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(loc||'ללא כתובת')+(rec.area_code!=null?' · אזור '+rec.area_code:' · <span style="color:var(--warn);font-weight:700">ללא אזור</span>')+(rec.phone?' · '+esc(rec.phone):'')+'</div>';}
+   if(!rec._new&&rec._ex&&impKey(rec._ex)!==impKey(rec.name))det+='<div style="font-size:11px;color:var(--mut);margin-top:3px">מתאים ללקוח קיים: '+esc(rec._ex)+'</div>';
+   h+='<div class="card impr" data-i="'+i+'" style="cursor:pointer;'+(rec._off?'opacity:.45;':'')+'border-inline-start:4px solid '+(rec._new?'var(--good)':(rec._chg.length?'var(--acc)':'var(--line)'))+'"><div style="display:flex;align-items:flex-start;gap:9px"><span class="impchk" style="font-size:15px">'+(rec._off?'⬜':'✅')+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800">'+esc(rec.name)+' '+badge+'</div>'+det+'</div></div></div>';});
+  if(out.length>80)h+='<div style="text-align:center;font-size:12px;color:var(--mut);padding:6px">…ועוד '+(out.length-80)+' שורות (ייובאו לפי הסימון)</div>';
  }
  _imp.out=out;
  h+=(out.length?'<button class="cta" id="imp_apply">'+(type==='prices'?'החלת '+out.length+' שינויים':(type==='aging'?'ייבוא '+out.length+' שורות חוב':'ייבוא '+out.length+' לקוחות'))+'</button>':'')
@@ -2486,9 +2526,12 @@ function impApply(btn){
    if(r&&r.error)return fail(r.error);
    var d=r.data||{};done('✓ '+(d.lines||0)+' שורות · סה״כ '+ils(d.total_agorot||0)+(d.unmatched?' · '+d.unmatched+' לא זוהו':''));},fail);}
  else {
-  sb.rpc('import_customers_apply',{p_rows:list}).then(function(r){
+  var payload=list.map(function(r){return {name:r.name,city:r.city,address:r.address,legal_id:r.legal_id,
+   phone:r.phone,contact_name:r.contact_name,lat:r.lat,lng:r.lng,area_code:r.area_code};});
+  sb.rpc('import_customers_apply',{p_rows:payload}).then(function(r){
    if(r&&r.error)return fail(r.error);
-   var d=r.data||{};done('✓ '+(d.created||0)+' לקוחות נוספו · '+(d.updated||0)+' עודכנו');},fail);}}
+   var d=r.data||{};
+   done('✓ '+(d.created||0)+' לקוחות נוספו · '+(d.updated||0)+' עודכנו'+(d.phones?' · '+d.phones+' טלפונים':''));},fail);}}
 /* ================= MANAGER SALES QUERIES ================= */
 var SQ_DIMS=[{k:'product',l:'מוצר'},{k:'agent_name',l:'סוכן'},{k:'customer_name',l:'לקוח'},
  {k:'brand',l:'מותג'},{k:'category',l:'קטגוריה'},{k:'area_name',l:'אזור'},
