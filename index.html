@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-51';
+var APP_VERSION='2026-08-26-52';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -1550,6 +1550,7 @@ function editCustomer(c){
   '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">📍 מיקום GPS (לכפרים ללא כתובת)</span><div style="display:flex;gap:8px;align-items:center;margin-top:5px"><button type="button" id="ec_gps" class="chip" style="background:var(--accs);color:var(--accd);white-space:nowrap">📍 קבע לפי המיקום שלי</button><span id="ec_loc" style="font-size:12px;color:var(--mut);flex:1"></span></div></div>'+
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">ע.מ / ח.פ</span><input id="ec_legal" class="field" style="margin-top:5px" inputmode="numeric"></label>'+
   '<div style="margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">סטטוס</span><div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap"><button class="chip eclc" data-v="active">פעיל</button><button class="chip eclc" data-v="potential">פוטנציאלי</button><button class="chip eclc" data-v="inactive">לא פעיל</button></div></div>'+
+  '<div id="ec_potwrap" style="margin-top:11px;display:none"><span style="font-size:12px;color:var(--mut);font-weight:600">⭐ רמת פוטנציאל</span><div style="display:flex;gap:7px;margin-top:5px"><button class="chip ecpot" data-v="low" style="flex:1">נמוך</button><button class="chip ecpot" data-v="medium" style="flex:1">בינוני</button><button class="chip ecpot" data-v="high" style="flex:1">גבוה</button></div><div style="font-size:11px;color:var(--mut);margin-top:5px;line-height:1.5">הדירוג מוצג למנהל בשיתוף המסלול</div></div>'+
   '<label style="display:block;margin-top:11px"><span style="font-size:12px;color:var(--mut);font-weight:600">📝 הערה</span><textarea id="ec_notes" class="field" style="margin-top:5px;min-height:74px" placeholder="שעות פתיחה, איש קשר, מה סוכם…"></textarea></label></div>'+
   '<button class="cta" id="ec_save">שמירת שינויים</button></div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};document.getElementById('ecx').onclick=function(){ov.remove()};
@@ -1558,11 +1559,19 @@ function editCustomer(c){
  function ecLocShow(){$('ec_loc').innerHTML=ecLoc?('<span style="color:var(--good);font-weight:700">✓ '+ecLoc.lat.toFixed(5)+', '+ecLoc.lng.toFixed(5)+'</span>'):'טרם נקבע מיקום מדויק';}
  ecLocShow();
  $('ec_gps').onclick=function(){if(!navigator.geolocation){toast('אין גישה למיקום');return}var b=$('ec_gps');b.textContent='מאתר…';b.disabled=true;navigator.geolocation.getCurrentPosition(function(pos){ecLoc={lat:+pos.coords.latitude.toFixed(6),lng:+pos.coords.longitude.toFixed(6)};ecLocShow();b.textContent='📍 עדכני מיקום';b.disabled=false;toast('המיקום נלכד ✓ — לחצי שמירה');},function(err){b.textContent='📍 קבע לפי המיקום שלי';b.disabled=false;toast('לא ניתן לאתר מיקום')},{enableHighAccuracy:true,timeout:12000})};
- var lc=c.lifecycle||'active';var opts=document.querySelectorAll('.eclc');for(var i=0;i<opts.length;i++){if(opts[i].getAttribute('data-v')===lc)opts[i].classList.add('on');opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v')}}
+ var lc=c.lifecycle||'active';var pot=c.potential_level||null;
+ var potWrap=function(){var w=$('ec_potwrap');if(w)w.style.display=(lc==='potential')?'block':'none';};
+ var popts=document.querySelectorAll('.ecpot');
+ for(var p=0;p<popts.length;p++){if(popts[p].getAttribute('data-v')===pot)popts[p].classList.add('on');
+  popts[p].onclick=function(){var v=this.getAttribute('data-v');var was=(pot===v);
+   for(var q=0;q<popts.length;q++)popts[q].classList.remove('on');
+   if(was){pot=null;}else{pot=v;this.classList.add('on');}};}
+ var opts=document.querySelectorAll('.eclc');for(var i=0;i<opts.length;i++){if(opts[i].getAttribute('data-v')===lc)opts[i].classList.add('on');opts[i].onclick=function(){for(var j=0;j<opts.length;j++)opts[j].classList.remove('on');this.classList.add('on');lc=this.getAttribute('data-v');potWrap();}}
+ potWrap();
  LQ(function(){return LOC.areas}).then(function(r){var h='<option value="">— ללא —</option>';(r.data||[]).forEach(function(a){h+='<option value="'+a.id+'"'+(a.code===c.area_code?' selected':'')+'>אזור '+a.code+'</option>'});$('ec_area').innerHTML=h});
  $('ec_save').onclick=function(){var name=$('ec_name').value.trim();if(!name){toast('נא למלא שם');return}$('ec_save').disabled=true;$('ec_save').textContent='שומר…';
   var city=$('ec_city').value.trim();
-  var rec={name:name,city:city||null,address:$('ec_addr').value.trim()||null,legal_id:$('ec_legal').value.trim()||null,lifecycle:lc,area_id:$('ec_area').value||null,notes:$('ec_notes').value.trim()||null};
+  var rec={name:name,city:city||null,address:$('ec_addr').value.trim()||null,legal_id:$('ec_legal').value.trim()||null,lifecycle:lc,area_id:$('ec_area').value||null,notes:$('ec_notes').value.trim()||null,potential_level:(lc==='potential'?pot:null)};
   if(city&&city!==(c.city||'')){var g=geocodeCity(city);if(g[0]!=null){rec.lat=g[0];rec.lng=g[1]}}
   if(ecLoc){rec.lat=ecLoc.lat;rec.lng=ecLoc.lng}
   sb.from('customers').update(rec).eq('id',c.id).then(function(res){if(res.error){toast('שגיאה: '+res.error.message);$('ec_save').disabled=false;$('ec_save').textContent='שמירת שינויים';return}toast('נשמר ✓');ov.remove();openCustomer(c.id)})};

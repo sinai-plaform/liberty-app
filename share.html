@@ -26,6 +26,11 @@ body{margin:0;background:#f6f4f1;font-family:Heebo,system-ui,-apple-system,'Sego
 .tag{font-size:11px;font-weight:800;border-radius:20px;padding:3px 9px;display:inline-block}
 .t-debt{background:#fdeceb;color:#b23b34}
 .t-done{background:#e4f3ea;color:#1a7a4d}
+.t-ph{background:#fff1d6;color:#8a5a12}
+.t-pm{background:#eef2f5;color:#54677a}
+.t-pl{background:#f2f0ec;color:#7c766c}
+.note{margin-top:7px;background:#fbfaf8;border:1px solid #eee9e2;border-radius:10px;padding:8px 10px;font-size:12px;color:#5b564e;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.note b{color:#0b5860;font-weight:800}
 .nav{display:flex;gap:6px;margin-top:9px}
 .nav a{flex:1;text-align:center;font-size:12px;font-weight:700;text-decoration:none;padding:8px 4px;border-radius:9px;border:1px solid #e8e4de;color:#0b5860;background:#fbfaf8}
 .allbtn{display:block;margin:14px 14px 0;text-align:center;background:#0f6b74;color:#fff;text-decoration:none;font-weight:800;font-size:14px;padding:13px;border-radius:13px}
@@ -64,6 +69,15 @@ function render(d){
     var tags='';
     if(s.visited)tags+='<span class="tag t-done">✓ בוצע</span>';
     if(s.has_debt)tags+='<span class="tag t-debt">לגבייה</span>';
+    var PL={high:['פוטנציאל גבוה','t-ph'],medium:['פוטנציאל בינוני','t-pm'],low:['פוטנציאל נמוך','t-pl']};
+    if(s.potential_level&&PL[s.potential_level])tags+='<span class="tag '+PL[s.potential_level][1]+'">⭐ '+PL[s.potential_level][0]+'</span>';
+    else if(s.lifecycle==='potential')tags+='<span class="tag t-pl">לקוח פוטנציאלי</span>';
+    var notes='';
+    if(s.notes)notes+='<div class="note"><b>הערה:</b> '+esc(s.notes)+'</div>';
+    (s.last_notes||[]).forEach(function(n){
+      if(!n||!n.s)return;
+      notes+='<div class="note"><b>'+esc(n.d||'')+(n.o?' · '+esc(n.o):'')+'</b><br>'+esc(n.s)+'</div>';
+    });
     var nav='';
     if(s.lat!=null&&s.lng!=null){
       nav='<div class="nav">'
@@ -74,7 +88,7 @@ function render(d){
     h+='<div class="stop'+(s.visited?' done':'')+'"><div class="num">'+(s.visited?'✓':(i+1))+'</div>'
      +'<div style="flex:1;min-width:0"><div class="nm">'+esc(s.name)+'</div>'
      +(where?'<div class="ct">'+esc(where)+'</div>':'')
-     +(tags?'<div class="tags">'+tags+'</div>':'')+nav+'</div></div>';
+     +(tags?'<div class="tags">'+tags+'</div>':'')+notes+nav+'</div></div>';
   });
   h+='</div>';
   var up=d.updated_at?new Date(d.updated_at):null;
