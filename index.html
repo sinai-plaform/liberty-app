@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-46';
+var APP_VERSION='2026-08-26-47';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -166,7 +166,7 @@ function buildOrderEmail(custName,items){
  items.forEach(function(it,i){var f=bi.perLine[i]||0;var q=(f>0?(it.qty+'+'+f):(it.qty+' יח׳'));s+=R+q+' * '+it.sku+'\n';});
  return s;
 }
-function orderSentModal(custName,items,t,isUpdate,done){
+function orderSentModal(custName,items,t,isUpdate,done,oid,custId){
  var text=buildOrderText(custName,items,t,isUpdate);
  var emailBody=buildOrderEmail(custName,items);
  var subj=(isUpdate?'עדכון הזמנה — ':'הזמנה חדשה — ')+custName;
@@ -181,10 +181,24 @@ function orderSentModal(custName,items,t,isUpdate,done){
   '<a href="'+wa+'" target="_blank" rel="noopener" class="cta" style="height:48px;background:#25d366;display:flex;align-items:center;justify-content:center;gap:9px;text-decoration:none">💬 שליחת וואטסאפ</a>'+
   '<div style="font-size:11px;color:var(--mut);font-weight:700;padding:2px 2px 0">תצוגת וואטסאפ — סיכום מלא</div>'+
   '<div class="card" style="white-space:pre-wrap;font-size:12.5px;color:#5b564e;line-height:1.6;background:#fbfaf8">'+esc(text)+'</div>'+
+  '<button class="cta" id="os_doc" style="height:48px;background:var(--acc)">📄 מסמך ללקוח (PDF)</button>'+
+  '<div style="font-size:11px;color:var(--mut);font-weight:700;padding:2px 2px 0">אישור הזמנה בפורמט ליברטי — להפקה ושיתוף עם הלקוח</div>'+
   '<button class="cta" id="osdone" style="background:#efece7;color:var(--ink)">סיום</button></div></div>';
  document.body.appendChild(ov);
  function fin(){ov.remove();if(done)done()}
  ov.onclick=function(e){if(e.target===ov)fin()};document.getElementById('osx').onclick=fin;document.getElementById('osdone').onclick=fin;
+ var _db=document.getElementById('os_doc');
+ if(_db)_db.onclick=function(){quickOrderDoc(oid,custName,custId,items,t,this);};
+}
+function quickOrderDoc(oid,custName,custId,items,t,btn){
+ if(!oid){toast('אין מזהה הזמנה');return;}
+ var lines=(items||[]).map(function(it){return {sku:it.sku,name:it.name,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,line_total_agorot:(it.price||0)*(it.qty||0)};});
+ var o={id:oid,customer_name:custName,customer_id:custId,created_at:new Date().toISOString(),discount_agorot:(t&&t.disc)||0,total_agorot:(t&&t.total)||0};
+ var cust=null;try{cust=(LOC.customers||[]).filter(function(c){return c.id===custId;})[0]||null;}catch(e){}
+ if(btn){btn.disabled=true;btn.textContent='מפיקה…';}
+ docToPdf(buildDocHtml(o,lines,{doc_type:'order_confirm'},cust),'אישור הזמנה '+docRef(o)+'.pdf',function(blob,fn){
+  if(btn){btn.disabled=false;btn.textContent='📄 מסמך ללקוח (PDF)';}
+  sharePdf(blob,fn);});
 }
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
 var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
@@ -1803,7 +1817,7 @@ function saveOrder(force){
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
  obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){
   if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
-  orderSentModal(snapName,snapItems,t,isUpd,finishOrder);
+  orderSentModal(snapName,snapItems,t,isUpd,finishOrder,oid,(cart&&cart.cust)?cart.cust.id:null);
  });
 }
 function openOrderDetail(id){
@@ -1823,8 +1837,10 @@ function openOrderDetail(id){
   h+='<div class="card" style="background:#fbfaf8"><div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span style="color:var(--mut)">סכום ביניים</span><b>'+ils(sub)+'</b></div>'+(disc>0?'<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;color:var(--good)"><span style="font-weight:700">🎁 הטבת סוכן</span><b>−'+ils(disc)+'</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(vat)+'</b></div><div style="display:flex;justify-content:space-between;font-size:16px;padding:6px 0 0;border-top:1px solid var(--line);margin-top:4px"><span style="font-weight:800">סה״כ</span><b style="color:var(--acc)">'+ils(o.total_agorot)+'</b></div></div>';
   var _onspot=!o.payment_terms;var _pm=o.payment_method?(PAYM[o.payment_method]||o.payment_method):'';
   h+='<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">תשלום</div><div style="font-size:13.5px;font-weight:700">'+(_onspot?('✅ שולם במקום'+(_pm?' · '+_pm:'')):('🧾 לחיוב / חוב'+(o.payment_terms?' · '+(PAYT[o.payment_terms]||o.payment_terms):'')+(_pm?' · '+_pm:'')))+'</div>'+(o.channel?'<div style="font-size:11.5px;color:var(--mut);margin-top:3px">'+(o.channel==='phone'?'📞 טלפונית':'🤝 ביקור פיזי')+'</div>':'')+(o.payment_photo?'<a href="'+esc(o.payment_photo)+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px"><img src="'+esc(o.payment_photo)+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>':'')+'</div>';
+  h+='<button id="od_doc" class="cta" style="height:46px;margin-bottom:9px;background:var(--acc)">📄 הפקת מסמך / חשבונית</button>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="od_edit" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">✏️ עריכה</button><button id="od_del" class="cta" style="height:46px;background:var(--bads);color:var(--bad)">🗑️ מחיקה</button></div>';
   $('odbody').innerHTML=h;
+  if($('od_doc'))$('od_doc').onclick=function(){openOrderDoc(o.id);};
   $('od_edit').onclick=function(){
    cart={cust:{id:o.customer_id,name:o.customer_name},items:lines.map(function(l){return {id:l.product_id,sku:l.sku,name:l.name,price:l.unit_price_agorot,comm:l.is_commissionable===true,bonus_buy:l.bonus_buy,bonus_get:l.bonus_get,qty:l.qty}})};if(o.discount_agorot>0)cart.discount={mode:'order',kind:'amt',value:o.discount_agorot};
    cartChannel=o.channel||'inperson';cartPayMethod=o.payment_method||'cash';cartPayTerms=o.payment_terms||'net30';cartPayPhotoData=null;cartPayPhotoFile=null;editingOrderId=o.id;ov.remove();route='orders';render();
@@ -2587,6 +2603,162 @@ function sqBind(){
  if($('sq_q')){var q=$('sq_q');q.oninput=function(){clearTimeout(window.__sqT);var v=this.value;window.__sqT=setTimeout(function(){_sq.q=v;sqRender();var e=$('sq_q');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}},350);};}
  if($('sq_share'))$('sq_share').onclick=function(){var t=sqText();if(navigator.share){navigator.share({text:t}).catch(function(){});}else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');};
  if($('sq_print'))$('sq_print').onclick=function(){window.print();};}
+/* ================= ORDER DOCUMENT / INVOICE PDF ================= */
+var LIB_CO={name:'ליברטי שירותי סחר ומוצרים רפואיים בע"מ',address:'מבוא סיוון 5',city:'קרית גת',zip:'82022',
+ phone:'1-700-702270',fax:'08-9398643',vat_id:'512211780',website:'www.Liberty.co.il',email:'office@libertyisrael.co.il'};
+var DOC_TYPES={order_confirm:'אישור הזמנה',delivery:'תעודת משלוח',invoice:'חשבונית מס',quote:'הצעת מחיר'};
+function loadPdfLibs(){
+ if(window.__pdfLibP)return window.__pdfLibP;
+ var one=function(src){return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=function(){rej(new Error('load '+src))};document.head.appendChild(sc);});};
+ window.__pdfLibP=one('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')
+  .then(function(){return one('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');});
+ return window.__pdfLibP;}
+function dnum(a){return (a/100).toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function dHeDate(d){if(!d)return '';var x=(typeof d==='string')?new Date(d):d;if(isNaN(x.getTime()))return '';
+ return String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0')+'/'+String(x.getFullYear()).slice(2);}
+function docRef(o){return 'ORD-'+String(o.id||'').replace(/-/g,'').slice(0,8).toUpperCase();}
+function buildDocHtml(o,lines,doc,cust){
+ var co=LIB_CO,items=[],sub=0;
+ lines.forEach(function(l){
+  var free=freeUnits(l.qty,l.bonus_buy,l.bonus_get);
+  items.push({sku:l.sku,name:l.name,qty:l.qty,price:l.unit_price_agorot,tot:l.line_total_agorot});
+  sub+=l.line_total_agorot||0;
+  if(free>0)items.push({sku:l.sku,name:l.name,qty:free,price:0,tot:0,bonus:true});});
+ var disc=o.discount_agorot||0;
+ if(doc.discount_pct)disc=Math.round(sub*(+doc.discount_pct)/100);
+ var afterDisc=sub-disc, vat=Math.round(afterDisc*VAT), tot=afterDisc+vat;
+ var title=(DOC_TYPES[doc.doc_type]||DOC_TYPES.order_confirm)+' '+(doc.doc_number||docRef(o));
+ var dd=doc.doc_date?new Date(doc.doc_date):new Date(o.created_at||Date.now());
+ var rows='';
+ items.forEach(function(it,i){
+  rows+='<tr>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px;text-align:center;width:26px">'+(i+1)+'</td>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px;direction:ltr;text-align:left;white-space:nowrap">'+esc(it.sku||'')+'</td>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px">'+esc(it.name||'')+(it.bonus?' <b>(בונוס)</b>':'')+'</td>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px;text-align:center;white-space:nowrap">'+Number(it.qty).toFixed(2)+' יח׳</td>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px;text-align:left;white-space:nowrap">'+dnum(it.price)+' ש"ח</td>'
+   +'<td style="border:1px solid #d8d3ca;padding:3px 5px;text-align:left;white-space:nowrap">'+dnum(it.tot)+' ש"ח</td>'
+   +'</tr>';});
+ var trow=function(l,v,b){return '<tr><td style="padding:3px 8px;text-align:right;'+(b?'font-weight:800':'')+'">'+l+'</td><td style="padding:3px 8px;text-align:left;white-space:nowrap;'+(b?'font-weight:800':'')+'">'+v+'</td></tr>';};
+ return '<div id="docpage" style="width:794px;min-height:1123px;background:#fff;color:#111;font-family:Heebo,Arial,sans-serif;direction:rtl;padding:26px 30px;box-sizing:border-box;font-size:12px">'
+  +'<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f6b74;padding-bottom:10px">'
+   +'<div style="font-size:10.5px;color:#444;text-align:left;direction:ltr;line-height:1.6">web site: '+esc(co.website)+'<br>e-mail: '+esc(co.email)+'</div>'
+   +'<div style="text-align:right;line-height:1.55"><div style="font-size:15px;font-weight:800;color:#0f6b74">'+esc(co.name)+'</div>'
+    +'<div>'+esc(co.address)+'</div><div>'+esc(co.city)+' '+esc(co.zip)+'</div>'
+    +'<div>טלפון: '+esc(co.phone)+' , פקס: '+esc(co.fax)+'</div>'
+    +'<div>עוסק מורשה: '+esc(co.vat_id)+'</div></div>'
+  +'</div>'
+  +'<div style="display:flex;justify-content:space-between;margin-top:12px;gap:20px">'
+   +'<div style="line-height:1.7;font-size:11.5px"><div>תאריך: '+dHeDate(dd)+'</div><div>תאריך הדפסה: '+dHeDate(new Date())+'</div>'
+    +'<div>מספר תעודה: '+esc(doc.doc_number||docRef(o))+'</div>'+(doc.due_date?'<div>לתשלום עד: '+dHeDate(doc.due_date)+'</div>':'')+'</div>'
+   +'<div style="line-height:1.7;text-align:right"><div style="font-weight:800">לכבוד:</div>'
+    +'<div style="font-size:13px;font-weight:800">'+esc(o.customer_name||'')+'</div>'
+    +(cust&&cust.address?'<div>'+esc(cust.address)+'</div>':'')
+    +(cust&&cust.city?'<div>'+esc(cust.city)+'</div>':'')
+    +(cust&&cust.legal_id?'<div>מס\' חברה: ע.מ '+esc(cust.legal_id)+'</div>':'')+'</div>'
+  +'</div>'
+  +'<div style="text-align:center;font-size:16px;font-weight:800;margin:14px 0 9px;padding:6px;background:#eef5f5;border:1px solid #0f6b74;color:#0b5860">'+esc(title)+'</div>'
+  +'<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f2efe9;font-weight:800">'
+   +'<th style="border:1px solid #d8d3ca;padding:4px">#</th><th style="border:1px solid #d8d3ca;padding:4px">מק"ט</th>'
+   +'<th style="border:1px solid #d8d3ca;padding:4px">תאור מוצר</th><th style="border:1px solid #d8d3ca;padding:4px">כמות</th>'
+   +'<th style="border:1px solid #d8d3ca;padding:4px">מחיר ליחידה</th><th style="border:1px solid #d8d3ca;padding:4px">סה"כ</th></tr></thead><tbody>'
+   +rows+'</tbody></table>'
+  +'<div style="display:flex;justify-content:flex-start;margin-top:14px"><table style="font-size:12px;border-collapse:collapse;min-width:290px;border:1px solid #d8d3ca">'
+   +trow('מחיר כולל',dnum(sub)+' ש"ח')
+   +(disc?trow('הנחה',"-"+dnum(disc)+' ש"ח'):'')
+   +trow('מחיר אחרי הנחה',dnum(afterDisc)+' ש"ח')
+   +trow('מע"מ (18.00%)',dnum(vat)+' ש"ח')
+   +trow('סה"כ לתשלום',dnum(tot)+' ש"ח',true)
+   +'</table></div>'
+  +(doc.note?'<div style="margin-top:12px;font-size:11.5px;border-top:1px dashed #d8d3ca;padding-top:8px;white-space:pre-wrap">'+esc(doc.note)+'</div>':'')
+  +'<div style="margin-top:20px;font-size:10px;color:#666;text-align:center;border-top:1px solid #d8d3ca;padding-top:8px">'+esc(co.name)+(doc.doc_type==='invoice'?'':' · מסמך זה אינו חשבונית מס')+'</div>'
+  +'</div>';}
+function docToPdf(html,fname,cb){
+ loadPdfLibs().then(function(){
+  var wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;z-index:-1';
+  wrap.innerHTML=html;document.body.appendChild(wrap);
+  var el=wrap.querySelector('#docpage');
+  html2canvas(el,{scale:2,backgroundColor:'#fff',useCORS:true}).then(function(cv){
+   var jsPDF=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+   var pdf=new jsPDF({unit:'pt',format:'a4'});
+   var pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+   var iw=pw,ih=cv.height*(pw/cv.width);
+   var img=cv.toDataURL('image/jpeg',0.92);
+   var y=0;
+   pdf.addImage(img,'JPEG',0,0,iw,ih);
+   var left=ih-ph;
+   while(left>0){pdf.addPage();y-=ph;pdf.addImage(img,'JPEG',0,y,iw,ih);left-=ph;}
+   wrap.remove();cb(pdf.output('blob'),fname);
+  },function(e){wrap.remove();toast('שגיאה ביצירת המסמך');});
+ },function(){toast('לא ניתן לטעון את מנוע ה-PDF — צריך אינטרנט');});}
+function sharePdf(blob,fname){
+ try{
+  var file=new File([blob],fname,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:fname}).catch(function(){});return;}
+ }catch(e){}
+ var u=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(function(){URL.revokeObjectURL(u);},4000);
+ toast('המסמך הורד למכשיר');}
+function openOrderDoc(orderId){
+ var ov=actModal('מסמך להזמנה');var body=ov.querySelector('.amb');
+ Promise.all([
+  sb.from('liberty_my_orders').select('id,customer_id,customer_name,total_agorot,discount_agorot,created_at').eq('id',orderId).single(),
+  sb.from('liberty_order_lines').select('sku,name,qty,unit_price_agorot,bonus_buy,bonus_get,line_total_agorot').eq('order_id',orderId),
+  sb.from('liberty_order_docs').select('*').eq('order_id',orderId).maybeSingle()
+ ]).then(function(res){
+  var o=res[0].data,lines=res[1].data||[],doc=(res[2]&&res[2].data)||{};
+  if(!o){body.innerHTML='<div style="padding:12px;color:var(--mut)">ההזמנה לא נמצאה</div>';return;}
+  var cust=null;try{cust=(LOC.customers||[]).filter(function(c){return c.id===o.customer_id;})[0]||null;}catch(e){}
+  if(!doc.doc_type)doc.doc_type='order_confirm';
+  var mgr=isMgr();
+  var render=function(){
+   var h='<div class="card" style="background:var(--accs);font-size:12px;color:var(--accd);line-height:1.7">'
+    +(mgr?'כמנהל אפשר לשנות את סוג המסמך, המספר, התאריכים והערות — והשינויים נשמרים להזמנה.':'המסמך מופק מנתוני ההזמנה ונשלח ללקוח.')+'</div>';
+   if(mgr){
+    h+='<div class="card"><label style="display:block"><span class="lbl">סוג מסמך</span><select id="dc_type" class="field" style="margin-top:4px">'
+     +Object.keys(DOC_TYPES).map(function(k){return '<option value="'+k+'"'+(doc.doc_type===k?' selected':'')+'>'+DOC_TYPES[k]+'</option>';}).join('')
+     +'</select></label>'
+     +'<label style="display:block;margin-top:9px"><span class="lbl">מספר מסמך</span><input id="dc_num" class="field" style="margin-top:4px" value="'+esc(doc.doc_number||'')+'" placeholder="'+esc(docRef(o))+'"></label>'
+     +'<div id="dc_warn" style="font-size:11.5px;color:var(--bad);font-weight:700;margin-top:6px;line-height:1.5;display:'+(doc.doc_type==='invoice'?'block':'none')+'">⚠️ חשבונית מס — יש להזין את המספר הרשמי מתוכנת הנהלת החשבונות. המערכת לא מנפיקה מספרי חשבונית.</div>'
+     +'<div style="display:flex;gap:9px;margin-top:9px"><label style="flex:1"><span class="lbl">תאריך מסמך</span><input id="dc_date" type="date" class="field" style="margin-top:4px" value="'+(doc.doc_date||String(o.created_at||'').slice(0,10))+'"></label>'
+     +'<label style="flex:1"><span class="lbl">לתשלום עד</span><input id="dc_due" type="date" class="field" style="margin-top:4px" value="'+(doc.due_date||'')+'"></label></div>'
+     +'<label style="display:block;margin-top:9px"><span class="lbl">הנחה כללית (%)</span><input id="dc_disc" class="field" inputmode="decimal" style="margin-top:4px" value="'+(doc.discount_pct==null?'':doc.discount_pct)+'" placeholder="0"></label>'
+     +'<label style="display:block;margin-top:9px"><span class="lbl">הערה למסמך</span><textarea id="dc_note" class="field" style="margin-top:4px;min-height:54px">'+esc(doc.note||'')+'</textarea></label>'
+     +'<button class="cta" id="dc_save" style="height:42px;margin-top:10px;background:var(--accs);color:var(--accd)">שמירת התיקונים</button></div>';
+   }
+   h+='<div class="card" style="padding:0;overflow:auto;background:#f2efe9"><div id="dc_prev" style="transform:scale(.42);transform-origin:top right;width:794px;height:auto"></div></div>';
+   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button class="cta" id="dc_share" style="background:#25d366">📤 הפקה ושיתוף</button><button class="cta" id="dc_print" style="background:var(--accs);color:var(--accd)">🖨️ הדפסה</button></div>';
+   body.innerHTML=h;
+   var prevHost=document.getElementById('dc_prev');
+   var html=buildDocHtml(o,lines,doc,cust);
+   prevHost.innerHTML=html;
+   var ph=prevHost.querySelector('#docpage');
+   if(ph)prevHost.parentNode.style.height=(ph.offsetHeight*0.42+12)+'px';
+   if(mgr){
+    var sync=function(){
+     doc.doc_type=$('dc_type').value;doc.doc_number=$('dc_num').value.trim();
+     doc.doc_date=$('dc_date').value||null;doc.due_date=$('dc_due').value||null;
+     doc.note=$('dc_note').value;var dv=parseFloat($('dc_disc').value);doc.discount_pct=isNaN(dv)?null:dv;};
+    $('dc_type').onchange=function(){sync();var w=document.getElementById('dc_warn');if(w)w.style.display=(doc.doc_type==='invoice'?'block':'none');render();};
+    ['dc_num','dc_date','dc_due','dc_note','dc_disc'].forEach(function(id){var e=$(id);if(e)e.onchange=function(){sync();render();};});
+    $('dc_save').onclick=function(){var b=this;sync();b.disabled=true;b.textContent='שומר…';
+     sb.rpc('order_doc_save',{p_order:o.id,p_type:doc.doc_type,p_number:doc.doc_number||null,p_date:doc.doc_date,p_due:doc.due_date,p_note:doc.note||null,p_discount:doc.discount_pct})
+      .then(function(r){if(r&&r.error){toast('שגיאה: '+r.error.message);b.disabled=false;b.textContent='שמירת התיקונים';return;}
+       toast('התיקונים נשמרו ✓');b.disabled=false;b.textContent='שמירת התיקונים';},
+       function(){toast('שגיאה בשמירה');b.disabled=false;b.textContent='שמירת התיקונים';});};
+   }
+   $('dc_share').onclick=function(){var b=this;b.disabled=true;b.textContent='מפיקה…';
+    docToPdf(buildDocHtml(o,lines,doc,cust),(DOC_TYPES[doc.doc_type]||'מסמך')+' '+(doc.doc_number||docRef(o))+'.pdf',function(blob,fn){
+     b.disabled=false;b.textContent='📤 הפקה ושיתוף';sharePdf(blob,fn);});};
+   $('dc_print').onclick=function(){
+    var w=window.open('','_blank');if(!w){toast('החסימה מנעה פתיחת חלון');return;}
+    w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>'+esc(DOC_TYPES[doc.doc_type]||'מסמך')+'</title></head><body style="margin:0">'+buildDocHtml(o,lines,doc,cust)+'</body></html>');
+    w.document.close();setTimeout(function(){try{w.print();}catch(e){}},400);};
+  };
+  render();
+ },function(){body.innerHTML='<div style="padding:12px;color:var(--mut)">שגיאה בטעינה</div>';});}
 function routeView(){
  var o=getOrigin();
  if(_fuMap===null&&navigator.onLine!==false&&me){loadFollowups(function(){if(route==='route')render();});}
