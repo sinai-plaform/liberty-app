@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-49';
+var APP_VERSION='2026-08-26-50';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -2158,7 +2158,7 @@ function parseVisitOutcome(t){
  return null;
 }
 /* ---------- ROUTE SHARE (view-only link for the manager) ---------- */
-var ROUTE_SHARE_BASE='https://ooxdupeihzvbzudibaoi.supabase.co/functions/v1/route-share?t=';
+var ROUTE_SHARE_BASE='https://sinai-plaform.github.io/liberty-app/share.html?t=';
 function showRouteShare(tok,ds,n){
  var url=ROUTE_SHARE_BASE+tok;
  var msg='מסלול העבודה שלי · '+heDateFull(ds)+' ('+n+' עצירות):\n'+url;

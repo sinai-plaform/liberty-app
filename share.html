@@ -1,0 +1,100 @@
+<!doctype html><html lang="he" dir="rtl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>מסלול יומי · ליברטי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f4f1;font-family:Heebo,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:#24211d;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding-bottom:40px}
+.hd{background:linear-gradient(135deg,#0b5860,#0f6b74);color:#fff;padding:20px 18px 22px}
+.hd h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.sub{font-size:13px;color:#cfe6e8;margin-top:4px;font-weight:500}
+.bar{height:9px;border-radius:20px;background:rgba(255,255,255,.22);margin-top:14px;overflow:hidden}
+.bar>i{display:block;height:100%;background:#7fd1a6;border-radius:20px;transition:width .4s}
+.prog{font-size:12.5px;color:#cfe6e8;margin-top:7px;font-weight:700}
+.list{padding:14px 14px 0}
+.stop{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:12px 13px;margin-bottom:9px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 2px 8px rgba(36,33,29,.04)}
+.stop.done{opacity:.62;background:#f4f8f5;border-color:#d6e7dc}
+.num{width:29px;height:29px;border-radius:9px;background:#e3f0f1;color:#0b5860;font-weight:800;font-size:13.5px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+.stop.done .num{background:#1a7a4d;color:#fff}
+.nm{font-size:15px;font-weight:800;line-height:1.3;color:#1c1a17}
+.ct{font-size:12.5px;color:#7c766c;margin-top:2px;line-height:1.45}
+.tags{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:800;border-radius:20px;padding:3px 9px;display:inline-block}
+.t-debt{background:#fdeceb;color:#b23b34}
+.t-done{background:#e4f3ea;color:#1a7a4d}
+.nav{display:flex;gap:6px;margin-top:9px}
+.nav a{flex:1;text-align:center;font-size:12px;font-weight:700;text-decoration:none;padding:8px 4px;border-radius:9px;border:1px solid #e8e4de;color:#0b5860;background:#fbfaf8}
+.allbtn{display:block;margin:14px 14px 0;text-align:center;background:#0f6b74;color:#fff;text-decoration:none;font-weight:800;font-size:14px;padding:13px;border-radius:13px}
+.ft{text-align:center;font-size:11.5px;color:#9a938a;padding:18px 16px 0;line-height:1.7}
+.card{background:#fff;border:1px solid #e8e4de;border-radius:14px;padding:26px 18px;text-align:center;color:#7c766c;font-size:14px;margin:14px}
+.card h2{margin:0 0 8px;font-size:19px;color:#1c1a17}
+.card p{margin:0;font-size:14px;color:#7c766c;line-height:1.7}
+</style></head><body><div class="wrap" id="app">
+<div class="card"><p>טוען…</p></div>
+</div>
+<script>
+var FN='https://ooxdupeihzvbzudibaoi.supabase.co/functions/v1/route-share?t=';
+var HEDAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function token(){var m=location.search.match(/[?&]t=([^&]+)/);return m?decodeURIComponent(m[1]):'';}
+function card(t,p){return '<div class="card"><h2>'+esc(t)+'</h2><p>'+esc(p)+'</p></div>';}
+function render(d){
+  var stops=(d.stops||[]),done=0;
+  stops.forEach(function(s){if(s.visited)done++;});
+  var pct=stops.length?Math.round(done/stops.length*100):0;
+  var dt=new Date(String(d.route_date)+'T00:00:00Z');
+  var dateTxt='יום '+HEDAYS[dt.getUTCDay()]+' · '+String(dt.getUTCDate()).padStart(2,'0')+'.'+String(dt.getUTCMonth()+1).padStart(2,'0')+'.'+dt.getUTCFullYear();
+  var h='<div class="hd"><h1>מסלול יומי · '+esc(d.agent_name||'')+'</h1>'
+   +'<div class="sub">'+esc(dateTxt)+(d.area_code?' · אזור '+esc(d.area_code):'')+' · '+stops.length+' עצירות</div>'
+   +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
+   +'<div class="prog">'+done+' מתוך '+stops.length+' בוצעו · '+pct+'%</div></div>';
+  if(!stops.length){h+='<div class="card"><p>עדיין לא נבחרו עצירות ליום הזה.</p></div>';document.getElementById('app').innerHTML=h;return;}
+  var geo=stops.filter(function(s){return s.lat!=null&&s.lng!=null;});
+  if(geo.length>1){
+    h+='<a class="allbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/'
+      +geo.map(function(s){return s.lat+','+s.lng;}).join('/')+'">🗺️ פתיחת כל המסלול בגוגל מפות</a>';
+  }
+  h+='<div class="list">';
+  stops.forEach(function(s,i){
+    var where=[s.address,s.city].filter(Boolean).join(' · ');
+    var tags='';
+    if(s.visited)tags+='<span class="tag t-done">✓ בוצע</span>';
+    if(s.has_debt)tags+='<span class="tag t-debt">לגבייה</span>';
+    var nav='';
+    if(s.lat!=null&&s.lng!=null){
+      nav='<div class="nav">'
+        +'<a target="_blank" rel="noopener" href="https://waze.com/ul?ll='+s.lat+','+s.lng+'&navigate=yes">Waze</a>'
+        +'<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng+'">גוגל מפות</a>'
+        +'</div>';
+    }
+    h+='<div class="stop'+(s.visited?' done':'')+'"><div class="num">'+(s.visited?'✓':(i+1))+'</div>'
+     +'<div style="flex:1;min-width:0"><div class="nm">'+esc(s.name)+'</div>'
+     +(where?'<div class="ct">'+esc(where)+'</div>':'')
+     +(tags?'<div class="tags">'+tags+'</div>':'')+nav+'</div></div>';
+  });
+  h+='</div>';
+  var up=d.updated_at?new Date(d.updated_at):null;
+  var upTxt=up?up.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  h+='<div class="ft">מתעדכן אוטומטית כל שתי דקות'+(upTxt?' · עודכן '+esc(upTxt):'')+'<br>ליברטי · תצוגה בלבד</div>';
+  document.getElementById('app').innerHTML=h;
+}
+function load(){
+  var t=token();
+  if(!t){document.getElementById('app').innerHTML=card('קישור לא תקין','חסר מזהה בקישור. בקשי קישור חדש מהסוכנת.');return;}
+  fetch(FN+encodeURIComponent(t),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.ok){
+      document.getElementById('app').innerHTML=card('הקישור אינו פעיל','ייתכן שהשיתוף בוטל או שהקישור שגוי. בקשי קישור חדש מהסוכנת.');
+      return;
+    }
+    render(j.data);
+  }).catch(function(){
+    document.getElementById('app').innerHTML=card('שגיאה בטעינה','בדקי את החיבור לאינטרנט ונסי לרענן.');
+  });
+}
+load();
+setInterval(load,120000);
+</script></body></html>
