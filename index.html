@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-52';
+var APP_VERSION='2026-08-26-53';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -2380,6 +2380,24 @@ function impStep1(){
     if(r2&&r2.error){toast('שגיאה: '+r2.error.message);b.disabled=false;b.textContent='↩︎ ביטול ייבוא הגיול האחרון';return;}
     toast('הייבוא בוטל — '+((r2.data||{}).restored||0)+' שורות שוחזרו');locRefresh(function(){});impStep1();},
     function(){toast('שגיאה בביטול');b.disabled=false;b.textContent='↩︎ ביטול ייבוא הגיול האחרון';});};
+ },function(){});
+ sb.rpc('customer_import_state').then(function(r){
+  var st=(r&&r.data)||{};if(!st.can_undo)return;
+  var el=$('res');if(!el||_imp.type)return;
+  var parts=[];
+  if(st.created)parts.push(st.created+' לקוחות חדשים');
+  if(st.updated)parts.push(st.updated+' עודכנו');
+  if(st.phones)parts.push(st.phones+' טלפונים נוספו');
+  var d=document.createElement('div');d.className='card';d.style.cssText='background:var(--warns);border:1px solid #e7c9a0';
+  d.innerHTML='<div style="font-size:12.5px;color:var(--warn);font-weight:700;line-height:1.7">יש ייבוא לקוחות אחרון שניתן לבטל<br>'+(parts.join(' · ')||'ללא שינויים')+'</div><div style="font-size:11px;color:var(--mut);margin-top:5px;line-height:1.6">הביטול יחזיר את הפרטים הקודמים ויסיר לקוחות שנוצרו בייבוא — למעט לקוחות שכבר נרשמה להם פעילות (ביקור/הזמנה/תשלום).</div><button class="cta" id="ci_undo" style="height:40px;margin-top:9px;background:var(--bads);color:var(--bad)">↩︎ ביטול ייבוא הלקוחות האחרון</button>';
+  el.appendChild(d);
+  document.getElementById('ci_undo').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';
+   sb.rpc('import_customers_undo').then(function(r2){
+    if(r2&&r2.error){toast('שגיאה: '+r2.error.message);b.disabled=false;b.textContent='↩︎ ביטול ייבוא הלקוחות האחרון';return;}
+    var d2=r2.data||{},m='הייבוא בוטל — '+(d2.restored||0)+' שוחזרו, '+(d2.removed||0)+' הוסרו';
+    if(d2.kept)m+=' ('+d2.kept+' נשמרו בגלל פעילות קיימת)';
+    toast(m);locRefresh(function(){});impStep1();},
+    function(){toast('שגיאה בביטול');b.disabled=false;b.textContent='↩︎ ביטול ייבוא הלקוחות האחרון';});};
  },function(){});
  if($('imp_undo'))$('imp_undo').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';
   sb.rpc('import_prices_undo',{p_batch:lb}).then(function(r){
