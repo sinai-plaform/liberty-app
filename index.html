@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-43';
+var APP_VERSION='2026-08-26-44';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -2169,8 +2169,8 @@ function openRouteShare(seq){
 var _imp={type:null,fname:'',rows:[],hdr:[],map:{},body:[]};
 var IMP_TYPES={
  prices:{t:'מחירון',ic:'💰',desc:'עדכון מחירים ובונוסים לפי מק״ט',fields:[
-   {k:'sku',l:'מק״ט',req:true,h:['מק"ט','מקט','מק״ט','sku','קוד','פריט','barcode']},
-   {k:'price',l:'מחיר לסוכן',req:true,h:['מחיר','price','עלות','סוכן']},
+   {k:'sku',l:'מק״ט',req:true,h:['מק"ט','מקט','מק״ט','sku','קוד','פריט','barcode','מק']},
+   {k:'price',l:'מחיר לסוכן',req:true,h:['מחיר בסיס','בסיס','מחיר לסוכן','price','מחיר','עלות']},
    {k:'bonus_buy',l:'בונוס — קנה',req:false,h:['קנה','buy','בונוס']},
    {k:'bonus_get',l:'בונוס — קבל',req:false,h:['קבל','get','חינם','מתנה']}]},
  aging:{t:'דוח גיול',ic:'📄',desc:'חובות פתוחים — מזין את הגבייה והמסלול',fields:[
@@ -2215,39 +2215,106 @@ function impParseXLSX(file){return impLoadXLSX().then(function(X){return file.ar
  var wb=X.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];
  var arr=X.utils.sheet_to_json(ws,{header:1,raw:false,defval:''});
  return arr.map(function(r){return r.map(function(c){return String(c==null?'':c).trim()})}).filter(function(r){return r.some(function(c){return c!==''})});});});}
-function impParsePDF(file){return loadPdfJs().then(function(pdfjs){return file.arrayBuffer().then(function(buf){
+function impKey(s){return String(s||'').replace(/[^א-תa-zA-Z0-9]/g,'');}
+function impPdfPages(buf){return loadPdfJs().then(function(pdfjs){
  return pdfjs.getDocument({data:buf}).promise.then(function(doc){
-  var out=[],chain=Promise.resolve();
+  var pages=[],chain=Promise.resolve();
   var one=function(n){return doc.getPage(n).then(function(pg){return pg.getTextContent().then(function(tc){
    var groups=[];
    tc.items.forEach(function(it){ if(!it.str||!it.str.trim())return;
-    var y=it.transform[5],x=it.transform[4],g=null;
+    var y=it.transform[5],x=it.transform[4],w=(it.width||0);
+    var g=null;
     for(var i=0;i<groups.length;i++){if(Math.abs(groups[i].y-y)<=2.5){g=groups[i];break;}}
-    if(!g){g={y:y,c:[]};groups.push(g);}
-    g.c.push({x:x,s:it.str.trim()});});
+    if(!g){g={y:y,w:[]};groups.push(g);}
+    g.w.push({x0:x,x1:x+w,t:it.str.trim()});});
    groups.sort(function(a,b){return b.y-a.y;});
-   groups.forEach(function(g){
-    g.c.sort(function(a,b){return b.x-a.x;});
-    var cells=g.c.map(function(o){return o.s;}).filter(function(t){return t!=='';});
-    if(cells.length)out.push(cells);});
+   var rows=groups.map(function(g){
+    g.w.sort(function(a,b){return b.x1-a.x1;});
+    var cells=[],cur=null;
+    g.w.forEach(function(o){
+     if(cur&&(cur.x0-o.x1)<=8){cur.t+=' '+o.t;cur.x0=Math.min(cur.x0,o.x0);}
+     else{cur={x0:o.x0,x1:o.x1,t:o.t};cells.push(cur);}});
+    cells.forEach(function(c){c.t=c.t.replace(/\s{2,}/g,' ').trim();c.c=(c.x0+c.x1)/2;});
+    var words=g.w.map(function(o){return {t:o.t,c:(o.x0+o.x1)/2};});
+    return {y:g.y,cells:cells,words:words};});
+   pages.push(rows);
   });});};
   for(var n=1;n<=doc.numPages;n++)(function(k){chain=chain.then(function(){return one(k);});})(n);
-  return chain.then(function(){return out;});});});});}
-function impParseFile(file){
+  return chain.then(function(){return pages;});});});}
+function impParsePdfTable(buf){return impPdfPages(buf).then(function(pages){
+ var rows=[];pages.forEach(function(pr){pr.forEach(function(r){if(r.cells.length)rows.push(r);});});
+ if(!rows.length)return [];
+ var cent=[];rows.forEach(function(r){r.cells.forEach(function(c){cent.push(c.c);});});
+ cent.sort(function(a,b){return b-a;});
+ var cols=[];
+ cent.forEach(function(v){
+  var f=null;for(var i=0;i<cols.length;i++){if(Math.abs(cols[i].c-v)<=14){f=cols[i];break;}}
+  if(f){f.n++;f.s+=v;f.c=f.s/f.n;}else cols.push({c:v,s:v,n:1});});
+ cols=cols.filter(function(c){return c.n>=Math.max(2,Math.round(rows.length*0.05));});
+ cols.sort(function(a,b){return b.c-a.c;});
+ if(!cols.length)return [];
+ var place=function(r){var out=[];for(var i=0;i<cols.length;i++)out.push('');
+  (r.words||r.cells).forEach(function(c){var bi=0,bd=1e9;
+   for(var i=0;i<cols.length;i++){var d=Math.abs(cols[i].c-c.c);if(d<bd){bd=d;bi=i;}}
+   out[bi]=(out[bi]?out[bi]+' ':'')+c.t;});
+  return out;};
+ var isNumRow=function(a){return a.some(function(t){return t!==''&&impNum(t)!=null;});};
+ var tbl=rows.map(place);
+ var hdr=null,body=[],inHdr=true;
+ tbl.forEach(function(a){
+  if(inHdr&&!isNumRow(a)){
+   if(!hdr)hdr=a.slice();
+   else a.forEach(function(t,i){if(t)hdr[i]=(hdr[i]?hdr[i]+' ':'')+t;});
+   return;}
+  inHdr=false;
+  if(!isNumRow(a)){
+   var same=0,tot=0;a.forEach(function(t,i){if(t!==''){tot++;if(impKey(t)&&impKey((hdr&&hdr[i])||'').indexOf(impKey(t))>-1)same++;}});
+   if(tot&&same/tot>=0.5)return;}
+  body.push(a);});
+ var out=[];if(hdr)out.push(hdr);
+ return out.concat(body);});}
+function impParseAgingPdf(buf){return impPdfPages(buf).then(function(pages){
+ var raw=[];
+ pages.forEach(function(pr){pr.forEach(function(r){
+  if(!r.cells.length)return;
+  var amt=null,ai=-1,best=1e9;
+  r.cells.forEach(function(c,i){var n=impNum(c.t);if(n!=null&&/^-?[\d,]+\.?\d*$/.test(c.t.replace(/\s/g,''))&&c.c<best){best=c.c;amt=n;ai=i;}});
+  var lab=r.cells.filter(function(c,i){return i!==ai;});
+  if(!lab.length&&amt==null)return;
+  var txt=lab.map(function(c){return c.t;}).join(' ').replace(/\s{2,}/g,' ').trim();
+  var right=lab.length?Math.max.apply(null,lab.map(function(c){return c.x1;})):0;
+  raw.push({txt:txt,right:right,amt:amt,single:lab.length===1?lab[0].t:null});});});
+ var DATE=/^\d{1,2}\/\d{1,2}\/\d{4}$/;
+ var body=raw.filter(function(r){
+  if(!r.txt)return false;
+  if(/תוויות|סכום של/.test(r.txt))return false;
+  if(/כולל|סה"כ|סהכ/.test(r.txt))return false;
+  return true;});
+ var lvl=body.filter(function(r){return !(r.single&&DATE.test(r.single));});
+ var R=0;lvl.forEach(function(r){if(r.right>R)R=r.right;});
+ var city='',cust='',out=[['שם לקוח','עיר','תאריך חשבונית','סכום']];
+ body.forEach(function(r){
+  if(r.single&&DATE.test(r.single)){ if(r.amt!=null&&cust)out.push([cust,city,r.single,String(r.amt)]); return; }
+  if(r.right>=R-6)city=/ריק/.test(r.txt)?'':r.txt; else cust=r.txt;});
+ return out;});}
+function impParseFile(file,type){
  var nm=(file.name||'').toLowerCase();
  if(/\.(xlsx|xlsm|xls)$/.test(nm))return impParseXLSX(file);
- if(/\.pdf$/.test(nm))return impParsePDF(file);
+ if(/\.pdf$/.test(nm))return file.arrayBuffer().then(function(buf){
+  return type==='aging'?impParseAgingPdf(buf):impParsePdfTable(buf);});
  return file.text().then(impParseCSV);}
 function impLooksHeader(r){if(!r||!r.length)return false;var nn=0;r.forEach(function(c){if(c!==''&&impNum(c)==null)nn++;});return nn>=Math.max(1,Math.ceil(r.length*0.6));}
 function impGuess(){
  var f=IMP_TYPES[_imp.type].fields,used={};
  f.forEach(function(fd){
   _imp.map[fd.k]='';
-  for(var i=0;i<_imp.hdr.length;i++){
-   if(used[i])continue;
-   var h=String(_imp.hdr[i]||'').toLowerCase();
-   for(var j=0;j<fd.h.length;j++){ if(h&&h.indexOf(String(fd.h[j]).toLowerCase())>-1){_imp.map[fd.k]=String(i);used[i]=1;return;} }
-  }});}
+  for(var j=0;j<fd.h.length;j++){
+   var hint=String(fd.h[j]).toLowerCase();
+   for(var i=0;i<_imp.hdr.length;i++){
+    if(used[i])continue;
+    var h=String(_imp.hdr[i]||'').toLowerCase();
+    if(h&&h.indexOf(hint)>-1){_imp.map[fd.k]=String(i);used[i]=1;return;}
+   }}});}
 function importView(){
  if(!isMgr()){shell('<div class="list"><div class="card">אין הרשאה</div></div>');return;}
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div><div style="color:#fff;font-size:19px;font-weight:700">ייבוא נתונים</div><div style="color:#cfe6e8;font-size:12px">אקסל · CSV · PDF — תמיד עם אישור לפני שמירה</div></div></div></div><div class="list" id="res"></div>');
@@ -2273,7 +2340,7 @@ function impStep2(){
  $('imp_f').onchange=function(){
   var f=this.files&&this.files[0];if(!f)return;
   _imp.fname=f.name;$('imp_p').textContent='קורא את הקובץ…';
-  impParseFile(f).then(function(rows){
+  impParseFile(f,_imp.type).then(function(rows){
    if(!rows||!rows.length){$('imp_p').innerHTML='<span style="color:var(--bad)">לא נמצאו שורות בקובץ</span>';return;}
    var maxc=0;rows.forEach(function(r){if(r.length>maxc)maxc=r.length;});
    if(impLooksHeader(rows[0])){_imp.hdr=rows[0];_imp.body=rows.slice(1);}
@@ -2321,28 +2388,32 @@ function impStep4(){
    if(!p){unk.push(sku);return;}
    var pc=(price!=null&&price!==p.price_agorot);
    var bc=((bb!=null&&bb!==p.bonus_buy)||(bg!=null&&bg!==p.bonus_get));
-   var rec={sku:p.sku,name:p.name,old:p.price_agorot,neu:price,obb:p.bonus_buy,obg:p.bonus_get,nbb:bb,nbg:bg,pc:pc,bc:bc};
+   var ratio=false;
+   if(bc&&p.bonus_buy&&p.bonus_get&&bb&&bg){ if(bb*p.bonus_get===bg*p.bonus_buy)ratio=true; }
+   var rec={sku:p.sku,name:p.name,old:p.price_agorot,neu:price,obb:p.bonus_buy,obg:p.bonus_get,nbb:bb,nbg:bg,pc:pc,bc:bc,ratio:ratio};
+   if(ratio&&!pc)rec._off=true;
    if(pc)chg.push(rec);else if(bc)bon.push(rec);else same++;
    if(pc||bc)out.push(rec);});
   h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">שינויי מחיר</div><div style="font-size:22px;font-weight:800;color:var(--warnd)">'+chg.length+'</div></div><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">שינויי בונוס</div><div style="font-size:22px;font-weight:800;color:var(--accd)">'+bon.length+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">ללא שינוי</div><div style="font-size:22px;font-weight:800;color:var(--goodd)">'+same+'</div></div><div class="stat" style="background:var(--bads)"><div style="font-size:11px;color:var(--bad);font-weight:700">מק״ט לא מוכר</div><div style="font-size:22px;font-weight:800;color:var(--bad)">'+unk.length+'</div></div></div></div>';
   if(unk.length)h+='<div class="card" style="background:var(--bads)"><div style="font-size:12px;color:var(--bad);font-weight:700;line-height:1.6">מק״טים שאינם במערכת (לא ייובאו — הוסיפי אותם קודם במסך מוצרים):</div><div style="font-size:11.5px;color:var(--bad);margin-top:5px;word-break:break-all">'+esc(unk.slice(0,40).join(', '))+(unk.length>40?' …':'')+'</div></div>';
   if(!out.length)h+='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:22px">אין הפרשים — המחירון במערכת כבר תואם לקובץ.</div>';
   out.forEach(function(rec,i){
-   h+='<div class="card impr" data-i="'+i+'" style="cursor:pointer;border-inline-start:4px solid '+(rec.pc?'var(--warn)':'var(--acc)')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span class="impchk" style="font-size:15px">✅</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800">'+esc(rec.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(rec.sku)+'</div>'+
+   h+='<div class="card impr" data-i="'+i+'" style="cursor:pointer;'+(rec._off?'opacity:.45;':'')+'border-inline-start:4px solid '+(rec.pc?'var(--warn)':'var(--acc)')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span class="impchk" style="font-size:15px">'+(rec._off?'⬜':'✅')+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800">'+esc(rec.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(rec.sku)+'</div>'+
    (rec.pc?'<div style="font-size:12.5px;margin-top:4px;font-weight:700">מחיר: <span style="color:var(--mut);text-decoration:line-through">'+ils(rec.old)+'</span> ← <span style="color:var(--warn)">'+ils(rec.neu)+'</span></div>':'')+
-   (rec.bc?'<div style="font-size:12.5px;margin-top:3px;font-weight:700">בונוס: <span style="color:var(--mut)">'+(rec.obb||0)+'+'+(rec.obg||0)+'</span> ← <span style="color:var(--acc)">'+(rec.nbb==null?rec.obb:rec.nbb)+'+'+(rec.nbg==null?rec.obg:rec.nbg)+'</span></div>':'')+
+   (rec.bc?'<div style="font-size:12.5px;margin-top:3px;font-weight:700">בונוס: <span style="color:var(--mut)">'+(rec.obb||0)+'+'+(rec.obg||0)+'</span> ← <span style="color:var(--acc)">'+(rec.nbb==null?rec.obb:rec.nbb)+'+'+(rec.nbg==null?rec.obg:rec.nbg)+'</span></div>'+(rec.ratio?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-top:3px;line-height:1.5">⚠️ יחס בונוס זהה — במערכת נקבע סף נמוך יותר בכוונה. מסומן לא־לשינוי; הקישי כדי לכלול בכל זאת.</div>':''):'')+
    '</div></div></div>';});
  }
  else if(type==='aging'){
   var custs=(LOC.customers||[]);var byName={},byLegal={};
-  custs.forEach(function(c){byName[String(c.name).trim().toLowerCase()]=c;if(c.legal_id)byLegal[String(c.legal_id).trim()]=c;});
+  custs.forEach(function(c){byName[impKey(c.name)]=c;if(c.legal_id)byLegal[String(c.legal_id).trim()]=c;});
   var mt=0,un=[],tot=0;
   rows.forEach(function(r){
    var nm=impVal(r,'customer_name');var amt=impAgorot(impVal(r,'amount'));
    if(!nm||amt==null)return;
    var lg=impVal(r,'legal_id');
-   var c=(lg&&byLegal[lg])||byName[nm.toLowerCase()]||null;
-   if(!c){for(var k in byName){if(k.indexOf(nm.toLowerCase())>-1||nm.toLowerCase().indexOf(k)>-1){c=byName[k];break;}}}
+   var nk=impKey(nm);
+   var c=(lg&&byLegal[lg])||byName[nk]||null;
+   if(!c&&nk.length>=4){for(var k in byName){if(k.length>=4&&(k.indexOf(nk)>-1||nk.indexOf(k)>-1)){c=byName[k];break;}}}
    tot+=amt;if(c)mt++;else un.push(nm);
    out.push({customer_name:nm,city:impVal(r,'city'),legal_id:lg,invoice_date:impDate(impVal(r,'invoice_date')),amount_agorot:amt,matched:!!c});});
   h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">שורות</div><div style="font-size:22px;font-weight:800;color:var(--accd)">'+out.length+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">זוהו לקוחות</div><div style="font-size:22px;font-weight:800;color:var(--goodd)">'+mt+'</div></div><div class="stat" style="background:var(--bads)"><div style="font-size:11px;color:var(--bad);font-weight:700">לא זוהו</div><div style="font-size:22px;font-weight:800;color:var(--bad)">'+un.length+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">סה״כ חוב</div><div style="font-size:19px;font-weight:800;color:var(--warnd)">'+ils(tot)+'</div></div></div></div>';
