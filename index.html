@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-50';
+var APP_VERSION='2026-08-26-51';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -230,10 +230,13 @@ var __drSaveTmr=null;
 function pendRouteSave(row){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');m[row.route_date]=row;localStorage.setItem('lib_route_pending',JSON.stringify(m));}catch(e){}}
 function pendRouteClear(date){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');if(m[date]){delete m[date];localStorage.setItem('lib_route_pending',JSON.stringify(m));}}catch(e){}}
 function pendRouteFlush(){if(!me||navigator.onLine===false)return;var m;try{m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');}catch(e){return;}var keys=Object.keys(m);if(!keys.length)return;keys.forEach(function(k){var row=m[k];row.agent_id=me.id;sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){if(!(r&&r.error))pendRouteClear(k);},function(){});});}
-function saveDailyRoute(){
+function routeSelCount(){return Object.keys(routeSel).filter(function(k){return routeSel[k]}).length;}
+function cancelRouteSave(){try{clearTimeout(__drSaveTmr);}catch(e){}}
+function saveDailyRoute(allowEmpty){
  if(!me||!routeArea)return;
  routeLocalSave();
  var ids=Object.keys(routeSel).filter(function(k){return routeSel[k]});
+ if(!ids.length&&allowEmpty!==true)return;
  var row={agent_id:me.id,route_date:curRouteDate(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()};
  if(navigator.onLine===false){_drDirty=row;pendRouteSave(row);return}
  sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){
@@ -1977,7 +1980,7 @@ function nextVisitUrg(ds){if(!ds)return null;var days=Math.round((parseYmd(ds)-p
  if(days<=3)return {lvl:2,label:'🟡 בעוד '+days+' י׳',color:'var(--warn)'};
  if(days<=7)return {lvl:1,label:'🟢 בעוד '+days+' י׳',color:'var(--good)'};
  return null;}
-function loadRouteForDate(ds,cb){routeArea=null;routeSel={};routeBuilt=false;
+function loadRouteForDate(ds,cb){cancelRouteSave();routeArea=null;routeSel={};routeBuilt=false;
  if(navigator.onLine===false||!me){cb&&cb();return}
  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',ds).eq('status','active').limit(1).then(function(r){
   var row=(r&&r.data)?r.data[0]:null;
@@ -2091,8 +2094,11 @@ function openAreaSuggest(){
   var el=body.querySelectorAll('.asug');
   for(var i=0;i<el.length;i++)el[i].onclick=function(){
    var code=+this.getAttribute('data-a');ov.remove();
-   routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute();render();
-   setTimeout(function(){openRouteSuggest((LOC.customers||[]).filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'}));},260);
+   var cur=routeSelCount();
+   var go2=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute(true);render();
+    setTimeout(function(){openRouteSuggest((LOC.customers||[]).filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'}));},260);};
+   if(cur>0&&code!==routeArea){confirmModal('מעבר לאזור '+code+' ימחק את הבחירה הנוכחית ('+cur+' לקוחות). להמשיך?',go2);return;}
+   go2();return;
   };
  };
  if(_fuMap===null||_ltMap===null){toast('טוען נתונים…');loadFollowups(run);}else run();
@@ -2353,7 +2359,19 @@ function impStep1(){
  if(lb)h+='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0"><div style="font-size:12.5px;color:var(--warn);font-weight:700;line-height:1.6">יש ייבוא מחירון אחרון שניתן לבטל</div><button class="cta" id="imp_undo" style="height:40px;margin-top:8px;background:var(--bads);color:var(--bad)">↩︎ ביטול ייבוא המחירון האחרון</button></div>';
  $('res').innerHTML=h;
  var it=document.querySelectorAll('.impt');
- for(var i=0;i<it.length;i++)it[i].onclick=function(){_imp.type=this.getAttribute('data-k');_imp.rows=[];_imp.hdr=[];_imp.map={};impStep2();};
+ for(var i=0;i<it.length;i++)it[i].onclick=function(){_imp.type=this.getAttribute('data-k');_imp.rows=[];_imp.hdr=[];_imp.map={};_imp.agState=null;impStep2();};
+ sb.rpc('aging_state').then(function(r){
+  var st=(r&&r.data)||{};if(!st.can_undo)return;
+  var el=$('res');if(!el||_imp.type)return;
+  var d=document.createElement('div');d.className='card';d.style.cssText='background:var(--warns);border:1px solid #e7c9a0';
+  d.innerHTML='<div style="font-size:12.5px;color:var(--warn);font-weight:700;line-height:1.7">יש ייבוא גיול אחרון שניתן לבטל<br>כעת: '+st.lines+' שורות · '+ils(st.total||0)+'<br>לפני הייבוא: '+st.prev_lines+' שורות · '+ils(st.prev_total||0)+'</div><button class="cta" id="ag_undo" style="height:40px;margin-top:9px;background:var(--bads);color:var(--bad)">↩︎ ביטול ייבוא הגיול האחרון</button>';
+  el.appendChild(d);
+  document.getElementById('ag_undo').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';
+   sb.rpc('import_aging_undo').then(function(r2){
+    if(r2&&r2.error){toast('שגיאה: '+r2.error.message);b.disabled=false;b.textContent='↩︎ ביטול ייבוא הגיול האחרון';return;}
+    toast('הייבוא בוטל — '+((r2.data||{}).restored||0)+' שורות שוחזרו');locRefresh(function(){});impStep1();},
+    function(){toast('שגיאה בביטול');b.disabled=false;b.textContent='↩︎ ביטול ייבוא הגיול האחרון';});};
+ },function(){});
  if($('imp_undo'))$('imp_undo').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';
   sb.rpc('import_prices_undo',{p_batch:lb}).then(function(r){
    if(r&&!r.error){toast('הייבוא בוטל — '+((r.data&&r.data.restored)||0)+' מוצרים שוחזרו');try{localStorage.removeItem('lib_imp_batch')}catch(e){}locRefresh(function(){render()});}
@@ -2402,6 +2420,7 @@ function impStep3(){
 function impVal(row,k){var i=_imp.map[k];if(i===''||i==null)return '';var v=row[+i];return v==null?'':String(v).trim();}
 function impStep4(){
  if(_imp.type==='customers'&&!window.__impGeoReady&&typeof loadAreaPts==='function'){loadAreaPts(function(){window.__impGeoReady=1;impStep4();});return;}
+ if(_imp.type==='aging'&&!_imp.agState){sb.rpc('aging_state').then(function(r){_imp.agState=(r&&r.data)||{};impStep4();},function(){_imp.agState={};impStep4();});return;}
  var type=_imp.type,rows=_imp.body,out=[],h='';
  if(type==='prices'){
   var bySku={};(LOC.products||[]).forEach(function(p){bySku[String(p.sku).toUpperCase().trim()]=p;});
@@ -2444,8 +2463,16 @@ function impStep4(){
    tot+=amt;if(c)mt++;else un.push(nm);
    out.push({customer_name:nm,city:impVal(r,'city'),legal_id:lg,invoice_date:impDate(impVal(r,'invoice_date')),amount_agorot:amt,matched:!!c});});
   h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:9px"><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">שורות</div><div style="font-size:22px;font-weight:800;color:var(--accd)">'+out.length+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">זוהו לקוחות</div><div style="font-size:22px;font-weight:800;color:var(--goodd)">'+mt+'</div></div><div class="stat" style="background:var(--bads)"><div style="font-size:11px;color:var(--bad);font-weight:700">לא זוהו</div><div style="font-size:22px;font-weight:800;color:var(--bad)">'+un.length+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">סה״כ חוב</div><div style="font-size:19px;font-weight:800;color:var(--warnd)">'+ils(tot)+'</div></div></div></div>';
-  h+='<div class="card" style="background:var(--warns);font-size:12px;color:var(--warn);line-height:1.7"><b>שים לב:</b> דוח גיול הוא תמונת מצב חודשית — הייבוא <b>מחליף</b> את נתוני החוב הקיימים. שורות שלא זוהו יישמרו עם השם מהקובץ ולא ישויכו ללקוח.</div>';
-  if(un.length)h+='<div class="card" style="background:var(--bads)"><div style="font-size:12px;color:var(--bad);font-weight:700">לקוחות שלא זוהו:</div><div style="font-size:11.5px;color:var(--bad);margin-top:5px;line-height:1.6">'+esc(un.slice(0,30).join(' · '))+(un.length>30?' …':'')+'</div></div>';
+  var _ag=_imp.agState||{};
+  h+='<div class="card" style="background:var(--warns);font-size:12px;color:var(--warn);line-height:1.7"><b>שים לב:</b> דוח גיול הוא תמונת מצב חודשית — הייבוא <b>מחליף</b> את כל נתוני החוב.'
+   +(_ag.lines?'<br>כרגע במערכת: <b>'+_ag.lines+' שורות · '+ils(_ag.total||0)+'</b> ← אחרי הייבוא: <b>'+out.length+' שורות · '+ils(tot)+'</b>':'')
+   +'<br>אפשר לבטל את הייבוא בלחיצה אחת ממסך הייבוא.</div>';
+  if(un.length)h+='<div class="card" style="background:var(--bads)"><div style="font-size:12px;color:var(--bad);font-weight:700">לקוחות שלא זוהו (השורה תישמר עם השם מהקובץ):</div><div style="font-size:11.5px;color:var(--bad);margin-top:5px;line-height:1.6">'+esc(un.slice(0,30).join(' · '))+(un.length>30?' …':'')+'</div></div>';
+  h+='<div style="font-size:11.5px;color:var(--mut);font-weight:700;padding:2px 2px 4px">הקישי על שורה כדי לא לייבא אותה</div>';
+  out.forEach(function(rec,i){
+   if(i>=80)return;
+   h+='<div class="card impr" data-i="'+i+'" style="cursor:pointer;'+(rec._off?'opacity:.45;':'')+'border-inline-start:4px solid '+(rec.matched?'var(--good)':'var(--bad)')+'"><div style="display:flex;align-items:flex-start;gap:9px"><span class="impchk" style="font-size:15px">'+(rec._off?'⬜':'✅')+'</span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800">'+esc(rec.customer_name)+(rec.matched?'':' <span class="badge b-bad">לא זוהה</span>')+'</div><div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(rec.invoice_date||'')+' · <b style="color:'+((rec.amount_agorot||0)<0?'var(--good)':'var(--head)')+'">'+ils(rec.amount_agorot||0)+'</b>'+(rec.city?' · '+esc(rec.city):'')+'</div></div></div></div>';});
+  if(out.length>80)h+='<div style="text-align:center;font-size:12px;color:var(--mut);padding:6px">…ועוד '+(out.length-80)+' שורות (ייובאו לפי הסימון)</div>';
  }
  else {
   var byL={},byK={},byKC={};
@@ -2833,7 +2860,13 @@ function routeView(){
  var planBar='<button id="planbtn" style="width:100%;display:flex;align-items:center;gap:9px;background:'+(_isToday?'#fbfaf8':'var(--warns)')+';border:1px solid '+(_isToday?'var(--line)':'#e7c9a0')+';border-radius:12px;padding:9px 12px;margin-bottom:10px;cursor:pointer;text-align:right"><span style="font-size:16px">📆</span><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">תכנון מסלול</div><div style="font-size:14px;font-weight:800;color:'+(_isToday?'var(--head)':'var(--warn)')+'">'+(_isToday?'היום · '+heDateFull(todayStr()):heDateFull(curRouteDate()))+'</div></div><span style="font-size:12px;color:var(--acc);font-weight:700">שינוי ›</span></button>';
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">מסלול נסיעה יומי</div></div><div style="background:var(--sur);padding:12px 16px 13px;border-bottom:1px solid var(--line)">'+planBar+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
  if($('planbtn'))$('planbtn').onclick=openPlanPicker;
- var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){routeArea=+this.getAttribute('data-a');routeSel={};routeBuilt=false;saveDailyRoute();render()}}
+ var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){
+  var code=+this.getAttribute('data-a'),cur=routeSelCount();
+  if(code===routeArea)return;
+  var go=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute(true);render();};
+  if(cur>0)confirmModal('מעבר לאזור '+code+' ימחק את הבחירה הנוכחית ('+cur+' לקוחות) ליום '+heDateFull(curRouteDate())+'. להמשיך?',go);
+  else go();
+ }}
  $('dayhistbtn').onclick=function(){route='dayhist';render()};
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
@@ -2984,8 +3017,9 @@ function routeView(){
   if($('backtoday2'))$('backtoday2').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;routeArea=null;routeSel={};routeBuilt=false;restoreDailyRoute();render()};
   if($('autosug'))$('autosug').onclick=function(){openRouteSuggest(d);};
   $('selall').onclick=function(){d.forEach(function(c){routeSel[c.id]=true});saveDailyRoute();render()};
-  $('selnone').onclick=function(){routeSel={};saveDailyRoute();render()};
-  $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});saveDailyRoute();render()};
+  $('selnone').onclick=function(){var cur=routeSelCount();var go=function(){routeSel={};saveDailyRoute(true);render();};
+   if(cur>0)confirmModal('לנקות את הבחירה ('+cur+' לקוחות)?',go);else go();};
+  $('seldebt').onclick=function(){routeSel={};d.forEach(function(c){if(c.debt_agorot>0)routeSel[c.id]=true});saveDailyRoute(true);render()};
   document.getElementById('buildbtn').onclick=function(){if(selCount()===0){toast('בחרי לפחות לקוח אחד');return}
    var leftDebt=d.filter(function(c){return c.debt_agorot>0&&!routeSel[c.id];});
    var doBuild=function(){routeBuilt=true;saveDailyRoute();render();};
