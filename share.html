@@ -27,6 +27,8 @@ body{margin:0;background:#f6f4f1;font-family:Heebo,system-ui,-apple-system,'Sego
 .t-debt{background:#fdeceb;color:#b23b34}
 .t-done{background:#e4f3ea;color:#1a7a4d}
 .t-ph{background:#fff1d6;color:#8a5a12}
+.t-appt{background:#0f6b74;color:#fff;font-weight:800}
+.t-out{background:#fbe3df;color:#a4372a;font-weight:700}
 .t-pm{background:#eef2f5;color:#54677a}
 .t-pl{background:#f2f0ec;color:#7c766c}
 .note{margin-top:7px;background:#fbfaf8;border:1px solid #eee9e2;border-radius:10px;padding:8px 10px;font-size:12px;color:#5b564e;line-height:1.6;white-space:pre-wrap;word-break:break-word}
@@ -67,6 +69,8 @@ function render(d){
   stops.forEach(function(s,i){
     var where=[s.address,s.city].filter(Boolean).join(' · ');
     var tags='';
+    if(s.appt_time)tags+='<span class="tag t-appt">🕐 פגישה '+esc(s.appt_time)+'</span>';
+    if(s.out_of_area)tags+='<span class="tag t-out">מחוץ לאזור</span>';
     if(s.visited)tags+='<span class="tag t-done">✓ בוצע</span>';
     if(s.has_debt)tags+='<span class="tag t-debt">לגבייה</span>';
     var PL={high:['פוטנציאל גבוה','t-ph'],medium:['פוטנציאל בינוני','t-pm'],low:['פוטנציאל נמוך','t-pl']};

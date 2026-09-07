@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-61';
+var APP_VERSION='2026-08-26-62';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -218,6 +218,94 @@ var DEFAULT_ORIGIN={name:'נהריה',lat:33.008,lng:35.095};
 function getOrigin(){try{var s=localStorage.getItem('lib_origin');if(s)return JSON.parse(s)}catch(e){}return DEFAULT_ORIGIN}
 function setOrigin(o){try{localStorage.setItem('lib_origin',JSON.stringify(o))}catch(e){}}
 function hav(a,b){var R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.sin(dLng/2)*Math.sin(dLng/2)*Math.cos(la1)*Math.cos(la2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function renderApptBar(){
+ var el=$('apptbar');if(!el)return;
+ var ds=curRouteDate();
+ loadAppts(ds,function(list){
+  var el2=$('apptbar');if(!el2||route!=='route')return;
+  if(!list.length){el2.innerHTML='';return;}
+  var custById={};(LOC.customers||[]).forEach(function(c){custById[c.id]=c;});
+  var autoAdded=0;
+  list.forEach(function(a){
+   var c=custById[a.customer_id];if(!c)return;
+   if(routeArea&&c.area_code===routeArea&&!routeSel[a.customer_id]){routeSel[a.customer_id]=true;autoAdded++;}
+  });
+  if(autoAdded){saveDailyRoute();toast(autoAdded+' פגישות נוספו אוטומטית למסלול 📅');}
+  var h='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;margin-bottom:10px">'+
+   '<div style="font-size:13px;font-weight:800;color:var(--warn);margin-bottom:6px">📅 '+list.length+' פגישות קבועות · '+heDateFull(ds)+'</div>';
+  list.forEach(function(a){
+   var c=custById[a.customer_id];
+   var inArea=(!routeArea)||(c&&c.area_code===routeArea);
+   var on=!!routeSel[a.customer_id];
+   var tag=on?'<span class="badge b-good" style="font-size:10px">✓ במסלול</span>'
+     :(inArea?'':'<span class="badge b-bad" style="font-size:10px">אזור '+((c&&c.area_code)||'?')+' — מחוץ לאזור</span>');
+   h+='<div style="background:#fff;display:flex;align-items:center;gap:9px;padding:9px 11px;margin:6px 0;border-radius:11px">'+
+    '<div style="font-size:14px;font-weight:800;color:var(--acc);min-width:44px">'+esc(apptTime(a))+'</div>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+esc(a.customer_name||'')+' '+tag+'</div>'+
+    '<div style="font-size:11px;color:var(--mut)">'+esc(a.city||'')+(a.note?' · '+esc(a.note):'')+' · '+a.duration_min+' דק׳</div></div>'+
+    (on?'<button class="apedit chip" data-id="'+a.id+'" style="padding:4px 10px;font-size:11.5px">עריכה</button>'
+       :'<button class="apadd chip" data-id="'+a.id+'" data-cid="'+a.customer_id+'" style="padding:4px 11px;background:var(--acc);color:#fff;border-color:var(--acc);font-size:11.5px;font-weight:800">+ הוסף</button>')+
+    '</div>';
+  });
+  h+='<div style="font-size:11px;color:var(--warn);line-height:1.6;margin-top:4px">פגישה שהלקוח שלה באזור שנבחר נכנסת למסלול אוטומטית.</div></div>';
+  el2.innerHTML=h;
+  var add=document.querySelectorAll('.apadd');
+  for(var i=0;i<add.length;i++)add[i].onclick=function(){
+   var cid=this.getAttribute('data-cid');
+   var c=custById[cid],a=null;list.forEach(function(x){if(x.customer_id===cid)a=x;});
+   var go=function(){routeSel[cid]=true;routeBuilt=false;saveDailyRoute();toast('הפגישה נוספה למסלול ✓');render();};
+   if(routeArea&&c&&c.area_code!==routeArea){
+    var extra='';
+    try{var o=getOrigin();if(c.lat!=null&&o&&o.lat!=null)extra=' (מרחק ~'+Math.round(hav(o,c))+' ק״מ מנקודת המוצא)';}catch(e){}
+    confirmModal(esc(c.name)+' נמצא באזור '+(c.area_code||'?')+', והמסלול מתוכנן לאזור '+routeArea+'.'+extra+'\nלהוסיף בכל זאת?',go,'הוספה למסלול');
+   } else go();
+  };
+  var ed=document.querySelectorAll('.apedit');
+  for(var j=0;j<ed.length;j++)ed[j].onclick=function(){
+   var id=this.getAttribute('data-id'),a=null;list.forEach(function(x){if(x.id===id)a=x;});
+   if(!a)return;var c=custById[a.customer_id]||{id:a.customer_id,name:a.customer_name,city:a.city};
+   openApptSheet(c,a,function(){apptInvalidate();render();});
+  };
+ });
+}
+function apptTravelMin(a,b){if(!a||!b||a.lat==null||b.lat==null)return 0;return Math.round(hav(a,b)/35*60);}
+/* Order the day around the meetings: each meeting is an anchor at its own clock time,
+   and free stops are only slotted in front of an anchor while there is still time to
+   arrive on schedule. Whatever doesn't fit moves after it. */
+function apptOrder(stops,origin,fixedMap,startMin){
+ var fixed=stops.filter(function(c){return fixedMap[c.id];})
+                .sort(function(a,b){return apptMin(fixedMap[a.id])-apptMin(fixedMap[b.id]);});
+ if(!fixed.length)return nnOrder(stops,origin);
+ var free=stops.filter(function(c){return !fixedMap[c.id];}).slice();
+ var STOP=20,out=[],cur=origin,t=(startMin==null?8*60:startMin);
+ for(var i=0;i<fixed.length;i++){
+  var f=fixed[i],want=apptMin(fixedMap[f.id]);
+  while(true){
+   var bi=-1,bd=1e18;
+   for(var k=0;k<free.length;k++){var sp=free[k];if(sp.lat==null)continue;var d=hav(cur,sp);if(d<bd){bd=d;bi=k;}}
+   if(bi<0)break;
+   var s2=free[bi];
+   if(t+apptTravelMin(cur,s2)+STOP+apptTravelMin(s2,f)>want)break;
+   t+=apptTravelMin(cur,s2)+STOP;cur=s2;out.push(s2);free.splice(bi,1);
+  }
+  t=Math.max(t+apptTravelMin(cur,f),want)+((fixedMap[f.id]||{}).duration_min||30);
+  cur=f;out.push(f);
+ }
+ return out.concat(nnOrder(free,cur));
+}
+/* rough arrival estimate: 35 km/h door to door + 20 min inside each stop */
+function apptEtaWarn(seq,origin,fixedMap,startMin){
+ var KMH=35,STOP=20,t=startMin,cur=origin,warn=[];
+ seq.forEach(function(c){
+  if(c.lat!=null&&cur&&cur.lat!=null)t+=Math.round(hav(cur,c)/KMH*60);
+  var a=fixedMap[c.id];
+  if(a){var want=apptMin(a);if(t>want+10)warn.push({name:c.name,eta:t,want:want});t=Math.max(t,want)+(a.duration_min||30);}
+  else t+=STOP;
+  if(c.lat!=null)cur=c;
+ });
+ return warn;
+}
+function hhmm(mins){var m=Math.max(0,Math.round(mins));return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 function nnOrder(stops,origin){var pts=stops.filter(function(s){return s.lat!=null&&s.lng!=null});var rest=stops.filter(function(s){return s.lat==null||s.lng==null});var out=[],cur=origin;while(pts.length){var bi=0,bd=1e9;for(var i=0;i<pts.length;i++){var d=hav(cur,pts[i]);if(d<bd){bd=d;bi=i}}cur=pts[bi];out.push(pts[bi]);pts.splice(bi,1)}return out.concat(rest)}
 function mapsUrl(origin,stops){var pts=[[origin.lat,origin.lng]];stops.forEach(function(s){if(s.lat!=null)pts.push([s.lat,s.lng])});var path=pts.map(function(p){return p[0]+','+p[1]}).join('/');return 'https://www.google.com/maps/dir/'+path}
 function waLink(phone,text){if(!phone)return null;var p=(''+phone).replace(/[^0-9]/g,'');if(p[0]==='0')p='972'+p.slice(1);return 'https://wa.me/'+p+(text?('?text='+encodeURIComponent(text)):'')}
@@ -1552,6 +1640,7 @@ function homeView(){
    '<button data-go="catalog" style="margin-top:13px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(10,79,86,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button>'+
   '</div>'+
   '<div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px">'+
+   '<div id="apptnext"></div>'+
    '<div id="routecard"></div>'+
    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">'+qa+'</div>'+
    '<div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים.</div>'+
@@ -1561,7 +1650,7 @@ function homeView(){
  bindGo();
  $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
  locTouch();
- renderHomeRoute();
+ renderApptNext();renderHomeRoute();
 }
 var _cheerPending=false,_revealTarget=null;
 function wdayState(){try{var v=localStorage.getItem('lib_wday_'+todayStr());return v?JSON.parse(v):null;}catch(e){return null;}}
@@ -1583,6 +1672,18 @@ function bannerAnim(el,type,cb){
  }
  el.innerHTML=html;
  setTimeout(function(){cb&&cb();},type==='cheer'?1450:(type==='start'?1150:1200));
+}
+function renderApptNext(){
+ var el=$('apptnext');if(!el||!me)return;
+ loadApptsUpcoming(function(list){
+  var e2=$('apptnext');if(!e2||route!=='home')return;
+  if(!list.length){e2.innerHTML='';return;}
+  var a=list[0],d=new Date(a.starts_at);
+  var T=todayStr(),day=(a.il_date===T)?'היום':((a.il_date===tomorrowStr())?'מחר':d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:IL_TZ}));
+  var more=(list.length>1)?('<div style="font-size:11px;color:var(--warn);margin-top:4px">ועוד '+(list.length-1)+' פגישות מתוכננות</div>'):'';
+  e2.innerHTML='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;box-shadow:0 6px 18px rgba(36,33,29,.06)"><div style="display:flex;align-items:center;gap:11px"><div style="text-align:center;min-width:52px"><div style="font-size:10.5px;color:var(--warn);font-weight:700">'+esc(day)+'</div><div style="font-size:19px;font-weight:800;color:var(--warn);line-height:1.1">'+esc(apptTime(a))+'</div></div><div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--warn);font-weight:700">📅 הפגישה הבאה</div><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.customer_name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(a.city||'')+(a.note?' · '+esc(a.note):'')+'</div>'+more+'</div><button class="chip" id="apgo" style="background:#fff">פרטים</button></div></div>';
+  if($('apgo'))$('apgo').onclick=function(){openCustomer(a.customer_id);};
+ });
 }
 function renderHomeRoute(){
  var el=$('routecard');if(!el)return;
@@ -1752,6 +1853,7 @@ function renderCustTab(){
    '<button id="cord" class="cta" style="height:46px">הזמנה חדשה</button>'+
    '<button id="cvis" class="cta" style="height:46px;background:var(--surq);color:var(--ink)">רישום ביקור</button>'+
    '<button id="ccontacts" class="cta" style="height:46px;background:var(--accs);color:var(--accd)">אנשי קשר</button>'+
+   '<button id="cappt" class="cta" style="height:46px;background:var(--warns);color:var(--warn);grid-column:1/-1">📅 קביעת פגישה</button>'+
    (loc?'<a href="'+loc+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:var(--accs);color:var(--accd);display:flex;align-items:center;justify-content:center;text-decoration:none">🗺️ Google Maps</a>':'')+
    (waze?'<a href="'+waze+'" target="_blank" rel="noopener" class="cta" style="height:46px;background:#33ccff;color:#003a4d;display:flex;align-items:center;justify-content:center;text-decoration:none;grid-column:1/-1">🚗 ניווט ב-Waze</a>':'')+
    (c.debt_agorot>0?'<button id="cpay" class="cta" style="height:46px;background:var(--bads);color:var(--bad);grid-column:1/-1">💰 סימון תשלום · חוב '+ils(c.debt_agorot)+'</button>':'')+
@@ -1762,6 +1864,7 @@ function renderCustTab(){
   $('cord').onclick=function(){cart.cust={id:c.id,name:c.name};route='orders';render()};
   $('cvis').onclick=function(){visitTarget={id:c.id,name:c.name};route='visits';render()};
   $('ccontacts').onclick=function(){loadContacts(c)};
+  if($('cappt'))$('cappt').onclick=function(){openApptSheet(c,null,function(){apptInvalidate();});};
   $('cedit').onclick=function(){editCustomer(c)};
   $('cgps').onclick=function(){updateLocation(c)};
   if($('cpay'))$('cpay').onclick=function(){openPaymentSheet(c)};
@@ -2315,6 +2418,98 @@ var routeBuilt=false;
 var routeRev=false;
 var _discCap=null,_discAck=false;
 var _agFresh=null,_pulse=null;
+/* ================= APPOINTMENTS (פגישות שנקבעו עם הלקוח) ================= */
+var _appts={};            /* 'YYYY-MM-DD' -> [rows]  */
+var _apptsAll=null;       /* upcoming, for the home card */
+function apptISO(dateStr,hhmm){
+ /* build the exact instant for a wall-clock time in Israel */
+ var base=Date.UTC(+dateStr.slice(0,4),+dateStr.slice(5,7)-1,+dateStr.slice(8,10),+hhmm.slice(0,2),+hhmm.slice(3,5),0);
+ var t=base-ilOffsetMs(new Date(base)); t=base-ilOffsetMs(new Date(t));
+ return new Date(t).toISOString();
+}
+function apptTime(a){return a.il_time||(a.starts_at?new Date(a.starts_at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',timeZone:IL_TZ}):'');}
+function apptMin(a){var t=apptTime(a);return t?(+t.slice(0,2)*60 + +t.slice(3,5)):0;}
+function loadAppts(dateStr,cb){
+ if(!me){cb&&cb([]);return;}
+ if(_appts[dateStr]){cb&&cb(_appts[dateStr]);return;}
+ if(navigator.onLine===false){cb&&cb([]);return;}
+ sb.from('liberty_appointments').select('*').eq('agent_id',me.id).eq('il_date',dateStr)
+   .neq('status','cancelled').order('starts_at').then(function(r){
+   var d=(r&&r.data)||[];_appts[dateStr]=d;cb&&cb(d);
+ },function(){cb&&cb([]);});
+}
+function apptInvalidate(dateStr){if(dateStr)delete _appts[dateStr];else _appts={};_apptsAll=null;}
+function loadApptsUpcoming(cb){
+ if(!me){cb&&cb([]);return;}
+ sb.from('liberty_appointments').select('*').eq('agent_id',me.id).eq('status','scheduled')
+   .gte('starts_at',new Date().toISOString()).order('starts_at').limit(20).then(function(r){
+   _apptsAll=(r&&r.data)||[];cb&&cb(_apptsAll);},function(){cb&&cb([]);});
+}
+function apptWaText(a,custName){
+ var d=new Date(a.starts_at);
+ var day=d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric',timeZone:IL_TZ});
+ return 'שלום! מאשרת את הפגישה שלנו ל'+day+' בשעה '+apptTime(a)+'.'+(a.note?'\n'+a.note:'')+'\nנתראה, '+((me&&me.name)||'')+' · ליברטי';
+}
+/* create / edit a meeting */
+function openApptSheet(cust,existing,after){
+ if(!cust||!cust.id){toast('צריך לבחור לקוח');return;}
+ var T=todayStr();
+ var dv=existing?(existing.il_date||ilYmd(existing.starts_at)):T;
+ var tv=existing?apptTime(existing):'10:00';
+ var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
+ ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">📅 '+(existing?'עריכת פגישה':'קביעת פגישה')+'</b><span id="apx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  '<div class="card" style="background:var(--accs)"><div style="font-size:12px;color:var(--accd);font-weight:700">לקוח</div><div style="font-size:15px;font-weight:800;color:var(--accd)">'+esc(cust.name||'')+'</div>'+(cust.city?'<div style="font-size:11.5px;color:var(--accd)">'+esc(cust.city)+'</div>':'')+'</div>'+
+  '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תאריך</span><input id="ap_d" type="date" class="field" value="'+dv+'" min="'+T+'"></label><label style="flex:1"><span class="lbl">שעה</span><input id="ap_t" type="time" class="field" value="'+tv+'" step="300"></label></div>'+
+   '<div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">'+[15,30,45,60].map(function(m){return '<button class="chip apdur'+((existing?existing.duration_min:30)===m?' on':'')+'" data-m="'+m+'" style="flex:1;min-width:56px">'+m+' דק׳</button>';}).join('')+'</div></div>'+
+  '<div class="card"><label style="display:block"><span class="lbl">הערה (לא חובה)</span><input id="ap_n" class="field" placeholder="על מה הפגישה" value="'+esc((existing&&existing.note)||'')+'"></label></div>'+
+  '<div class="card" style="background:var(--warns)"><div style="font-size:11.5px;color:var(--warn);line-height:1.65">פגישה נכנסת אוטומטית לתכנון המסלול של אותו יום — גם אם הלקוח באזור אחר, ואז תקבלי התראה.</div></div>'+
+  '<button class="cta" id="ap_save">'+(existing?'שמירת שינויים':'קביעת פגישה')+'</button>'+
+  (existing?'<button id="ap_cancel" style="width:100%;height:44px;margin-top:9px;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:12px;font-weight:700;cursor:pointer">ביטול הפגישה</button>':'')+
+  '<div id="ap_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
+  '</div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('apx').onclick=function(){ov.remove();};
+ var dur=existing?existing.duration_min:30;
+ var db=ov.querySelectorAll('.apdur');
+ for(var i=0;i<db.length;i++)db[i].onclick=function(){dur=+this.getAttribute('data-m');for(var j=0;j<db.length;j++)db[j].classList.toggle('on',db[j]===this);};
+ if($('ap_cancel'))$('ap_cancel').onclick=function(){var b=this;b.disabled=true;b.textContent='מבטלת…';
+  sb.from('appointments').update({status:'cancelled',updated_at:new Date().toISOString()}).eq('id',existing.id).then(function(r){
+   if(r&&r.error){toast('שגיאה: '+r.error.message);b.disabled=false;b.textContent='ביטול הפגישה';return;}
+   apptInvalidate();toast('הפגישה בוטלה');ov.remove();after&&after(null);},function(){toast('שגיאה');b.disabled=false;});};
+ $('ap_save').onclick=function(){
+  var b=this,err=$('ap_err');err.textContent='';
+  var d=$('ap_d').value,t=$('ap_t').value;
+  if(!d||!t){err.textContent='נא למלא תאריך ושעה';return;}
+  var iso=apptISO(d,t);
+  if(new Date(iso).getTime()<Date.now()-60000){err.textContent='השעה שנבחרה כבר עברה';return;}
+  b.disabled=true;b.textContent='שומרת…';
+  var row={agent_id:me.id,customer_id:cust.id,starts_at:iso,duration_min:dur,note:$('ap_n').value.trim()||null,status:'scheduled',updated_at:new Date().toISOString()};
+  var q=existing?sb.from('appointments').update(row).eq('id',existing.id):sb.from('appointments').insert(row);
+  q.then(function(r){
+   if(r&&r.error){err.textContent='שגיאה: '+r.error.message;b.disabled=false;b.textContent=existing?'שמירת שינויים':'קביעת פגישה';return;}
+   apptInvalidate();
+   /* an hour-before nudge rides on the existing reminder + push pipeline */
+   try{
+    var due=new Date(new Date(iso).getTime()-60*60000).toISOString();
+    if(new Date(due).getTime()>Date.now())
+     sb.from('reminders').insert({agent_id:me.id,customer_id:cust.id,kind:'meeting',
+      text:'פגישה בעוד שעה · '+cust.name+' ('+t+')',due_at:due,done:false,source:'appointment'}).then(function(){},function(){});
+   }catch(e){}
+   ov.remove();
+   toast('הפגישה נקבעה ל-'+heDate(d)+' בשעה '+t+' ✓');
+   apptOfferWa({starts_at:iso,note:row.note},cust);
+   after&&after(row);
+  },function(){err.textContent='שגיאה בשמירה';b.disabled=false;b.textContent=existing?'שמירת שינויים':'קביעת פגישה';});
+ };
+}
+/* offer to send the customer a WhatsApp confirmation */
+function apptOfferWa(a,cust){
+ var ph=custPhone(cust.id);if(!ph)return;
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:340px;margin:auto;border-radius:18px;padding:20px 18px 16px"><div style="font-size:30px;text-align:center">💬</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:6px">לשלוח ללקוח אישור פגישה?</div><div style="font-size:12.5px;color:var(--mut);text-align:center;line-height:1.6;margin-top:8px;white-space:pre-wrap">'+esc(apptWaText(a,cust.name))+'</div><button class="cta" id="apwa" style="margin-top:15px;background:#25d366">שליחה בוואטסאפ</button><button id="apwano" style="width:100%;height:42px;margin-top:9px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">לא עכשיו</button></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};
+ $('apwano').onclick=function(){ov.remove();};
+ $('apwa').onclick=function(){var u=waLink(ph,apptWaText(a,cust.name));if(u)window.open(u,'_blank');ov.remove();};
+}
 function loadPulse(){try{sb.rpc('team_pulse').then(function(r){if(r&&!r.error&&r.data){_pulse=r.data;if(route==='home'&&isMgr())renderMgrPulse();}},function(){});}catch(e){}}
 function cmpChip(label,now,base,fmt){
  if(base==null)return '';
@@ -3339,7 +3534,7 @@ function routeView(){
  var originBar='<div style="display:flex;align-items:center;gap:8px;background:var(--accs);border-radius:12px;padding:9px 12px;margin-bottom:10px"><span style="font-size:16px">📍</span><div style="flex:1"><div style="font-size:11px;color:var(--accd);font-weight:700">נקודת מוצא</div><div style="font-size:14px;font-weight:700;color:var(--accd)">'+esc(o.name)+'</div></div><button id="chgorigin" class="chip" style="background:#fff">שינוי</button></div>';
  var _isToday=(curRouteDate()===todayStr());
  var planBar='<button id="planbtn" style="width:100%;display:flex;align-items:center;gap:9px;background:'+(_isToday?'#fbfaf8':'var(--warns)')+';border:1px solid '+(_isToday?'var(--line)':'#e7c9a0')+';border-radius:12px;padding:9px 12px;margin-bottom:10px;cursor:pointer;text-align:right"><span style="font-size:16px">📆</span><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">תכנון מסלול</div><div style="font-size:14px;font-weight:800;color:'+(_isToday?'var(--head)':'var(--warn)')+'">'+(_isToday?'היום · '+heDateFull(todayStr()):heDateFull(curRouteDate()))+'</div></div><span style="font-size:12px;color:var(--acc);font-weight:700">שינוי ›</span></button>';
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">מסלול נסיעה יומי</div></div><div style="background:var(--sur);padding:12px 16px 13px;border-bottom:1px solid var(--line)">'+planBar+originBar+chips+'</div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">מסלול נסיעה יומי</div></div><div style="background:var(--sur);padding:12px 16px 13px;border-bottom:1px solid var(--line)">'+planBar+originBar+chips+'</div><div id="apptbar" style="padding:0 16px"></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">'+(routeArea?'טוען…':'בחרי אזור — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.')+'</div></div>');
  if($('planbtn'))$('planbtn').onclick=openPlanPicker;
  var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){
   var code=+this.getAttribute('data-a'),cur=routeSelCount();
@@ -3352,6 +3547,7 @@ function routeView(){
  $('chgorigin').onclick=openOriginPicker;
  $('mgareas').onclick=function(){_hist.push('route');route='areas';render()};
  if(!window.__arealist&&LOC.areas.length){window.__arealist=LOC.areas.map(function(a){return {code:a.code,name:a.name}})}
+ renderApptBar();
  if(!routeArea){if($('res')){var _na=(curRouteDate()!==todayStr())?('<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מתכננים ל־ '+heDateFull(curRouteDate())+'</div><button id="backtoday3" class="chip" style="background:#fff">היום</button></div>'):'';
   _na+=sugCtaHtml('איזה אזור הכי דחוף היום?','המערכת תדרג את האזורים ותציע מסלול מוכן');
   _na+='<div style="color:var(--mut);font-size:13px;padding:6px 2px;line-height:1.6">או בחרי אזור למעלה — לאחר מכן סמני את הלקוחות שתגיעי אליהם, והמערכת תבנה מסלול נסיעה מסודר.</div>';
@@ -3368,7 +3564,9 @@ function routeView(){
    // ---- BUILT DAILY ROUTE ----
    var ob=document.getElementById('buildbar');if(ob)ob.remove();
    var sel=d.filter(function(c){return routeSel[c.id]});
-   var ordered=nnOrder(sel,o);
+   var _fix={};(_appts[curRouteDate()]||[]).forEach(function(a){_fix[a.customer_id]=a;});
+   var _startMin0=(curRouteDate()!==todayStr())?9*60:Math.max(ilNowMinutes(),8*60);
+   var ordered=apptOrder(sel,o,_fix,_startMin0);
    var withGeo=ordered.filter(function(c){return c.lat!=null});
    var noGeo=ordered.filter(function(c){return c.lat==null});
    if(routeRev){withGeo=withGeo.slice().reverse();noGeo=noGeo.slice().reverse();}
@@ -3391,7 +3589,7 @@ function routeView(){
     if(planningFuture){acts='';}
     else if(!done){acts='<div style="display:flex;gap:7px;margin-top:9px"><button class="rvisit cta" data-id="'+c.id+'" data-name="'+esc(c.name)+'" style="height:38px;font-size:13px;flex:1'+(isCur?'':';background:var(--accs);color:var(--accd)')+'">📝 רישום ביקור</button>'+(c.lat!=null?'<a class="rnav" href="'+mapsUrl(o,[c])+'" target="_blank" rel="noopener" style="height:38px;display:flex;align-items:center;justify-content:center;padding:0 14px;background:var(--sur);border:1px solid var(--line);border-radius:11px;text-decoration:none;font-size:17px" title="ניווט לעצירה">🧭</a>':'')+'</div>';}
     else{acts='<div style="margin-top:7px"><span class="badge b-good">✓ בוצע ביקור</span></div>';}
-    return '<div class="card" style="'+border+op+'"><div class="rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:28px;height:28px;border-radius:50%;background:'+badgeBg+';color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">'+inner+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+((isCur&&!done)?' <span class="badge b-acc" style="font-size:10px">עצירה נוכחית</span>':'')+stateBadge+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+(c.lat==null?' <span class="badge b-mut">ללא מיקום</span>':'')+'</div>'+hoursLine+'</div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'+acts+'</div>';
+    return '<div class="card" style="'+border+op+'"><div class="rstop" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer"><div style="width:28px;height:28px;border-radius:50%;background:'+badgeBg+';color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">'+inner+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+esc(c.name)+(_fix[c.id]?' <span class="badge" style="font-size:10px;background:var(--warns);color:var(--warn)">🕐 פגישה '+esc(apptTime(_fix[c.id]))+'</span>':'')+((isCur&&!done)?' <span class="badge b-acc" style="font-size:10px">עצירה נוכחית</span>':'')+stateBadge+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(c.city||'')+' · '+tag+(c.debt_agorot>0?' <span class="badge b-bad">'+ils(c.debt_agorot)+'</span>':'')+(c.lat==null?' <span class="badge b-mut">ללא מיקום</span>':'')+'</div>'+hoursLine+'</div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>'+acts+'</div>';
    }
    function bindStops(){
     var rs=document.querySelectorAll('.rstop');for(var k=0;k<rs.length;k++){rs[k].onclick=function(){openCustomer(this.getAttribute('data-id'))}}
@@ -3422,6 +3620,15 @@ function routeView(){
      h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+sel.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+selDebt+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:700;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
     }else{
      h+='<div class="card" style="background:#fbfaf8"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">התקדמות היום</div><div style="font-size:14px;font-weight:700;color:'+(doneCount>=sel.length&&sel.length?'var(--good)':'var(--acc)')+'">'+doneCount+' / '+sel.length+' עצירות</div></div><div class="bar"><div style="width:'+pct+'%;background:var(--good)"></div></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--mut)"><span>~'+Math.round(tot)+' ק״מ</span><span>'+(selDebt?selDebt+' לגבייה · ':'')+(sel.length-doneCount)+' נותרו</span></div></div>';
+    }
+    var _apN=seq.filter(function(c){return _fix[c.id];}).length;
+    if(_apN){
+     var _startMin=planningFuture?9*60:Math.max(ilNowMinutes(),8*60);
+     var _w=apptEtaWarn(seq,o,_fix,_startMin);
+     h+='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0"><div style="font-size:12.5px;color:var(--warn);font-weight:800">📅 '+_apN+' פגישות קבועות במסלול</div>'+
+      (_w.length?'<div style="font-size:11.5px;color:var(--bad);line-height:1.7;margin-top:5px">⚠︎ לפי הסדר הנוכחי לא תגיעי בזמן:<br>'+_w.map(function(x){return esc(x.name)+' — קבוע '+hhmm(x.want)+', צפי הגעה '+hhmm(x.eta);}).join('<br>')+'<div style="color:var(--warn);margin-top:4px">כדאי להוריד עצירות לפני הפגישה או להזיז אותה.</div></div>'
+        :'<div style="font-size:11.5px;color:var(--good);font-weight:700;margin-top:4px">✓ הסדר מאפשר להגיע לכל הפגישות בזמן (הערכה: 35 קמ״ש, 20 דק׳ לעצירה)</div>')+
+      '</div>';
     }
     if(!planningFuture){var closedNow=sel.filter(function(c){return !doneSet[c.id]&&c.opening_hours&&isOpenAt(c.opening_hours,nowDay,nowMin)===false});if(closedNow.length)h+='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0"><div style="font-size:12.5px;color:var(--warn);font-weight:800;margin-bottom:5px">⚠︎ '+closedNow.length+' עסקים במסלול סגורים כעת</div><div style="font-size:11.5px;color:var(--warn);line-height:1.7">'+closedNow.map(function(c){return '🔴 '+esc(c.name)+' · '+esc(c.opening_hours)}).join('<br>')+'</div><div style="font-size:11px;color:var(--mut);margin-top:7px">כדאי לתזמן את הביקור בשעות הפתיחה או לדלג בינתיים ולחזור.</div></div>';}
     if(withGeo.length&&(planningFuture||doneCount<sel.length))h+='<a href="'+mapsUrl(o,withGeo)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;background:var(--acc);color:#fff;font-weight:700;font-size:14.5px;padding:13px;border-radius:14px;text-decoration:none;margin-bottom:4px">'+navSvg+'נווט במסלול המלא · Google Maps</a>';
@@ -3525,7 +3732,11 @@ function visitsView(){
   '<div class="card">'+cust+'</div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">תוצאת הביקור</div><div id="outc" style="display:flex;gap:8px;flex-wrap:wrap"><button class="chip oc on" data-v="הזמנה">הזמנה</button><button class="chip oc" data-v="ללא הזמנה">ללא הזמנה</button><button class="chip oc" data-v="לא נכח">לא נכח</button><button class="chip oc" data-v="פוטנציאלי">סיור/פוטנציאלי</button></div>'+
   '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:12px;color:var(--mut);font-weight:600">סיכום ביקור</div><button id="vmic" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🎙️ הקלטה</button></div><textarea id="vsum" class="field" placeholder="מה סוכם, מה להביא בפעם הבאה…"></textarea><div id="vdet" style="font-size:11.5px;color:var(--acc);font-weight:700;margin-top:5px;line-height:1.5"></div></div>'+
-  '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">ביקור הבא (לא חובה)</div><input id="vnext" type="date" class="field"></div></div>'+
+  '<div style="margin-top:12px"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">ביקור הבא (לא חובה)</div><input id="vnext" type="date" class="field">'+
+   '<label style="display:flex;align-items:center;gap:9px;margin-top:10px;cursor:pointer"><input type="checkbox" id="vismeet" style="width:20px;height:20px;flex:none"><span style="font-size:13px;font-weight:700;color:var(--head)">🤝 נקבעה פגישה עם הלקוח</span></label>'+
+   '<div id="vismeetbox" style="display:none;margin-top:9px"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">שעה</span><input id="vismeet_t" type="time" class="field" value="10:00" step="300"></label><label style="flex:1"><span class="lbl">משך</span><select id="vismeet_d" class="field"><option value="15">15 דק׳</option><option value="30" selected>30 דק׳</option><option value="45">45 דק׳</option><option value="60">60 דק׳</option></select></label></div>'+
+   '<div style="font-size:11px;color:var(--warn);line-height:1.6;margin-top:6px">פגישה נכנסת אוטומטית לתכנון המסלול של אותו יום, ומקבלת תזכורת שעה לפני.</div></div>'+
+   '</div>'+
   '<button class="cta" id="savevis"'+(visitTarget?'':' disabled')+'>שמירת ביקור</button>'+
   '<div style="margin-top:6px"><div class="h1" style="font-size:15px">ביקורים אחרונים</div><div id="vhist"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>'+
   '</div>');
@@ -3542,7 +3753,28 @@ function visitsView(){
   });};}
  if($('vpick'))$('vpick').onclick=openVisitPicker;
  if($('vchg'))$('vchg').onclick=openVisitPicker;
- $('savevis').onclick=function(){if(!visitTarget||!me)return;$('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;var _vcid=visitTarget.id,_vsum=rec.summary;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render();maybeVisitReminder(_vsum,_vcid,vn);})};
+ if($('vismeet'))$('vismeet').onchange=function(){var b=$('vismeetbox');if(b)b.style.display=this.checked?'block':'none';
+  if(this.checked&&$('vnext')&&!$('vnext').value){$('vnext').value=tomorrowStr();}};
+ $('savevis').onclick=function(){if(!visitTarget||!me)return;
+  var _mk=$('vismeet')&&$('vismeet').checked, _mt=$('vismeet_t')?$('vismeet_t').value:'', _md=$('vismeet_d')?+$('vismeet_d').value:30;
+  if(_mk){
+   if(!$('vnext').value){toast('לפגישה צריך תאריך — מלאי «ביקור הבא»');return;}
+   if(!_mt){toast('נא לבחור שעה לפגישה');return;}
+   var _miso=apptISO($('vnext').value,_mt);
+   if(new Date(_miso).getTime()<Date.now()-60000){toast('השעה שנבחרה כבר עברה');return;}
+   var _mc={id:visitTarget.id,name:visitTarget.name};
+   sb.from('appointments').insert({agent_id:me.id,customer_id:visitTarget.id,starts_at:_miso,duration_min:_md,
+     note:null,status:'scheduled',updated_at:new Date().toISOString()}).then(function(rr){
+    if(rr&&rr.error){toast('הביקור נשמר אבל הפגישה לא: '+rr.error.message);return;}
+    apptInvalidate();
+    try{var due=new Date(new Date(_miso).getTime()-60*60000).toISOString();
+     if(new Date(due).getTime()>Date.now())
+      sb.from('reminders').insert({agent_id:me.id,customer_id:_mc.id,kind:'meeting',
+       text:'פגישה בעוד שעה · '+_mc.name+' ('+_mt+')',due_at:due,done:false,source:'appointment'}).then(function(){},function(){});}catch(e){}
+    setTimeout(function(){apptOfferWa({starts_at:_miso,note:null},_mc);},700);
+   },function(){toast('הפגישה לא נשמרה — נסי שוב מכרטיס הלקוח');});
+  }
+  $('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;var _vcid=visitTarget.id,_vsum=rec.summary;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render();maybeVisitReminder(_vsum,_vcid,vn);})};
  SQ(sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30),'myvisits',function(r){var d=pendVisits().concat(r.data||[]),h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
 }
 function openVisitPicker(){
@@ -3876,6 +4108,7 @@ function renderRoute(){
  else if(route==='customers')customersView();
  else if(route==='collections')collectionsView();
  else if(route==='alerts')alertsView();
+ else if(route==='prodcomm')prodCommView();
  else if(route==='orders')ordersView();
  else if(route==='myorders')myOrdersView();
  else if(route==='route')routeView();
@@ -3920,10 +4153,78 @@ function dayHistView(){
 var PHARM_CAT='5bbb535f-263a-4390-8ba9-ae6ad768d17a';
 function isMgr(){return me&&['manager','office','admin'].indexOf(me.role)>=0;}
 function compressImg(file,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var mx=440;var w=im.width,h=im.height;if(w>h){if(w>mx){h=Math.round(h*mx/w);w=mx;}}else{if(h>mx){w=Math.round(w*mx/h);h=mx;}}var cv=document.createElement('canvas');cv.width=w;cv.height=h;var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);cb(cv.toDataURL('image/jpeg',0.82));};im.src=r.result;};r.readAsDataURL(file);}
+var _pcData=null;
+function prodCommView(){
+ if(!isMgr()){shell('<div class="list"><div class="card">אין הרשאה</div></div>');return;}
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="prodadmin" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div><div style="color:#fff;font-size:19px;font-weight:700">סיווג מוצרים לעמלה</div><div style="color:#cfe6e8;font-size:12px">האם מכירה של המוצר נספרת בבסיס הבונוס של הסוכנת</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ bindGo();loadProdComm();
+}
+function loadProdComm(){
+ sb.rpc('products_unclassified').then(function(r){
+  if(route!=='prodcomm')return;
+  if(r&&r.error){$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה: '+esc(r.error.message)+'</div>';return;}
+  _pcData=(r&&r.data)||[];
+  if(!_pcData.length){$('res').innerHTML='<div class="card" style="text-align:center;color:var(--good);font-size:13px;padding:26px">✔ כל המוצרים מסווגים.</div>'+prodCommResync();bindProdCommResync();return;}
+  var totN=0,totS=0;_pcData.forEach(function(g){totN+=g.n;totS+=(+g.sold_agorot||0);});
+  var h='<div class="card" style="background:var(--warns);border:1px solid #e7c9a0"><div style="font-size:13px;font-weight:800;color:var(--warn)">⚠︎ '+totN+' מוצרים ללא סיווג</div><div style="font-size:11.5px;color:var(--warn);line-height:1.7;margin-top:5px">מוצר בלי סיווג מתנהג כאילו הוא <b>לא</b> מזכה עמלה — אבל אף אחד לא קיבל את ההחלטה הזו. כבר נמכרו מהם <b>'+ils(totS)+'</b>.<br>סמני «כן» או «לא» לכל משפחה.</div></div>';
+  _pcData.forEach(function(g,i){
+   h+='<div class="card" id="pcg'+i+'"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(g.prefix)+' · '+g.n+' מוצרים</div>'+((+g.sold_agorot)>0?'<div style="font-size:12.5px;font-weight:800;color:var(--acc);white-space:nowrap">נמכר '+ils(+g.sold_agorot)+'</div>':'<div style="font-size:11px;color:var(--mut)">טרם נמכר</div>')+'</div>'+
+    '<div style="font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:4px">'+esc((g.names||[]).join(' · '))+((g.n>(g.names||[]).length)?' …':'')+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px"><button class="pcyes cta" data-i="'+i+'" style="height:40px;background:var(--good)">✓ כן — מזכה עמלה</button><button class="pcno cta" data-i="'+i+'" style="height:40px;background:#efece7;color:var(--ink)">✕ לא</button></div></div>';
+  });
+  $('res').innerHTML=h+prodCommResync();
+  var y=document.querySelectorAll('.pcyes');for(var a=0;a<y.length;a++)y[a].onclick=function(){pcSet(+this.getAttribute('data-i'),true,this);};
+  var n=document.querySelectorAll('.pcno');for(var b=0;b<n.length;b++)n[b].onclick=function(){pcSet(+this.getAttribute('data-i'),false,this);};
+  bindProdCommResync();
+ },function(){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
+}
+function pcSet(i,val,btn){
+ var g=_pcData[i];if(!g)return;
+ var row=btn.parentNode;row.innerHTML='<div style="font-size:12.5px;color:var(--mut);padding:9px 0">שומרת…</div>';
+ sb.rpc('set_products_commissionable',{p_skus:g.skus,p_value:val}).then(function(r){
+  if(r&&r.error){toast('שגיאה: '+r.error.message);loadProdComm();return;}
+  var card=$('pcg'+i);
+  if(card)card.style.display='none';
+  toast(g.prefix+' · '+g.n+' מוצרים סומנו כ'+(val?'מזכים עמלה ✓':'לא מזכים'));
+  _pcData[i].done=true;
+  if(_pcData.every(function(x){return x.done;}))loadProdComm();
+ },function(){toast('שגיאה');loadProdComm();});
+}
+function prodCommResync(){
+ return '<div class="card" style="background:var(--accs);margin-top:12px"><div style="font-size:13px;font-weight:800;color:var(--accd)">עדכון הזמנות שכבר נשמרו</div>'+
+  '<div style="font-size:11.5px;color:var(--accd);line-height:1.7;margin-top:5px">בכל הזמנה נשמר צילום של הסיווג <b>ברגע ההזמנה</b>. שינוי הסיווג משפיע רק על הזמנות חדשות.<br>הכפתור יסנכרן מחדש את ההזמנות מהחודש שעבר והחודש הנוכחי, ויחשב מחדש את בסיס העמלה שלהן.</div>'+
+  '<button class="cta" id="pc_resync" style="height:42px;margin-top:10px;background:var(--accs);color:var(--accd);border:1px solid var(--acc)">↻ סנכרון הזמנות קיימות</button>'+
+  '<div id="pc_res" style="font-size:12.5px;text-align:center;margin-top:8px"></div></div>';
+}
+function bindProdCommResync(){
+ var b=$('pc_resync');if(!b)return;
+ b.onclick=function(){
+  confirmModal('לסנכרן את ההזמנות של החודש שעבר והחודש הנוכחי לפי הסיווג הנוכחי? בסיס העמלה בהזמנות האלה יחושב מחדש.',function(){
+   b.disabled=true;b.textContent='מסנכרנת…';
+   sb.rpc('resync_order_commissionable').then(function(r){
+    b.disabled=false;b.textContent='↻ סנכרון הזמנות קיימות';
+    var e=$('pc_res');if(!e)return;
+    if(r&&r.error){e.style.color='var(--bad)';e.textContent='שגיאה: '+r.error.message;return;}
+    var d=r.data||{};e.style.color='var(--good)';
+    e.textContent='✓ '+(d.lines_changed||0)+' שורות עודכנו · '+(d.orders_recalculated||0)+' הזמנות חושבו מחדש';
+   },function(){b.disabled=false;b.textContent='↻ סנכרון הזמנות קיימות';toast('שגיאה');});
+  },'סנכרון');
+ };
+}
 function prodAdminView(){
  if(!isMgr()){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="color:#fff;font-size:19px;font-weight:700">ניהול מוצרים</div></div><div class="list"><div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px">אין לך הרשאת ניהול.</div></div>');bindGo();return;}
  shell('<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700;flex:1">ניהול מוצרים</div><button id="panew" style="background:#fff;color:var(--accd);border:none;border-radius:10px;height:34px;padding:0 13px;font-size:13px;font-weight:700;cursor:pointer">+ מוצר</button></div><div class="search" style="margin-top:11px;background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.25)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dcecein" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="paq" placeholder="שם מוצר או מק״ט…" style="color:#fff"></div><div style="margin-top:9px"><button id="pacat" style="width:100%;background:rgba(255,255,255,.16);border:none;border-radius:10px;height:38px;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">📄 ייבוא קטלוג אוטומטי (PDF)</button></div></div><div class="list" id="pares"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();
+ sb.rpc('products_unclassified').then(function(r){
+  if(route!=='prodadmin')return;var d=(r&&r.data)||[];if(!d.length)return;
+  var n=0,sold=0;d.forEach(function(g){n+=g.n;sold+=(+g.sold_agorot||0);});
+  var el=$('res');if(!el)return;
+  var card=document.createElement('div');card.className='card';
+  card.style.cssText='background:var(--warns);border:1px solid #e7c9a0;cursor:pointer';
+  card.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--warn)">⚠︎ '+n+' מוצרים ללא סיווג עמלה</div><div style="font-size:11.5px;color:var(--warn);line-height:1.6;margin-top:4px">הם מתנהגים כאילו אינם מזכים עמלה — כבר נמכרו מהם '+ils(sold)+'. הקישי לסיווג ›</div>';
+  card.onclick=function(){route='prodcomm';render();};
+  el.insertBefore(card,el.firstChild);
+ },function(){});
  if($('panew'))$('panew').onclick=function(){editProduct({__new:true});};
  if($('pacat'))$('pacat').onclick=catalogImport;
  var pcache=[];
