@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-53';
+var APP_VERSION='2026-08-26-54';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -237,7 +237,7 @@ function saveDailyRoute(allowEmpty){
  routeLocalSave();
  var ids=Object.keys(routeSel).filter(function(k){return routeSel[k]});
  if(!ids.length&&allowEmpty!==true)return;
- var row={agent_id:me.id,route_date:curRouteDate(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,status:'active',updated_at:new Date().toISOString()};
+ var row={agent_id:me.id,route_date:curRouteDate(),area_code:routeArea,origin:getOrigin(),selected_ids:ids,built:routeBuilt,reversed:routeRev,status:'active',updated_at:new Date().toISOString()};
  if(navigator.onLine===false){_drDirty=row;pendRouteSave(row);return}
  sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r){
   if(r&&r.error){netMark(false,r.error);_drDirty=row;pendRouteSave(row);}else{netMark(true);_drDirty=null;pendRouteClear(row.route_date);}
@@ -269,7 +269,7 @@ function archiveStaleRoutes(cb){
   });
  });
 }
-function _applyRouteRow(row){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routeLocalSave();}
+function _applyRouteRow(row){routeArea=row.area_code;routeSel={};(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;routeRev=!!row.reversed;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routeLocalSave();}
 function carryDismissed(){try{return localStorage.getItem('carry_dismiss')===todayStr()}catch(e){return false}}
 function setCarryDismissed(){try{localStorage.setItem('carry_dismiss',todayStr())}catch(e){}}
 // offer to move an incomplete previous-day route into today (instead of silently archiving it)
@@ -281,7 +281,7 @@ function showCarryPrompt(cand,done){
  $('carryNo').onclick=function(){setCarryDismissed();ov.remove();done&&done();};
  $('carryYes').onclick=function(){
   var ids=cand.selected_ids||[];
-  var row={agent_id:me.id,route_date:todayStr(),area_code:cand.area_code,origin:cand.origin,selected_ids:ids,built:true,status:'active',updated_at:new Date().toISOString()};
+  var row={agent_id:me.id,route_date:todayStr(),area_code:cand.area_code,origin:cand.origin,selected_ids:ids,built:true,reversed:!!cand.reversed,status:'active',updated_at:new Date().toISOString()};
   sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(){
    _applyRouteRow(row);setCarryDismissed();ov.remove();toast('המסלול הועבר להיום ✓');done&&done();if(typeof render==='function')render();
   },function(){toast('לא הצלחתי להעביר — נסי שוב');});
@@ -291,7 +291,7 @@ function restoreDailyRoute(){
  if(!me)return;
  if(routeDate&&routeDate!==todayStr())return; // planning a future day — don't override
  var lr=routeLocalLoad();
- if(lr&&lr.area){routeArea=lr.area;routeSel=lr.sel||{};routeBuilt=!!lr.built;if(lr.origin&&lr.origin.lat!=null)setOrigin(lr.origin);if(route==='route')render()}
+ if(lr&&lr.area){routeArea=lr.area;routeSel=lr.sel||{};routeBuilt=!!lr.built;routeRev=!!lr.rev;if(lr.origin&&lr.origin.lat!=null)setOrigin(lr.origin);if(route==='route')render()}
  if(navigator.onLine===false)return;
  pendRouteFlush();
  var lrStops=(lr&&lr.sel)?Object.keys(lr.sel).filter(function(k){return lr.sel[k]}).length:0;
@@ -555,7 +555,7 @@ function updateSync(){
 }
 /* ---- daily route local mirror ---- */
 function routeLocalSave(){
- try{localStorage.setItem('lib_route',JSON.stringify({d:curRouteDate(),area:routeArea,sel:routeSel,built:routeBuilt,origin:getOrigin()}))}catch(e){}
+ try{localStorage.setItem('lib_route',JSON.stringify({d:curRouteDate(),area:routeArea,sel:routeSel,built:routeBuilt,rev:routeRev,origin:getOrigin()}))}catch(e){}
 }
 function routeLocalLoad(){
  try{var r=JSON.parse(localStorage.getItem('lib_route')||'null');if(r&&r.d===todayStr())return r}catch(e){}
@@ -1207,6 +1207,7 @@ function renderHomeRoute(){
  if(!ids.length){if($('hsub'))$('hsub').textContent='עדיין לא תוכנן מסלול להיום';el.innerHTML='<button data-go="route" class="card" style="border:none;cursor:pointer;color:inherit;display:flex;align-items:center;gap:11px;box-shadow:0 6px 18px rgba(36,33,29,.06);padding:14px 16px;width:100%;text-align:right"><span style="width:40px;height:40px;border-radius:11px;background:var(--accs);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+svgIcon('route')+'</span><div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--head)">תכנון מסלול היום</div><div style="font-size:11.5px;color:var(--mut)">בחרי אזור ולקוחות ובנה מסלול נסיעה</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>';var b0=el.querySelector('[data-go]');if(b0)b0.onclick=function(){route='route';render();};return;}
  LQ(function(){return LOC.customers.filter(function(c){return ids.indexOf(c.id)>-1})}).then(function(r){
   var d=r.data||[];var o=getOrigin();var ordered=nnOrder(d,o);
+  if(routeRev){ordered=ordered.filter(function(c){return c.lat!=null}).reverse().concat(ordered.filter(function(c){return c.lat==null}).reverse());}
   if($('hsub'))$('hsub').textContent=ordered.length+' עצירות מתוכננות היום';
   routeDoneSet(todayStr(),function(doneSet){
    if(route!=='home')return;var e2=$('routecard');if(!e2)return;
@@ -1903,7 +1904,7 @@ function newCustomerView(){
 var routeArea=null;
 var routeSel={};
 var routeBuilt=false;
-var routeDate=null;      // null = today; a YYYY-MM-DD string when planning a future day
+var routeRev=false;var routeDate=null;      // null = today; a YYYY-MM-DD string when planning a future day
 var routeEnded=false;    // set true after "end day" so the route screen shows the summary
 var _routeReport=null;   // last generated end-of-day report
 var _visitFrom=null;     // route name to return to after saving a visit
@@ -1989,11 +1990,11 @@ function nextVisitUrg(ds){if(!ds)return null;var days=Math.round((parseYmd(ds)-p
  if(days<=3)return {lvl:2,label:'🟡 בעוד '+days+' י׳',color:'var(--warn)'};
  if(days<=7)return {lvl:1,label:'🟢 בעוד '+days+' י׳',color:'var(--good)'};
  return null;}
-function loadRouteForDate(ds,cb){cancelRouteSave();routeArea=null;routeSel={};routeBuilt=false;
+function loadRouteForDate(ds,cb){cancelRouteSave();routeArea=null;routeSel={};routeBuilt=false;routeRev=false;
  if(navigator.onLine===false||!me){cb&&cb();return}
  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',ds).eq('status','active').limit(1).then(function(r){
   var row=(r&&r.data)?r.data[0]:null;
-  if(row){routeArea=row.area_code;(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);}
+  if(row){routeArea=row.area_code;(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;routeRev=!!row.reversed;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);}
   cb&&cb();
  },function(){cb&&cb();});}
 function planFor(ds){
@@ -2104,7 +2105,7 @@ function openAreaSuggest(){
   for(var i=0;i<el.length;i++)el[i].onclick=function(){
    var code=+this.getAttribute('data-a');ov.remove();
    var cur=routeSelCount();
-   var go2=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute(true);render();
+   var go2=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;routeRev=false;saveDailyRoute(true);render();
     setTimeout(function(){openRouteSuggest((LOC.customers||[]).filter(function(c){return c.area_code===routeArea&&c.lifecycle!=='disqualified'}));},260);};
    if(cur>0&&code!==routeArea){confirmModal('מעבר לאזור '+code+' ימחק את הבחירה הנוכחית ('+cur+' לקוחות). להמשיך?',go2);return;}
    go2();return;
@@ -2890,7 +2891,7 @@ function routeView(){
  var ac=document.querySelectorAll('.areac');for(var j=0;j<ac.length;j++){ac[j].onclick=function(){
   var code=+this.getAttribute('data-a'),cur=routeSelCount();
   if(code===routeArea)return;
-  var go=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;saveDailyRoute(true);render();};
+  var go=function(){cancelRouteSave();routeArea=code;routeSel={};routeBuilt=false;routeRev=false;saveDailyRoute(true);render();};
   if(cur>0)confirmModal('מעבר לאזור '+code+' ימחק את הבחירה הנוכחית ('+cur+' לקוחות) ליום '+heDateFull(curRouteDate())+'. להמשיך?',go);
   else go();
  }}
@@ -2917,6 +2918,7 @@ function routeView(){
    var ordered=nnOrder(sel,o);
    var withGeo=ordered.filter(function(c){return c.lat!=null});
    var noGeo=ordered.filter(function(c){return c.lat==null});
+   if(routeRev){withGeo=withGeo.slice().reverse();noGeo=noGeo.slice().reverse();}
    var seq=withGeo.concat(noGeo);
    var tot=0,cur=o;withGeo.forEach(function(c){tot+=hav(cur,c);cur=c});
    var selDebt=sel.filter(function(c){return c.debt_agorot>0}).length;
@@ -2953,7 +2955,7 @@ function routeView(){
      hc+='<button class="cta" id="plantom" style="margin-top:6px">🗓 תכנון מסלול למחר ('+heDate(tomorrowStr())+')</button>';
      hc+='<button id="godayhist" style="width:100%;height:42px;margin-top:8px;background:var(--accs);color:var(--accd);border:none;border-radius:12px;font-weight:700;font-size:13.5px;cursor:pointer">🗂 צפייה בהיסטוריית הדוחות</button>';
      $('res').innerHTML=hc;
-     $('plantom').onclick=function(){routeDate=tomorrowStr();routeEnded=false;_routeReport=null;routeArea=null;routeSel={};routeBuilt=false;render()};
+     $('plantom').onclick=function(){routeDate=tomorrowStr();routeEnded=false;_routeReport=null;routeArea=null;routeSel={};routeBuilt=false;routeRev=false;render()};
      $('godayhist').onclick=function(){route='dayhist';render()};
      return;
     }
@@ -2962,7 +2964,7 @@ function routeView(){
     var currentId=null;for(var si=0;si<seq.length;si++){if(!doneSet[seq[si].id]){currentId=seq[si].id;break}}
     var h='';
     if(planningFuture)h+='<div class="card" style="background:var(--warns);display:flex;justify-content:space-between;align-items:center;padding:11px 13px"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🗓 מסלול מתוכנן · '+heDateFull(curRouteDate())+'</div><button id="backtoday" class="chip" style="background:#fff">היום</button></div>';
-    h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button><button id="shareroute" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🔗 שיתוף עם המנהל</button></div>';
+    h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button id="editsel" class="chip" style="background:var(--accs);color:var(--accd)">✏️ ערוך בחירת לקוחות</button><button id="shareroute" class="chip" style="background:var(--accs);color:var(--accd);font-weight:800">🔗 שיתוף עם המנהל</button><button id="revroute" class="chip" style="'+(routeRev?'background:var(--acc);color:#fff;font-weight:800':'background:var(--accs);color:var(--accd)')+'">🔄 '+(routeRev?'סדר הפוך':'היפוך סדר')+'</button></div>';
     if(planningFuture){
      h+='<div class="card" style="background:#fbfaf8;display:flex;gap:12px"><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">עצירות</div><div style="font-size:20px;font-weight:700;color:var(--head)">'+sel.length+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">לגבייה</div><div style="font-size:20px;font-weight:700;color:var(--bad)">'+selDebt+'</div></div><div style="flex:1"><div style="font-size:11px;color:var(--mut);font-weight:700">אורך משוער</div><div style="font-size:20px;font-weight:700;color:var(--acc)">'+Math.round(tot)+' ק״מ</div></div></div>';
     }else{
@@ -2991,6 +2993,7 @@ function routeView(){
     $('res').innerHTML=h+'<div style="height:20px"></div>';
     if($('backtoday'))$('backtoday').onclick=function(){routeDate=null;routeEnded=false;_routeReport=null;restoreDailyRoute();render()};
     $('editsel').onclick=function(){routeBuilt=false;saveDailyRoute();render()};
+    if($('revroute'))$('revroute').onclick=function(){routeRev=!routeRev;saveDailyRoute();toast(routeRev?'סדר העצירות הופך — האחרון ראשון 🔄':'חזרה לסדר המקורי 🔄');render()};
     if($('shareroute'))$('shareroute').onclick=function(){openRouteShare(seq);};
     bindStops();
     var pa=document.querySelectorAll('.paddp');for(var pi=0;pi<pa.length;pi++){pa[pi].onclick=function(e){e.stopPropagation();routeSel[this.getAttribute('data-id')]=true;saveDailyRoute();render()}}
