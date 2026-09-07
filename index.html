@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-59';
+var APP_VERSION='2026-08-26-60';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -224,8 +224,39 @@ function waLink(phone,text){if(!phone)return null;var p=(''+phone).replace(/[^0-
 function wazeUrl(lat,lng){return 'https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes'}
 function custPhone(id){try{for(var i=0;i<(LOC.phones||[]).length;i++){if(LOC.phones[i].customer_id===id&&LOC.phones[i].phone)return LOC.phones[i].phone;}}catch(e){}return null;}
 // ---- daily route persistence ----
-function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function localDate(ts){var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+/* ---- everything date-related runs on Israel time, whatever the device clock says ---- */
+var IL_TZ='Asia/Jerusalem';
+function _ilParts(d){
+ try{
+  var p=new Intl.DateTimeFormat('en-US',{timeZone:IL_TZ,hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(d);
+  var m={};for(var i=0;i<p.length;i++)m[p[i].type]=p[i].value;
+  if(m.hour==='24')m.hour='00';
+  return m;
+ }catch(e){return null;}
+}
+function ilOffsetMs(at){
+ var d=at?new Date(at):new Date(); var m=_ilParts(d); if(!m)return -d.getTimezoneOffset()*60000;
+ return Date.UTC(+m.year,+m.month-1,+m.day,+m.hour,+m.minute,+m.second)-d.getTime();
+}
+function ilYmd(at){
+ var d=at?new Date(at):new Date(); if(isNaN(d))return '';
+ var m=_ilParts(d);
+ if(!m)return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return m.year+'-'+m.month+'-'+m.day;
+}
+function ilStartISO(ymdStr){
+ var base=Date.UTC(+ymdStr.slice(0,4),+ymdStr.slice(5,7)-1,+ymdStr.slice(8,10),0,0,0);
+ var t=base-ilOffsetMs(new Date(base));
+ t=base-ilOffsetMs(new Date(t));          /* second pass fixes DST edges */
+ return new Date(t).toISOString();
+}
+function ilEndISO(ymdStr){return new Date(new Date(ilStartISO(ymdStr)).getTime()+86400000-1).toISOString();}
+function ilShift(ymdStr,days){return ilYmd(new Date(new Date(ilStartISO(ymdStr)).getTime()+days*86400000+12*3600000));}
+function ilMonthStart(ymdStr){return (ymdStr||todayStr()).slice(0,7)+'-01';}
+function ilNowMinutes(){var m=_ilParts(new Date());return m?(+m.hour*60+ +m.minute):(new Date().getHours()*60+new Date().getMinutes());}
+function ilDow(ymdStr){return new Date(ilStartISO(ymdStr||todayStr())).getUTCDay();}
+function todayStr(){return ilYmd();}
+function localDate(ts){return ilYmd(ts);}
 var __drSaveTmr=null;
 function pendRouteSave(row){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');m[row.route_date]=row;localStorage.setItem('lib_route_pending',JSON.stringify(m));}catch(e){}}
 function pendRouteClear(date){try{var m=JSON.parse(localStorage.getItem('lib_route_pending')||'{}');if(m[date]){delete m[date];localStorage.setItem('lib_route_pending',JSON.stringify(m));}}catch(e){}}
@@ -702,7 +733,7 @@ function loadActs(elId,opts){
   if(!d.length){if(elId==='actlist')_lastActs=[];el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין פעולות להצגה.</div>';return;}
   if(elId==='actlist'&&_perfSort.k!=null)d=perfSortList(d,function(a){var ts=a.ts?new Date(a.ts).getTime():0;
    return [ts,ts,a.kind||'',a.agent_name||'',a.customer_name||'',(a.amount_agorot||0)][_perfSort.k];});
-  if(elId==='actlist'){_lastActs=d;perfSortSync();}
+  if(elId==='actlist')_lastActs=d;
   var hh='';d.forEach(function(a){hh+=actRow(a,opts.showAgent)});el.innerHTML=hh;
   var rs=el.querySelectorAll('.actrow');for(var i=0;i<rs.length;i++){rs[i].onclick=function(){actDetail(this.getAttribute('data-kind'),this.getAttribute('data-ref'),this.getAttribute('data-cust'));};}
  });
@@ -781,14 +812,19 @@ function myStatsView(){
   h+='<button data-go="targets" class="cta" style="background:var(--accs);color:var(--accd);margin-top:2px">פירוט יעדים ועמלות ›</button>';
   h+='<div style="margin-top:8px"><div style="font-size:13.5px;font-weight:800;color:var(--head);padding:6px 2px 2px">🕘 היסטוריית פעולות</div><div style="font-size:11px;color:var(--mut);padding:0 2px 4px">לחצי על פעולה לצפייה בפירוט</div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px"></div><div id="actlist" style="padding:0"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div></div>';
   $('res').innerHTML=h;bindGo();
-  var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
+  var mStart=ilStartISO(ilMonthStart(todayStr()));
   SQ(sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart).not('status','in','(cancelled,draft)'),'mystgt:'+mStart,function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
   var _mak='';renderActChips('actchips',function(k){_mak=k;loadActs('actlist',{kind:k,showAgent:false});});
   loadActs('actlist',{kind:'',showAgent:false});
  });
 }
 function qaBtn(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
-function workDaysLeft(){var now=new Date();var y=now.getFullYear(),m=now.getMonth();var end=new Date(y,m+1,0).getDate();var c=0;for(var day=now.getDate();day<=end;day++){var dw=new Date(y,m,day).getDay();if(dw>=0&&dw<=4)c++;}return c;}
+function ilMonthDays(T){T=T||todayStr();return new Date(Date.UTC(+T.slice(0,4),+T.slice(5,7),0)).getUTCDate();}
+function ilWorkDays(T,fromDay,toDay){T=T||todayStr();var y=+T.slice(0,4),m=+T.slice(5,7),c=0;
+ for(var day=fromDay;day<=toDay;day++){var dw=new Date(Date.UTC(y,m-1,day)).getUTCDay();if(dw>=0&&dw<=4)c++;}
+ return c;}
+function workDaysLeft(){var T=todayStr();return ilWorkDays(T,+T.slice(8,10),ilMonthDays(T));}
+function workDaysDone(){var T=todayStr();return ilWorkDays(T,1,+T.slice(8,10));}
 // ============ MANAGER CONSOLE (stage 1: home + team + agent dashboard) ============
 var _team=null,_teamTs=0,_dashAgent=null;
 function loadTeamData(cb){
@@ -1116,18 +1152,25 @@ function perfCols(){
   return [drl].concat((P.cols||[]).slice(0,12).map(function(c){return c.label||c.key;})).concat(['סה״כ']);
  }
  if(_teamTab==='overview')return ['סוכן','ביקורים','הזמנות','סכום מכירות','נגבה'];
+ if(_teamTab==='orders')return ['תאריך','מס׳ הזמנה','לקוח','סוכן','סכום','סטטוס'];
  return ['תאריך','שעה','סוג','סוכן','לקוח','סכום'];
 }
-function perfSortSync(){
- var sel=$('tm_sort');if(sel){
-  var cols=perfCols(),cur=(_perfSort.k==null)?'':String(_perfSort.k);
-  var o='<option value="">מיון: ברירת מחדל</option>';
-  cols.forEach(function(c,i){o+='<option value="'+i+'">מיון: '+esc(String(c))+'</option>';});
-  sel.innerHTML=o;
-  sel.value=(_perfSort.k!=null&&_perfSort.k<cols.length)?cur:'';
-  if(sel.value==='')_perfSort.k=null;
- }
- var b=$('tm_dir');if(b){b.textContent=(_perfSort.dir===1?'▲ עולה':'▼ יורד');b.style.opacity=(_perfSort.k==null)?'.45':'1';}
+/* a slim clickable header row for the tabs that render cards instead of a real table.
+   pairs = [[label, modelColumnIndex], ...] */
+function perfHeadStrip(pairs){
+ var h='<div class="card" style="padding:9px 12px;display:flex;gap:8px;align-items:center;background:#fbfaf8;margin-bottom:2px">';
+ pairs.forEach(function(pr,i){
+  var k=pr[1],on=(_perfSort.k===k);
+  h+='<button class="pfhs" data-i="'+k+'" style="flex:'+(i===0?'2.2':'1')+';min-width:0;text-align:'+(i===0?'right':'left')+';background:none;border:none;padding:0;cursor:pointer;font-size:11.5px;font-weight:800;color:'+(on?'var(--acc)':'var(--mut)')+'">'+esc(String(pr[0]))+(on?(_perfSort.dir===1?' \u25B2':' \u25BC'):'')+'</button>';
+ });
+ return h+'</div>';
+}
+function perfBindHeadStrip(){
+ var b=document.querySelectorAll('.pfhs');
+ for(var i=0;i<b.length;i++)b[i].onclick=function(){
+  var k=+this.getAttribute('data-i');
+  if(_perfSort.k===k)_perfSort.dir=-_perfSort.dir;else{_perfSort.k=k;_perfSort.dir=(k===0?1:-1);}
+  loadTeamTab();};
 }
 function perfCmp(a,b){
  var d=_perfSort.dir;
@@ -1145,8 +1188,7 @@ function perfSortList(list,val){
  if(_perfSort.k==null)return list;
  return list.slice().sort(function(x,y){return perfCmp(val(x),val(y));});
 }
-function perfDay(iso){if(!iso)return todayStr();var d=new Date(iso);if(isNaN(d))return String(iso).slice(0,10);
- return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function perfDay(iso){if(!iso)return todayStr();var v=ilYmd(iso);return v||String(iso).slice(0,10);}
 function perfPeriodLabel(){var b=teamRangeBounds();var f=perfDay(b.from),t=b.to?perfDay(b.to):todayStr();return (f===t)?f:(f+' – '+t);}
 function perfAgentLabel(){if(!_taAgent)return 'כל הסוכנים';var sel=$('tm_agent');if(sel){for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===_taAgent)return sel.options[i].text;}return '';}
 function perfNum(v,m){var n=+v||0;return (m==='amount'||m==='comm')?Math.round(n)/100:n;}
@@ -1179,6 +1221,16 @@ function perfModel(){
    total:['סה״כ',_teamOv.tot.v,_teamOv.tot.on,Math.round(_teamOv.tot.os)/100,Math.round(_teamOv.tot.c)/100],
    money:[3,4]};
  }
+ if(_teamTab==='orders'){
+  if(!_teamOrders||!_teamOrders.length)return null;
+  var tsum=0;_teamOrders.forEach(function(o){tsum+=o.total_agorot||0;});
+  return {title:'היסטוריית הזמנות',
+   head:['תאריך','מס׳ הזמנה','לקוח','סוכן','סכום','הנחה','סטטוס'],
+   rows:_teamOrders.map(function(o){return [o.created_at?ilYmd(o.created_at):'',
+     o.order_no?String(o.order_no).padStart(6,'0'):'',o.customer_name||'',o.agent_name||'',
+     Math.round(o.total_agorot||0)/100,o.discount_agorot?Math.round(o.discount_agorot)/100:'',ordStatusLabel(o)];}),
+   total:['סה״כ','','','',Math.round(tsum)/100,'',''],money:[4,5]};
+ }
  if(!_lastActs||!_lastActs.length)return null;
  var K={order:'הזמנה',visit:'ביקור',payment:'גבייה',customer_new:'לקוח חדש',customer_upd:'עדכון לקוח'};
  return {title:'יומן פעילות',
@@ -1205,7 +1257,7 @@ function perfExportXlsx(){
  },function(){toast('לא ניתן לטעון את מנוע האקסל — צריך אינטרנט');});
 }
 function perfFileName(ext){
- var t={sales:'מכירות',overview:'סקירת-צוות',acts:'פעילות'}[_teamTab]||'דוח';
+ var t={sales:'מכירות',overview:'סקירת-צוות',orders:'הזמנות',acts:'פעילות'}[_teamTab]||'דוח';
  var b=teamRangeBounds();
  return 'liberty-'+t+'-'+perfDay(b.from)+'.'+ext;
 }
@@ -1307,10 +1359,10 @@ function renderAlerts(S){
  };
 }
 function teamRangeBounds(){
- var now=new Date();var y=now.getFullYear(),mo=now.getMonth(),d=now.getDate();var startToday=new Date(y,mo,d);var m=_teamRange.mode;
- if(m==='custom'){var f=_teamRange.from?new Date(_teamRange.from+'T00:00:00'):startToday;var t=_teamRange.to?new Date(_teamRange.to+'T23:59:59'):new Date(y,mo,d,23,59,59);return {from:f.toISOString(),to:t.toISOString()};}
- var from;if(m==='today')from=startToday;else if(m==='7')from=new Date(now.getTime()-7*86400000);else if(m==='30')from=new Date(now.getTime()-30*86400000);else if(m==='year')from=new Date(y,0,1);else from=startToday;
- return {from:from.toISOString(),to:null};
+ var T=todayStr(),m=_teamRange.mode;
+ if(m==='custom'){var f0=_teamRange.from||T,t0=_teamRange.to||T;return {from:ilStartISO(f0),to:ilEndISO(t0)};}
+ var fromDay=(m==='today')?T:(m==='7')?ilShift(T,-7):(m==='30')?ilShift(T,-30):(m==='year')?(T.slice(0,4)+'-01-01'):T;
+ return {from:ilStartISO(fromDay),to:null};
 }
 function teamRangeLabel(){return {today:'היום','7':'7 ימים','30':'30 יום',year:'מתחילת השנה',custom:'טווח נבחר'}[_teamRange.mode]||'';}
 function teamView(){
@@ -1320,18 +1372,14 @@ function teamView(){
  var rchips=rng.map(function(c){return '<button class="trchip chip'+(_teamRange.mode===c[0]?' on':'')+'" data-r="'+c[0]+'" style="white-space:nowrap;flex:none">'+c[1]+'</button>';}).join('');
  var custom='<div id="tcustom" style="display:'+(_teamRange.mode==='custom'?'flex':'none')+';gap:8px;margin-top:2px"><label style="flex:1"><span class="lbl">מתאריך</span><input type="date" id="tc_from" class="field" value="'+(_teamRange.from||'')+'"></label><label style="flex:1"><span class="lbl">עד תאריך</span><input type="date" id="tc_to" class="field" value="'+(_teamRange.to||'')+'"></label></div>';
  var tab=function(t,l){var on=_teamTab===t;return '<button class="ttab" data-t="'+t+'" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;background:'+(on?'#fff':'transparent')+';color:'+(on?'var(--accd)':'var(--acc)')+'">'+l+'</button>';};
- var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('sales','מכירות')+tab('acts','פעילות')+'</div>';
+ var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('sales','מכירות')+tab('orders','הזמנות')+tab('acts','פעילות')+'</div>';
  var agentBar='<div style="margin-top:7px"><select id="tm_agent" class="field" style="height:38px;font-size:13px"><option value="">כל הסוכנים</option></select></div>';
- var expBar='<div style="display:flex;gap:8px;margin-top:8px"><select id="tm_sort" class="field" style="flex:2;height:36px;font-size:12.5px;padding:0 8px"><option value="">מיון: ברירת מחדל</option></select><button id="tm_dir" class="chip" style="flex:none;min-width:76px;font-weight:800">▼ יורד</button></div>'+
-  '<div style="display:flex;gap:8px;margin-top:8px"><button id="tm_pdf" class="chip" style="flex:1;background:var(--accs);color:var(--accd);font-weight:800">📄 PDF</button><button id="tm_xls" class="chip" style="flex:1;background:var(--goods);color:var(--goodd);font-weight:800">📊 אקסל</button></div>';
+ var expBar='<div style="display:flex;gap:8px;margin-top:8px"><button id="tm_pdf" class="chip" style="flex:1;background:var(--accs);color:var(--accd);font-weight:800">📄 PDF</button><button id="tm_xls" class="chip" style="flex:1;background:var(--goods);color:var(--goodd);font-weight:800">📊 אקסל</button></div>';
  $('res').innerHTML='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+rchips+'</div>'+custom+agentBar+tabs+expBar+'<div id="tbody" style="margin-top:6px"><div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div></div>';
  var rc=document.querySelectorAll('.trchip');for(var i=0;i<rc.length;i++)rc[i].onclick=function(){_teamRange.mode=this.getAttribute('data-r');if(_teamRange.mode!=='custom'){teamView();}else{var s=$('tcustom');if(s)s.style.display='flex';var all=document.querySelectorAll('.trchip');for(var j=0;j<all.length;j++)all[j].classList.toggle('on',all[j].getAttribute('data-r')==='custom');}};
  var tc=document.querySelectorAll('.ttab');for(var k=0;k<tc.length;k++)tc[k].onclick=function(){_teamTab=this.getAttribute('data-t');_perfSort.k=null;teamView();};
  if($('tc_from'))$('tc_from').onchange=function(){_teamRange.from=this.value;if(_teamRange.to)loadTeamTab();};
  if($('tc_to'))$('tc_to').onchange=function(){_teamRange.to=this.value;if(_teamRange.from)loadTeamTab();};
- if($('tm_sort'))$('tm_sort').onchange=function(){var v=this.value;_perfSort.k=(v==='')?null:+v;loadTeamTab();};
- if($('tm_dir'))$('tm_dir').onclick=function(){if(_perfSort.k==null){toast('בחרי קודם לפי מה למיין');return;}_perfSort.dir=-_perfSort.dir;perfSortSync();loadTeamTab();};
- perfSortSync();
  if($('tm_pdf'))$('tm_pdf').onclick=function(){perfExportPdf();};
  if($('tm_xls'))$('tm_xls').onclick=function(){perfExportXlsx();};
  loadTeamData(function(t){
@@ -1343,7 +1391,60 @@ function teamView(){
  });
  loadTeamTab();
 }
-function loadTeamTab(){if(_teamTab==='acts')renderTeamActs();else if(_teamTab==='sales')renderTeamSales();else renderTeamOverview();}
+function loadTeamTab(){if(_teamTab==='acts')renderTeamActs();else if(_teamTab==='sales')renderTeamSales();else if(_teamTab==='orders')renderTeamOrders();else renderTeamOverview();}
+var _teamOrders=null;
+function ordStatusLabel(o){
+ if(o.approval_status==='pending')return 'ממתין לאישור';
+ if(o.approval_status==='rejected')return 'נדחה';
+ if(o.status==='cancelled')return 'בוטל';
+ if(o.status==='draft')return 'טיוטה';
+ if(o.approval_status==='approved')return 'אושר';
+ return 'נשלח';
+}
+function ordStatusColor(l){
+ return l==='ממתין לאישור'?'var(--warn)':(l==='נדחה'||l==='בוטל')?'var(--bad)':(l==='אושר')?'var(--good)':'var(--mut)';
+}
+function renderTeamOrders(){
+ var el=$('tbody');if(!el)return;
+ el.innerHTML='<div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען הזמנות…</div>';
+ var b=teamRangeBounds();
+ var q=sb.from('liberty_my_orders')
+   .select('id,order_no,created_at,customer_name,agent_id,agent_name,total_agorot,discount_agorot,status,approval_status')
+   .gte('created_at',b.from).order('created_at',{ascending:false}).limit(400);
+ if(b.to)q=q.lte('created_at',b.to);
+ if(_taAgent)q=q.eq('agent_id',_taAgent);
+ q.then(function(r){
+  if(route!=='team'||_teamTab!=='orders')return;
+  if(r&&r.error){el.innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה: '+esc(r.error.message)+'</div>';return;}
+  var d=(r&&r.data)||[];
+  if(_perfSort.k!=null)d=perfSortList(d,function(o){var ts=o.created_at?new Date(o.created_at).getTime():0;
+   return [ts,(o.order_no||0),(o.customer_name||''),(o.agent_name||''),(o.total_agorot||0),ordStatusLabel(o)][_perfSort.k];});
+  _teamOrders=d;
+  var sum=0,disc=0;d.forEach(function(o){sum+=o.total_agorot||0;disc+=o.discount_agorot||0;});
+  var h='<div class="card" style="background:#fbfaf8"><div style="display:flex;gap:9px;flex-wrap:wrap">'+
+   drPill('הזמנות',d.length,'var(--acc)')+drPill('סה״כ',ils(sum),'var(--accd)')+(disc>0?drPill('הנחות',ils(disc),'var(--warn)'):'')+'</div></div>';
+  h+=perfHeadStrip([['תאריך',0],['מס׳',1],['לקוח',2],['סוכן',3],['סכום',4],['סטטוס',5]]);
+  if(!d.length){el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:22px">אין הזמנות בטווח שנבחר.</div>';perfBindHeadStrip();return;}
+  d.forEach(function(o){
+   var dt=o.created_at?new Date(o.created_at):null;
+   var lab=ordStatusLabel(o);
+   h+='<div class="card ordrow2" data-id="'+o.id+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 13px">'+
+    '<div style="flex:1;min-width:0">'+
+     '<div style="font-size:14px;font-weight:700">'+esc(o.customer_name||'')+'</div>'+
+     '<div style="font-size:11.5px;color:var(--mut)">'+(dt?ilYmd(dt).split("-").reverse().slice(0,2).join("/")+" "+dt.toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit",timeZone:IL_TZ}):"")+
+      (o.order_no?' · '+String(o.order_no).padStart(6,'0'):'')+(o.agent_name?' · '+esc(o.agent_name):'')+'</div>'+
+     (o.discount_agorot>0?'<div style="font-size:11px;color:var(--warn);margin-top:2px">הנחה '+ils(o.discount_agorot)+'</div>':'')+
+    '</div>'+
+    '<div style="text-align:left;white-space:nowrap"><div style="font-size:15.5px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot||0)+'</div>'+
+     '<div style="font-size:10.5px;font-weight:700;color:'+ordStatusColor(lab)+'">'+lab+'</div></div>'+
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg></div>';
+  });
+  el.innerHTML=h;
+  perfBindHeadStrip();
+  var rows=document.querySelectorAll('.ordrow2');
+  for(var i=0;i<rows.length;i++)rows[i].onclick=function(){openOrderDetail(this.getAttribute('data-id'));};
+ },function(){if($('tbody'))$('tbody').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינת ההזמנות</div>';});
+}
 function renderTeamSales(){
  var el=$('tbody');if(!el)return;
  var b=teamRangeBounds();
@@ -1354,10 +1455,11 @@ function renderTeamSales(){
 }
 function renderTeamActs(){
  var el=$('tbody');if(!el)return;
- el.innerHTML='<div class="card" style="padding:10px 12px;display:none"><label style="display:block"><span class="lbl">סינון לפי סוכן</span><select id="ta_agent" class="field"><option value="">כל הסוכנים</option></select></label></div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px"></div><div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
+ el.innerHTML=perfHeadStrip([['תאריך',0],['סוג',2],['סוכן',3],['לקוח',4],['סכום',5]])+'<div class="card" style="padding:10px 12px;display:none"><label style="display:block"><span class="lbl">סינון לפי סוכן</span><select id="ta_agent" class="field"><option value="">כל הסוכנים</option></select></label></div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px"></div><div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
  var b=teamRangeBounds();
  var reload=function(){loadActs('actlist',{agentId:_taAgent,kind:_taKind,showAgent:true,limit:120,from:b.from,to:b.to});};
  renderActChips('actchips',function(k){_taKind=k;reload();});
+ perfBindHeadStrip();
  loadTeamData(function(t){var sel=$('ta_agent');if(!sel)return;var rows=(t.rows||[]).filter(function(x){return x.role==='agent';});var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+x.agent_id+'">'+esc(x.name)+'</option>';});sel.innerHTML=o;sel.value=_taAgent;sel.onchange=function(){_taAgent=this.value;reload();};});
  reload();
 }
@@ -1393,9 +1495,9 @@ function renderTeamOverview(){
    _teamOv={agents:agents.map(function(x){var s2=stat[x.agent_id]||{on:0,os:0,v:0,c:0};return {name:x.name,v:s2.v,on:s2.on,os:s2.os,c:s2.c};}),tot:{v:TV,on:TON,os:TOS,c:TC}};
    var h='';agents.forEach(function(x){var s=stat[x.agent_id]||{on:0,os:0,v:0,c:0};
     h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(x.name)+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.cust_n||0)+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('ביקורים',s.v,'var(--good)')+drPill('הזמנות',s.on,'var(--acc)')+drPill('סכום',ils(s.os),'var(--accd)')+drPill('נגבה',ils(s.c),'var(--bad)')+((x.missed_cnt>0)?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+((x.aging_debt>0)?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div>'+attLine(x.agent_id)+'</div>';});
-   $('tbody').innerHTML=kpi+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין סוכנים.</div>');
+   $('tbody').innerHTML=kpi+perfHeadStrip([['סוכן',0],['ביקורים',1],['הזמנות',2],['סכום',3],['נגבה',4]])+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין סוכנים.</div>');
    var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++)ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};
-   perfSortSync();
+   perfBindHeadStrip();
   },function(){if($('tbody'))$('tbody').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
  });
 }
@@ -2248,7 +2350,7 @@ var routeEnded=false;    // set true after "end day" so the route screen shows t
 var _routeReport=null;   // last generated end-of-day report
 var _visitFrom=null;     // route name to return to after saving a visit
 function curRouteDate(){return routeDate||todayStr()}
-function tomorrowStr(){var d=new Date();d.setDate(d.getDate()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function tomorrowStr(){return ilShift(todayStr(),1);}
 function heDate(ds){try{var p=ds.split('-');return (+p[2])+'/'+(+p[1])}catch(e){return ds}}
 // build the set of customer_ids already visited on a given date (server + pending queue)
 function routeDoneSet(ds,cb){
@@ -2915,7 +3017,7 @@ function impApply(btn){
    try{localStorage.setItem('lib_imp_batch',batch)}catch(e){}
    var d=r.data||{};done('✓ '+(d.updated||0)+' מוצרים עודכנו · ניתן לבטל ממסך הייבוא');},fail);}
  else if(type==='aging'){
-  var mon=new Date();var ms=mon.getFullYear()+'-'+String(mon.getMonth()+1).padStart(2,'0')+'-01';
+  var ms=ilMonthStart(todayStr());
   sb.rpc('import_aging_apply',{p_month:ms,p_source:_imp.fname,p_rows:list}).then(function(r){
    if(r&&r.error)return fail(r.error);
    var d=r.data||{};done('✓ '+(d.lines||0)+' שורות · סה״כ '+ils(d.total_agorot||0)+(d.unmatched?' · '+d.unmatched+' לא זוהו':''));},fail);}
@@ -2931,7 +3033,7 @@ var SQ_DIMS=[{k:'product',l:'מוצר'},{k:'agent_name',l:'סוכן'},{k:'custom
  {k:'brand',l:'מותג'},{k:'category',l:'קטגוריה'},{k:'area_name',l:'אזור'},
  {k:'city',l:'עיר'},{k:'month',l:'חודש'},{k:'channel',l:'ערוץ הזמנה'}];
 var SQ_METRICS=[{k:'amount',l:'סכום מכירות'},{k:'units',l:'יחידות'},{k:'orders',l:'הזמנות'},{k:'comm',l:'מזכה עמלה'}];
-var _sq={from:'',to:'',metric:'amount',dr:'product',dc:'agent_name',q:'',piv:null,busy:false,seq:0,focusQ:false,el:'res',embed:false,agent:null,top:25};
+var _sq={from:'',to:'',metric:'amount',dr:'product',dc:'',q:'',piv:null,busy:false,seq:0,focusQ:false,el:'res',embed:false,agent:null,top:25};
 var SQ_SEP='|~|';
 function sqVal(r,k){
  if(!k)return '';
@@ -2955,13 +3057,13 @@ function sqAgg(rows,dr,dc,m){
  return {R:Object.keys(R),C:Object.keys(C),cells:cells};}
 function sqGet(a,rk,ck){var c=a.cells[rk+SQ_SEP+(ck||'')];return c?c.v:0;}
 function sqRange(kind){
- var n=new Date(),y=n.getFullYear(),mo=n.getMonth(),f,t=new Date();
- if(kind==='this'){f=new Date(y,mo,1);}
- else if(kind==='prev'){f=new Date(y,mo-1,1);t=new Date(y,mo,0);}
- else if(kind==='90'){f=new Date(Date.now()-90*86400000);}
- else{f=new Date(y,0,1);}
- var fs=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
- _sq.from=fs(f);_sq.to=fs(t);}
+ var T=todayStr(),y=+T.slice(0,4),mo=+T.slice(5,7),f,t=T;
+ if(kind==='this'){f=T.slice(0,7)+'-01';}
+ else if(kind==='prev'){var py=(mo===1)?y-1:y,pm=(mo===1)?12:mo-1;
+  f=py+'-'+String(pm).padStart(2,'0')+'-01';t=ilShift(T.slice(0,7)+'-01',-1);}
+ else if(kind==='90'){f=ilShift(T,-90);}
+ else{f=y+'-01-01';}
+ _sq.from=f;_sq.to=t;}
 function salesQView(){
  if(!isMgr()){shell('<div class="list"><div class="card">אין הרשאה</div></div>');return;}
  if(!_sq.from)sqRange('this');
@@ -3009,6 +3111,7 @@ function sqRender(){
  h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px"><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">'+mlabel+'</div><div style="font-size:19px;font-weight:800;color:var(--accd)">'+sqFmt(grand,m)+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">ערכים</div><div style="font-size:19px;font-weight:800;color:var(--goodd)">'+(P.row_count||rlist.length)+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">מוצג</div><div style="font-size:19px;font-weight:800;color:var(--warnd)">'+rlist.length+'</div></div></div>'+
   (m==='orders'?'<div style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.5">במדד «הזמנות» כל הזמנה נספרת פעם אחת בכל תא — לכן סכום התאים גדול מהסה״כ. זה נכון ומכוון.</div>':'')+'</div>';
  if(!dc){
+  if(_sq.embed)h+=perfHeadStrip([[(SQ_DIMS.filter(function(d){return d.k===dr;})[0]||{}).l,0],[mlabel,1]]);
   h+='<div class="card">';
   rlist.forEach(function(o){var v=+(o.total||0);var pct=grand?Math.round(v/grand*100):0;
    h+='<div style="padding:7px 0;border-bottom:1px solid var(--line2)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--head);flex:1;min-width:0">'+esc(o.label||o.key)+'</span><span style="font-size:13.5px;font-weight:800;color:var(--acc);white-space:nowrap">'+sqFmt(v,m)+'</span><span style="font-size:11px;color:var(--mut);width:34px;text-align:left">'+pct+'%</span></div><div style="height:5px;border-radius:20px;background:var(--line2);margin-top:5px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--acc);border-radius:20px"></i></div></div>';});
@@ -3033,7 +3136,7 @@ function sqRender(){
  }
  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="sq_share" class="cta" style="height:44px;background:#25d366">💬 שיתוף</button><button id="sq_print" class="cta" style="height:44px;background:var(--accs);color:var(--accd)">🖨️ הדפסה</button></div>';
  el.innerHTML=h;sqBind();sqBusy(!!_sq.busy);
- if(_sq.embed){perfSortSync();
+ if(_sq.embed){perfBindHeadStrip();
   var sh=document.querySelectorAll('.sqsh');
   for(var si=0;si<sh.length;si++)sh[si].onclick=function(){var i=+this.getAttribute('data-i');
    if(_perfSort.k===i)_perfSort.dir=-_perfSort.dir;else{_perfSort.k=i;_perfSort.dir=(i===0?1:-1);}
@@ -3452,7 +3555,7 @@ function openVisitPicker(){
 // ---------- TARGETS ----------
 function targetsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">יעדים ועמלות</div><div style="color:#cfe6e8;font-size:12.5px;margin-top:2px">עמלות ומדרגות · החודש</div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
+ var mStart=ilStartISO(ilMonthStart(todayStr()));
  SQ(sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at,status,approval_status').gte('created_at',mStart).not('status','in','(cancelled,draft)'),'targets:'+mStart,function(res){
   var orders=res.data||[];
   orders=orders.filter(function(o){return o.approval_status!=='rejected';});
@@ -3469,7 +3572,25 @@ function targetsView(){
   else{nextLabel=null;nextRemain=0;nextRate=3}
   var rateBadge=rate>0?'<span class="badge b-good">עמלה פעילה '+rate+'%</span>':'<span class="badge b-warn">טרם הופעלה עמלה</span>';
   function milestone(label,amt,prog,active,earnedNote){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">'+label+'</div>'+(active?'<span class="badge b-good">✓ הושג</span>':'<span class="badge b-mut">'+prog+'% מהיעד</span>')+'</div><div class="bar"><div style="width:'+prog+'%;'+(active?'background:var(--good)':'')+'"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><span style="color:var(--mut)">'+ils(achieved)+' / '+ils(amt)+'</span><span style="color:var(--mut)">'+earnedNote+'</span></div></div>'}
-  var h='<div class="card" style="background:var(--surq)"><div style="font-size:12px;color:var(--mut);font-weight:700">מכירות מזכות החודש (מוצרי בית)</div><div style="font-size:28px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin:3px 0">'+ils(achieved)+'</div>'+rateBadge+'</div>'+
+  var _pctT2=Math.min(100,Math.round(achieved/T2*1000)/10);
+  var _wdDone=workDaysDone(),_wdLeft=workDaysLeft(),_wdAll=_wdDone+_wdLeft;
+  var _pace=(_wdDone>0)?Math.round(achieved/_wdDone*_wdAll):0;
+  var _perDay=(_wdLeft>0)?Math.max(0,Math.ceil((T2-achieved)/_wdLeft)):0;
+  var _monthName=new Date().toLocaleDateString('he-IL',{month:'long',timeZone:IL_TZ});
+  var h='<div class="card" style="background:var(--surq)"><div style="font-size:12px;color:var(--mut);font-weight:700">מכירות מזכות החודש (מוצרי בית)</div><div style="font-size:28px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin:3px 0">'+ils(achieved)+'</div>'+rateBadge+
+   '<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px"><span style="font-size:12.5px;font-weight:800;color:var(--head)">התקדמות ליעד הראשון</span><span style="font-size:19px;font-weight:800;color:'+(achieved>=T2?'var(--good)':'var(--acc)')+'">'+_pctT2+'%</span></div>'+
+   '<div class="bar" style="height:10px"><div style="width:'+Math.min(100,_pctT2)+'%;background:'+(achieved>=T2?'var(--good)':'var(--acc)')+'"></div></div>'+
+   '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:5px"><span>'+ils(achieved)+'</span><span>'+ils(T2)+'</span></div></div>'+
+   '</div>'+
+   '<div class="card" style="background:var(--accs)"><div style="font-size:12.5px;font-weight:800;color:var(--accd);margin-bottom:6px">📈 קצב '+esc(_monthName)+'</div>'+
+   '<div style="font-size:12px;color:var(--accd);line-height:1.85">'+
+    'עברו <b>'+_wdDone+'</b> ימי עבודה, נותרו <b>'+_wdLeft+'</b>'+
+    '<br>בקצב הנוכחי החודש ייסגר על <b>'+ils(_pace)+'</b> מכירות מזכות'+
+    (achieved>=T2?'<br><span style="color:var(--good);font-weight:800">✓ היעד הראשון הושג</span>'
+      :(_wdLeft>0?('<br>כדי להגיע ליעד צריך <b>'+ils(_perDay)+'</b> ליום עבודה'):'<br>החודש נגמר'))+
+   '</div>'+
+   (_wdDone<=3?'<div style="font-size:11px;color:var(--warn);margin-top:7px;line-height:1.6">⚠︎ עברו רק '+_wdDone+' ימי עבודה החודש — האחוז עדיין לא מייצג חודש מלא.</div>':'')+
+   '</div>'+
    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div class="card" style="background:var(--goods)"><div style="font-size:12px;color:var(--goodd);font-weight:700">עמלה צפויה כרגע</div><div style="font-size:22px;font-weight:700;color:var(--good);letter-spacing:-.01em;margin-top:2px">'+ils(commission)+'</div><div style="font-size:11px;color:var(--goodd);margin-top:1px">'+(rate>0?rate+'% ממוצרי הבית':'עדיין 0%')+'</div></div><div class="card" style="background:var(--accs)"><div style="font-size:12px;color:var(--accd);font-weight:700">סה״כ מכירות החודש</div><div style="font-size:22px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin-top:2px">'+ils(sales)+'</div><div style="font-size:11px;color:var(--accd);margin-top:1px">'+orders.length+' הזמנות</div></div></div>'+
    (nextLabel?'<div class="card" style="background:var(--warns)"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🎯 עוד '+ils(nextRemain)+' '+nextLabel+'</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">כשתעברי את הסף, כל המכירות המזכות יזכו ב-'+nextRate+'% — ברגע החצייה זה '+ils(Math.round((achieved<T2?T2:T3)*nextRate/100))+' לפחות, ועולה עם כל מכירה נוספת</div></div>':'<div class="card" style="background:var(--goods)"><div style="font-size:12.5px;color:var(--good);font-weight:700">🏆 עברת את יעד ה-3%! עמלה מלאה על כל המכירות המזכות.</div></div>')+
    milestone('יעד ראשון · 75,000 ₪ (2%)',T2,prog2,achieved>=T2,achieved>=T2?'עמלה: '+ils(Math.round(achieved*0.02)):'2% על הכל')+
