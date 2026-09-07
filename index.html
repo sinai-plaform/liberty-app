@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-58';
+var APP_VERSION='2026-08-26-59';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -700,7 +700,9 @@ function loadActs(elId,opts){
  SQ(q,key,function(res){
   var d=(res&&res.data)||[];var el=$(elId);if(!el)return;
   if(!d.length){if(elId==='actlist')_lastActs=[];el.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:8px 2px">אין פעולות להצגה.</div>';return;}
-  if(elId==='actlist')_lastActs=d;
+  if(elId==='actlist'&&_perfSort.k!=null)d=perfSortList(d,function(a){var ts=a.ts?new Date(a.ts).getTime():0;
+   return [ts,ts,a.kind||'',a.agent_name||'',a.customer_name||'',(a.amount_agorot||0)][_perfSort.k];});
+  if(elId==='actlist'){_lastActs=d;perfSortSync();}
   var hh='';d.forEach(function(a){hh+=actRow(a,opts.showAgent)});el.innerHTML=hh;
   var rs=el.querySelectorAll('.actrow');for(var i=0;i<rs.length;i++){rs[i].onclick=function(){actDetail(this.getAttribute('data-kind'),this.getAttribute('data-ref'),this.getAttribute('data-cust'));};}
  });
@@ -1105,6 +1107,44 @@ function openAreaAssign(){
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 var _teamTab='overview',_teamRange={mode:'today',from:null,to:null};
 var _teamOv=null,_lastActs=null;
+var _perfSort={k:null,dir:-1};
+function perfCols(){
+ if(_teamTab==='sales'){
+  var P=_sq.piv,drl=(SQ_DIMS.filter(function(d){return d.k===_sq.dr;})[0]||{}).l||'ערך';
+  var ml=(SQ_METRICS.filter(function(x){return x.k===_sq.metric;})[0]||{}).l||'מדד';
+  if(!P||!_sq.dc)return [drl,ml];
+  return [drl].concat((P.cols||[]).slice(0,12).map(function(c){return c.label||c.key;})).concat(['סה״כ']);
+ }
+ if(_teamTab==='overview')return ['סוכן','ביקורים','הזמנות','סכום מכירות','נגבה'];
+ return ['תאריך','שעה','סוג','סוכן','לקוח','סכום'];
+}
+function perfSortSync(){
+ var sel=$('tm_sort');if(sel){
+  var cols=perfCols(),cur=(_perfSort.k==null)?'':String(_perfSort.k);
+  var o='<option value="">מיון: ברירת מחדל</option>';
+  cols.forEach(function(c,i){o+='<option value="'+i+'">מיון: '+esc(String(c))+'</option>';});
+  sel.innerHTML=o;
+  sel.value=(_perfSort.k!=null&&_perfSort.k<cols.length)?cur:'';
+  if(sel.value==='')_perfSort.k=null;
+ }
+ var b=$('tm_dir');if(b){b.textContent=(_perfSort.dir===1?'▲ עולה':'▼ יורד');b.style.opacity=(_perfSort.k==null)?'.45':'1';}
+}
+function perfCmp(a,b){
+ var d=_perfSort.dir;
+ var ea=(a==null||a===''),eb=(b==null||b==='');
+ if(ea&&eb)return 0;
+ if(ea)return 1;   /* blanks always last, in both directions */
+ if(eb)return -1;
+ var na=(typeof a==='number'&&isFinite(a)),nb=(typeof b==='number'&&isFinite(b));
+ if(na&&nb)return (a-b)*d;
+ if(na)return -1;  /* numbers before text, independent of direction */
+ if(nb)return 1;
+ return String(a).localeCompare(String(b),'he',{numeric:true})*d;
+}
+function perfSortList(list,val){
+ if(_perfSort.k==null)return list;
+ return list.slice().sort(function(x,y){return perfCmp(val(x),val(y));});
+}
 function perfDay(iso){if(!iso)return todayStr();var d=new Date(iso);if(isNaN(d))return String(iso).slice(0,10);
  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function perfPeriodLabel(){var b=teamRangeBounds();var f=perfDay(b.from),t=b.to?perfDay(b.to):todayStr();return (f===t)?f:(f+' – '+t);}
@@ -1282,12 +1322,16 @@ function teamView(){
  var tab=function(t,l){var on=_teamTab===t;return '<button class="ttab" data-t="'+t+'" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;background:'+(on?'#fff':'transparent')+';color:'+(on?'var(--accd)':'var(--acc)')+'">'+l+'</button>';};
  var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('sales','מכירות')+tab('acts','פעילות')+'</div>';
  var agentBar='<div style="margin-top:7px"><select id="tm_agent" class="field" style="height:38px;font-size:13px"><option value="">כל הסוכנים</option></select></div>';
- var expBar='<div style="display:flex;gap:8px;margin-top:8px"><button id="tm_pdf" class="chip" style="flex:1;background:var(--accs);color:var(--accd);font-weight:800">📄 PDF</button><button id="tm_xls" class="chip" style="flex:1;background:var(--goods);color:var(--goodd);font-weight:800">📊 אקסל</button></div>';
+ var expBar='<div style="display:flex;gap:8px;margin-top:8px"><select id="tm_sort" class="field" style="flex:2;height:36px;font-size:12.5px;padding:0 8px"><option value="">מיון: ברירת מחדל</option></select><button id="tm_dir" class="chip" style="flex:none;min-width:76px;font-weight:800">▼ יורד</button></div>'+
+  '<div style="display:flex;gap:8px;margin-top:8px"><button id="tm_pdf" class="chip" style="flex:1;background:var(--accs);color:var(--accd);font-weight:800">📄 PDF</button><button id="tm_xls" class="chip" style="flex:1;background:var(--goods);color:var(--goodd);font-weight:800">📊 אקסל</button></div>';
  $('res').innerHTML='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+rchips+'</div>'+custom+agentBar+tabs+expBar+'<div id="tbody" style="margin-top:6px"><div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div></div>';
  var rc=document.querySelectorAll('.trchip');for(var i=0;i<rc.length;i++)rc[i].onclick=function(){_teamRange.mode=this.getAttribute('data-r');if(_teamRange.mode!=='custom'){teamView();}else{var s=$('tcustom');if(s)s.style.display='flex';var all=document.querySelectorAll('.trchip');for(var j=0;j<all.length;j++)all[j].classList.toggle('on',all[j].getAttribute('data-r')==='custom');}};
- var tc=document.querySelectorAll('.ttab');for(var k=0;k<tc.length;k++)tc[k].onclick=function(){_teamTab=this.getAttribute('data-t');teamView();};
+ var tc=document.querySelectorAll('.ttab');for(var k=0;k<tc.length;k++)tc[k].onclick=function(){_teamTab=this.getAttribute('data-t');_perfSort.k=null;teamView();};
  if($('tc_from'))$('tc_from').onchange=function(){_teamRange.from=this.value;if(_teamRange.to)loadTeamTab();};
  if($('tc_to'))$('tc_to').onchange=function(){_teamRange.to=this.value;if(_teamRange.from)loadTeamTab();};
+ if($('tm_sort'))$('tm_sort').onchange=function(){var v=this.value;_perfSort.k=(v==='')?null:+v;loadTeamTab();};
+ if($('tm_dir'))$('tm_dir').onclick=function(){if(_perfSort.k==null){toast('בחרי קודם לפי מה למיין');return;}_perfSort.dir=-_perfSort.dir;perfSortSync();loadTeamTab();};
+ perfSortSync();
  if($('tm_pdf'))$('tm_pdf').onclick=function(){perfExportPdf();};
  if($('tm_xls'))$('tm_xls').onclick=function(){perfExportXlsx();};
  loadTeamData(function(t){
@@ -1344,11 +1388,14 @@ function renderTeamOverview(){
    var nIn=Object.keys(checkedIn).length;
    var kpi='<div class="card" style="background:#fbfaf8"><div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">'+teamRangeLabel()+' · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',nag,'var(--acc)')+drPill(isToday?'עלו היום':'עלו',nIn,'var(--acc2)')+drPill('ביקורים',TV,'var(--good)')+drPill('הזמנות',TON,'var(--acc)')+drPill('סכום',ils(TOS),'var(--accd)')+drPill('נגבה',ils(TC),'var(--bad)')+'</div></div>';
    agents.sort(function(a,b2){return ((stat[b2.agent_id]&&stat[b2.agent_id].os)||0)-((stat[a.agent_id]&&stat[a.agent_id].os)||0);});
+   if(_perfSort.k!=null)agents=perfSortList(agents,function(x){var s3=stat[x.agent_id]||{on:0,os:0,v:0,c:0};
+    return [x.name,s3.v,s3.on,s3.os,s3.c][_perfSort.k];});
    _teamOv={agents:agents.map(function(x){var s2=stat[x.agent_id]||{on:0,os:0,v:0,c:0};return {name:x.name,v:s2.v,on:s2.on,os:s2.os,c:s2.c};}),tot:{v:TV,on:TON,os:TOS,c:TC}};
    var h='';agents.forEach(function(x){var s=stat[x.agent_id]||{on:0,os:0,v:0,c:0};
     h+='<div class="card agrow" data-id="'+x.agent_id+'" style="cursor:pointer"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((x.name||'·').charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--head)">'+esc(x.name)+(x.active?'':' <span class="badge b-mut">לא פעיל</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.cust_n||0)+' לקוחות</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+drPill('ביקורים',s.v,'var(--good)')+drPill('הזמנות',s.on,'var(--acc)')+drPill('סכום',ils(s.os),'var(--accd)')+drPill('נגבה',ils(s.c),'var(--bad)')+((x.missed_cnt>0)?drPill('פוספסו',x.missed_cnt,'var(--warn)'):'')+((x.aging_debt>0)?drPill('חוב >90',ils(x.aging_debt),'var(--bad)'):'')+'</div>'+attLine(x.agent_id)+'</div>';});
    $('tbody').innerHTML=kpi+(h||'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין סוכנים.</div>');
    var ar=document.querySelectorAll('.agrow');for(var i=0;i<ar.length;i++)ar[i].onclick=function(){openAgentDash(this.getAttribute('data-id'));};
+   perfSortSync();
   },function(){if($('tbody'))$('tbody').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
  });
 }
@@ -2947,6 +2994,15 @@ function sqRender(){
   '<div style="margin-top:9px"><span class="lbl">סינון חופשי</span><input id="sq_q" class="field" style="margin-top:4px" placeholder="מוצר, מק״ט, לקוח, מותג, אזור…" value="'+esc(_sq.q)+'"></div>'+
   '<div id="sq_busy" style="display:none;font-size:11.5px;color:var(--acc);font-weight:700;padding-top:8px">מחשב…</div></div>';
  var rlist=P.rows||[],grand=+(P.grand||0);
+ if(_sq.embed&&_perfSort.k!=null){
+  var _c0=(P.cols||[]).slice(0,12);
+  rlist=perfSortList(rlist,function(r){
+   var k=_perfSort.k;
+   if(k===0)return r.label||r.key;
+   if(!_sq.dc||k>_c0.length)return +(r.total||0);
+   return sqCell(r.key,(_c0[k-1]||{}).key);});
+  P.rows=rlist;
+ }
  if(!rlist.length){el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px">אין מכירות בטווח שנבחר.</div>';sqBind();return;}
  var dr=_sq.dr,dc=_sq.dc;
  var mlabel=esc((SQ_METRICS.filter(function(x){return x.k===m;})[0]||{}).l);
@@ -2960,9 +3016,9 @@ function sqRender(){
   h+='</div>';
  } else {
   var clist=(P.cols||[]).slice(0,12);
-  h+='<div class="card" style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%"><tr><th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--line);position:sticky;right:0;background:#fff">'+esc((SQ_DIMS.filter(function(d){return d.k===dr;})[0]||{}).l)+'</th>';
-  clist.forEach(function(c){h+='<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11.5px">'+esc(c.label||c.key)+'</th>';});
-  h+='<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);color:var(--acc)">סה״כ</th></tr>';
+  h+='<div class="card" style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%"><tr><th class="sqsh" data-i="0" style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--line);position:sticky;right:0;background:#fff;cursor:pointer">'+esc((SQ_DIMS.filter(function(d){return d.k===dr;})[0]||{}).l)+(_perfSort.k===0?(_perfSort.dir===1?' ▲':' ▼'):'')+'</th>';
+  clist.forEach(function(c,ci){h+='<th class="sqsh" data-i="'+(ci+1)+'" style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11.5px;cursor:pointer">'+esc(c.label||c.key)+(_perfSort.k===ci+1?(_perfSort.dir===1?' ▲':' ▼'):'')+'</th>';});
+  h+='<th class="sqsh" data-i="'+(clist.length+1)+'" style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);color:var(--acc);cursor:pointer">סה״כ'+(_perfSort.k===clist.length+1?(_perfSort.dir===1?' ▲':' ▼'):'')+'</th></tr>';
   rlist.forEach(function(o){
    h+='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--line2);font-weight:700;position:sticky;right:0;background:#fff;max-width:190px;overflow:hidden;text-overflow:ellipsis">'+esc(o.label||o.key)+'</td>';
    clist.forEach(function(c){var v=sqCell(o.key,c.key);
@@ -2976,7 +3032,12 @@ function sqRender(){
   h+='</div>';
  }
  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="sq_share" class="cta" style="height:44px;background:#25d366">💬 שיתוף</button><button id="sq_print" class="cta" style="height:44px;background:var(--accs);color:var(--accd)">🖨️ הדפסה</button></div>';
- el.innerHTML=h;sqBind();sqBusy(!!_sq.busy);}
+ el.innerHTML=h;sqBind();sqBusy(!!_sq.busy);
+ if(_sq.embed){perfSortSync();
+  var sh=document.querySelectorAll('.sqsh');
+  for(var si=0;si<sh.length;si++)sh[si].onclick=function(){var i=+this.getAttribute('data-i');
+   if(_perfSort.k===i)_perfSort.dir=-_perfSort.dir;else{_perfSort.k=i;_perfSort.dir=(i===0?1:-1);}
+   sqRender();};}}
 function sqText(){
  var P=_sq.piv||{rows:[],grand:0},m=_sq.metric;
  var ml=(SQ_METRICS.filter(function(x){return x.k===m;})[0]||{}).l;
