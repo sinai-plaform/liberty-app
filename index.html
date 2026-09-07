@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-62';
+var APP_VERSION='2026-08-26-63';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -4213,18 +4213,17 @@ function bindProdCommResync(){
 }
 function prodAdminView(){
  if(!isMgr()){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="color:#fff;font-size:19px;font-weight:700">ניהול מוצרים</div></div><div class="list"><div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px">אין לך הרשאת ניהול.</div></div>');bindGo();return;}
- shell('<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700;flex:1">ניהול מוצרים</div><button id="panew" style="background:#fff;color:var(--accd);border:none;border-radius:10px;height:34px;padding:0 13px;font-size:13px;font-weight:700;cursor:pointer">+ מוצר</button></div><div class="search" style="margin-top:11px;background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.25)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dcecein" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="paq" placeholder="שם מוצר או מק״ט…" style="color:#fff"></div><div style="margin-top:9px"><button id="pacat" style="width:100%;background:rgba(255,255,255,.16);border:none;border-radius:10px;height:38px;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">📄 ייבוא קטלוג אוטומטי (PDF)</button></div></div><div class="list" id="pares"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700;flex:1">ניהול מוצרים</div><button id="panew" style="background:#fff;color:var(--accd);border:none;border-radius:10px;height:34px;padding:0 13px;font-size:13px;font-weight:700;cursor:pointer">+ מוצר</button></div><div class="search" style="margin-top:11px;background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.25)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dcecein" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="paq" placeholder="שם מוצר או מק״ט…" style="color:#fff"></div><div style="margin-top:9px"><button id="pacat" style="width:100%;background:rgba(255,255,255,.16);border:none;border-radius:10px;height:38px;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">📄 ייבוא קטלוג אוטומטי (PDF)</button></div></div><div id="pcbanner" style="padding:12px 16px 0"></div><div class="list" id="pares"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();
  sb.rpc('products_unclassified').then(function(r){
-  if(route!=='prodadmin')return;var d=(r&&r.data)||[];if(!d.length)return;
-  var n=0,sold=0;d.forEach(function(g){n+=g.n;sold+=(+g.sold_agorot||0);});
-  var el=$('res');if(!el)return;
-  var card=document.createElement('div');card.className='card';
-  card.style.cssText='background:var(--warns);border:1px solid #e7c9a0;cursor:pointer';
-  card.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--warn)">⚠︎ '+n+' מוצרים ללא סיווג עמלה</div><div style="font-size:11.5px;color:var(--warn);line-height:1.6;margin-top:4px">הם מתנהגים כאילו אינם מזכים עמלה — כבר נמכרו מהם '+ils(sold)+'. הקישי לסיווג ›</div>';
-  card.onclick=function(){route='prodcomm';render();};
-  el.insertBefore(card,el.firstChild);
- },function(){});
+  if(route!=='prodadmin')return;
+  var el=$('pcbanner');if(!el)return;
+  if(r&&r.error){el.innerHTML='<div class="card" style="background:var(--bads);color:var(--bad);font-size:12px">לא ניתן לבדוק סיווג מוצרים: '+esc(r.error.message)+'</div>';return;}
+  var d=(r&&r.data)||[];if(!d.length){el.innerHTML='';return;}
+  var n=0,sold=0;d.forEach(function(g){n+=(+g.n||0);sold+=(+g.sold_agorot||0);});
+  el.innerHTML='<div class="card pcban" style="background:var(--warns);border:1px solid #e7c9a0;cursor:pointer;margin:0"><div style="display:flex;align-items:center;gap:9px"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;color:var(--warn)">⚠︎ '+n+' מוצרים ללא סיווג עמלה</div><div style="font-size:11.5px;color:var(--warn);line-height:1.6;margin-top:3px">הם מתנהגים כאילו אינם מזכים עמלה'+(sold>0?(' — כבר נמכרו מהם '+ils(sold)):'')+'. הקישי לסיווג ›</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b07d2a" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg></div></div>';
+  var b=el.querySelector('.pcban');if(b)b.onclick=function(){route='prodcomm';render();};
+ },function(e){var el=$('pcbanner');if(el)el.innerHTML='<div class="card" style="background:var(--bads);color:var(--bad);font-size:12px">לא ניתן לבדוק סיווג מוצרים'+((e&&e.message)?': '+esc(e.message):'')+'</div>';});
  if($('panew'))$('panew').onclick=function(){editProduct({__new:true});};
  if($('pacat'))$('pacat').onclick=catalogImport;
  var pcache=[];
