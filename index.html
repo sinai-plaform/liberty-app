@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-55';
+var APP_VERSION='2026-08-26-56';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -779,7 +779,7 @@ function myStatsView(){
   h+='<div style="margin-top:8px"><div style="font-size:13.5px;font-weight:800;color:var(--head);padding:6px 2px 2px">🕘 היסטוריית פעולות</div><div style="font-size:11px;color:var(--mut);padding:0 2px 4px">לחצי על פעולה לצפייה בפירוט</div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px"></div><div id="actlist" style="padding:0"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div></div>';
   $('res').innerHTML=h;bindGo();
   var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
-  SQ(sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart),'mystgt:'+mStart,function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
+  SQ(sb.from('liberty_my_orders').select('commissionable_agorot,created_at').gte('created_at',mStart).not('status','in','(cancelled,draft)'),'mystgt:'+mStart,function(res){var ach=0;(res.data||[]).forEach(function(o){ach+=o.commissionable_agorot||0;});var T2=7500000,T3=8500000;var tgt=ach<T2?T2:T3;var pct=Math.min(100,Math.round(ach/tgt*100));if($('tgtbar')){$('tgtbar').style.width=pct+'%';$('tgtnum').textContent=ils(ach)+' / '+ils(tgt);$('tgtpct').textContent=pct+'% מהיעד';$('tgtdays').textContent='נותרו '+workDaysLeft()+' ימי עבודה';}});
   var _mak='';renderActChips('actchips',function(k){_mak=k;loadActs('actlist',{kind:k,showAgent:false});});
   loadActs('actlist',{kind:'',showAgent:false});
  });
@@ -1872,7 +1872,25 @@ function cartTotals(){var sub=0,comm=0;for(var i=0;i<cart.items.length;i++){var 
   }
  }
  if(disc>sub)disc=sub;if(disc<0)disc=0;
- var netsub=sub-disc;var vat=Math.round(netsub*VAT);var comm2=sub>0?Math.round(comm*netsub/sub):comm;
+ var netsub=sub-disc;var vat=Math.round(netsub*VAT);
+ // commissionable base after discount: a discount aimed at specific lines only reduces
+ // the commissionable base if those lines are themselves commissionable.
+ var comm2;
+ if(!D||disc<=0){comm2=comm;}
+ else if(D.mode==='lines'&&D.items&&D.items.length){
+  var totByC={},isC={};
+  for(var ci=0;ci<cart.items.length;ci++){var s2=cart.items[ci].sku;totByC[s2]=(totByC[s2]||0)+cart.items[ci].price*cart.items[ci].qty;if(cart.items[ci].comm)isC[s2]=true;}
+  var cDisc=0;
+  D.items.forEach(function(e){if(!isC[e.sku])return;var lt=totByC[e.sku]||0;if(!lt||!(e.value>0))return;
+   cDisc+=D.kind==='pct'?Math.round(lt*Math.min(e.value,100)/100):Math.min(Math.round(e.value),lt);});
+  comm2=Math.max(0,comm-cDisc);
+ }
+ else if(D.mode==='line'&&D.sku){
+  var lt2=0,isC2=false;
+  for(var cj=0;cj<cart.items.length;cj++){if(cart.items[cj].sku===D.sku){lt2+=cart.items[cj].price*cart.items[cj].qty;if(cart.items[cj].comm)isC2=true;}}
+  comm2=isC2?Math.max(0,comm-Math.min(disc,lt2)):comm;
+ }
+ else{comm2=sub>0?Math.round(comm*netsub/sub):comm;}
  return {sub:sub,disc:disc,netsub:netsub,vat:vat,total:netsub+vat,comm:comm2,freeq:bi.total,bi:bi}}
 function discLabel(){var D=cart.discount;if(!D)return '';if(D.mode==='lines'&&D.items){var n=D.items.filter(function(e){return e.value>0;}).length;return n?('הטבת סוכן על '+n+' מוצרים'):'';}if(!D.value)return '';var v=D.kind==='pct'?(D.value+'%'):ils(Math.round(D.value));var scope=D.mode==='line'?('על '+(D.lineName||D.sku)):'על כל ההזמנה';return 'הטבת סוכן '+v+' '+scope;}
 function ordersView(){
@@ -3279,8 +3297,9 @@ function openVisitPicker(){
 function targetsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">יעדים ועמלות</div><div style="color:#cfe6e8;font-size:12.5px;margin-top:2px">עמלות ומדרגות · החודש</div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var mStart=new Date();mStart=new Date(mStart.getFullYear(),mStart.getMonth(),1).toISOString();
- SQ(sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at').gte('created_at',mStart),'targets:'+mStart,function(res){
+ SQ(sb.from('liberty_my_orders').select('commissionable_agorot,total_agorot,created_at,status,approval_status').gte('created_at',mStart).not('status','in','(cancelled,draft)'),'targets:'+mStart,function(res){
   var orders=res.data||[];
+  orders=orders.filter(function(o){return o.approval_status!=='rejected';});
   var achieved=0,sales=0;orders.forEach(function(o){achieved+=o.commissionable_agorot||0;sales+=o.total_agorot||0});
   var T2=7500000,T3=8500000; // 75K -> 2%, 85K -> 3%
   var rate=commRate(achieved);
@@ -3293,10 +3312,10 @@ function targetsView(){
   else if(achieved<T3){nextLabel='לעמלת 3%';nextRemain=T3-achieved;nextRate=3}
   else{nextLabel=null;nextRemain=0;nextRate=3}
   var rateBadge=rate>0?'<span class="badge b-good">עמלה פעילה '+rate+'%</span>':'<span class="badge b-warn">טרם הופעלה עמלה</span>';
-  function milestone(label,amt,prog,active,earnedNote){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">'+label+'</div>'+(active?'<span class="badge b-good">✓ הושג</span>':'<span class="badge b-mut">'+prog+'%</span>')+'</div><div class="bar"><div style="width:'+prog+'%;'+(active?'background:var(--good)':'')+'"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><span style="color:var(--mut)">'+ils(achieved)+' / '+ils(amt)+'</span><span style="color:var(--mut)">'+earnedNote+'</span></div></div>'}
+  function milestone(label,amt,prog,active,earnedNote){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">'+label+'</div>'+(active?'<span class="badge b-good">✓ הושג</span>':'<span class="badge b-mut">'+prog+'% מהיעד</span>')+'</div><div class="bar"><div style="width:'+prog+'%;'+(active?'background:var(--good)':'')+'"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><span style="color:var(--mut)">'+ils(achieved)+' / '+ils(amt)+'</span><span style="color:var(--mut)">'+earnedNote+'</span></div></div>'}
   var h='<div class="card" style="background:var(--surq)"><div style="font-size:12px;color:var(--mut);font-weight:700">מכירות מזכות החודש (מוצרי בית)</div><div style="font-size:28px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin:3px 0">'+ils(achieved)+'</div>'+rateBadge+'</div>'+
    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div class="card" style="background:var(--goods)"><div style="font-size:12px;color:var(--goodd);font-weight:700">עמלה צפויה כרגע</div><div style="font-size:22px;font-weight:700;color:var(--good);letter-spacing:-.01em;margin-top:2px">'+ils(commission)+'</div><div style="font-size:11px;color:var(--goodd);margin-top:1px">'+(rate>0?rate+'% ממוצרי הבית':'עדיין 0%')+'</div></div><div class="card" style="background:var(--accs)"><div style="font-size:12px;color:var(--accd);font-weight:700">סה״כ מכירות החודש</div><div style="font-size:22px;font-weight:700;color:var(--acc);letter-spacing:-.01em;margin-top:2px">'+ils(sales)+'</div><div style="font-size:11px;color:var(--accd);margin-top:1px">'+orders.length+' הזמנות</div></div></div>'+
-   (nextLabel?'<div class="card" style="background:var(--warns)"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🎯 עוד '+ils(nextRemain)+' '+nextLabel+'</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">כשתעברי, כל המכירות המזכות יזכו ב-'+nextRate+'% = '+ils(Math.round(achieved*nextRate/100))+' (על הבסיס הנוכחי)</div></div>':'<div class="card" style="background:var(--goods)"><div style="font-size:12.5px;color:var(--good);font-weight:700">🏆 עברת את יעד ה-3%! עמלה מלאה על כל המכירות המזכות.</div></div>')+
+   (nextLabel?'<div class="card" style="background:var(--warns)"><div style="font-size:12.5px;color:var(--warn);font-weight:700">🎯 עוד '+ils(nextRemain)+' '+nextLabel+'</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">כשתעברי את הסף, כל המכירות המזכות יזכו ב-'+nextRate+'% — ברגע החצייה זה '+ils(Math.round((achieved<T2?T2:T3)*nextRate/100))+' לפחות, ועולה עם כל מכירה נוספת</div></div>':'<div class="card" style="background:var(--goods)"><div style="font-size:12.5px;color:var(--good);font-weight:700">🏆 עברת את יעד ה-3%! עמלה מלאה על כל המכירות המזכות.</div></div>')+
    milestone('יעד ראשון · 75,000 ₪ (2%)',T2,prog2,achieved>=T2,achieved>=T2?'עמלה: '+ils(Math.round(achieved*0.02)):'2% על הכל')+
    milestone('יעד שני · 85,000 ₪ (3%)',T3,prog3,achieved>=T3,achieved>=T3?'עמלה: '+ils(Math.round(achieved*0.03)):'3% על הכל')+
    '<div class="card" style="background:var(--accs);font-size:12.5px;color:var(--accd);line-height:1.5">מדרגות העמלה: מתחת ל-75,000 ₪ אין עמלה · מ-75,000 ₪ → 2% · מעל 85,000 ₪ → 3%. העמלה מחושבת ממוצרי הבית בלבד (פראש גאם, MO, ווטס וכו׳) — לא שוורץ/דורקס.</div>';
