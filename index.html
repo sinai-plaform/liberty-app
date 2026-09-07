@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-54';
+var APP_VERSION='2026-08-26-55';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -625,6 +625,7 @@ function boot(){
   setTimeout(checkUpdate,8000);setInterval(checkUpdate,5*60*1000);
   loadReminders(startReminderScheduler);
   setTimeout(autoPushSubscribe,4000);
+  loadDiscCap();loadAgingFresh();if(isMgr())loadPulse();
  };
  locLoad(function(){
   kvGet('snap:ts',function(ts){if(ts)OFF.lastSync=ts;
@@ -799,7 +800,7 @@ function loadTeamData(cb){
 function mgrQa(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
 function mgrHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=mgrQa('team','צוות','stats')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('approvals','אישורים','reports')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('import','ייבוא נתונים','admin')+mgrQa('salesq','שאילתות מכירות','stats')+mgrQa('reports','דוחות','reports');
+ var qa=mgrQa('team','ביצועים','stats')+mgrQa('approvals','אישורים','reports')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('import','ייבוא נתונים','admin')+mgrQa('alerts','התראות','clock');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -821,7 +822,8 @@ function mgrHomeView(){
   var tOrdN=0,tOrdSum=0,tVis=0,tCollToday=0,activeN=0,tMissed=0,tAging=0;
   rows.forEach(function(x){tOrdN+=+x.ord_today_n||0;tOrdSum+=+x.ord_today_sum||0;tVis+=+x.vis_today||0;tCollToday+=+x.coll_today||0;tMissed+=+x.missed_cnt||0;tAging+=+x.aging_debt||0;if(x.active&&x.role==='agent')activeN++;});
   var alertRow=(tMissed>0||tAging>0)?('<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)">'+(tMissed>0?drPill('ביקורים שפוספסו',tMissed,'var(--warn)'):'')+(tAging>0?drPill('חוב מזדקן >90 יום',ils(tAging),'var(--bad)'):'')+'</div>'):'';
-  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',activeN,'var(--acc)')+drPill('ביקורים',tVis,'var(--good)')+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('נגבה (יומי)',ils(tCollToday),'var(--bad)')+'</div>'+alertRow;
+  if($('mgrkpi'))$('mgrkpi').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:700;margin-bottom:8px">היום · כל הצוות</div><div style="display:flex;gap:9px;flex-wrap:wrap">'+drPill('סוכנים',activeN,'var(--acc)')+drPill('ביקורים',tVis,'var(--good)')+drPill('הזמנות',tOrdN,'var(--acc)')+drPill('סכום',ils(tOrdSum),'var(--accd)')+drPill('נגבה (יומי)',ils(tCollToday),'var(--bad)')+'</div>'+alertRow+'<div id="mgrpulse"></div>';
+  renderMgrPulse();if(!_pulse)loadPulse();
   agents.sort(function(a,b){return (+b.ord_month_sum)-(+a.ord_month_sum);});
   var h='';
   if(!agents.length)h='<div class="card" style="color:var(--mut);font-size:12.5px;text-align:center;padding:16px">אין סוכנים להצגה.</div>';
@@ -862,7 +864,7 @@ function loadAgents(){
   var roleHe={agent:'סוכן',manager:'מנהל',office:'משרד',admin:'אדמין'};
   var h='';
   d.forEach(function(a){var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
-   h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
+   h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+(a.role==='agent'?(a.max_discount_pct!=null?' · תקרה '+(+a.max_discount_pct)+'%':' · ללא תקרה'):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
   $('res').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' עובדים · הקישי לעריכה. שיוך אזורים נעשה מתוך כרטיס העובד (לתפקיד סוכן).</div>'+h;
   var it=document.querySelectorAll('.agedit');for(var i=0;i<it.length;i++){it[i].onclick=function(){openAgentEditor(window.__agentsById[this.getAttribute('data-id')]);};}
  },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה: '+esc((e&&e.message)||'')+'</div>';});
@@ -965,6 +967,7 @@ function openAgentEditor(a){
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">'+(isNew?'סוכן חדש':'עריכת '+esc(a.name))+'</b><span id="agx" style="font-size:24px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
   '<div class="card"><label style="display:block"><span class="lbl">שם מלא</span><input id="ag_name" class="field" value="'+(a?esc(a.name):'')+'"></label><div style="display:flex;gap:9px;margin-top:10px"><label style="flex:1"><span class="lbl">קוד עובד'+(isNew?'':' (קבוע)')+'</span><input id="ag_code" class="field" inputmode="numeric" value="'+(a?esc(a.employee_code||''):'')+'"'+(isNew?'':' disabled')+'></label><label style="flex:1"><span class="lbl">טלפון</span><input id="ag_phone" class="field" inputmode="tel" value="'+(a?esc(a.phone||''):'')+'"></label></div></div>'+
   '<div class="card"><div style="display:flex;gap:9px"><label style="flex:1"><span class="lbl">תפקיד</span><select id="ag_role" class="field">'+roleOpts+'</select></label><label style="flex:1"><span class="lbl">כפוף למנהל</span><select id="ag_mgr" class="field">'+mgrOpts+'</select></label></div></div>'+
+  '<div class="card" id="ag_cap_sec" style="display:'+(((a&&a.role==='agent')||isNew)?'block':'none')+'"><label style="display:block"><span class="lbl">תקרת הנחה (%)</span><input id="ag_cap" class="field" inputmode="decimal" placeholder="ללא הגבלה" value="'+((a&&a.max_discount_pct!=null)?(+a.max_discount_pct):'')+'"></label><div style="font-size:11px;color:var(--mut);line-height:1.6;margin-top:6px">הנחה עד התקרה נשמרת רגיל. הנחה מעליה — ההזמנה נשמרת אבל נכנסת ל«אישורים» וממתינה לך. שדה ריק = ללא הגבלה.</div></div>'+
   (isNew?'':'<div class="card" id="ag_area_sec" style="display:'+(a.role==='agent'?'block':'none')+'"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:3px">🗺️ אזורים שהסוכן מכסה</div><div style="font-size:11px;color:var(--mut);margin-bottom:7px">סמני אזורים. אם אזור כבר משוייך לסוכן אחר תישאלי אם להחליף או לצרף.</div><div id="ag_areas"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
   (isNew?'':'<div class="card"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:6px">🕐 נוכחות · 30 יום אחרונים</div><div id="ag_att"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
   '<div class="card"><label style="display:block"><span class="lbl">'+(isNew?'קוד אישי (PIN) — לפחות 4 ספרות':'איפוס קוד אישי (השאירי ריק לשמירה)')+'</span><input id="ag_pin" class="field" inputmode="numeric" placeholder="'+(isNew?'PIN לכניסה':'PIN חדש (אופציונלי)')+'"></label>'+(isNew?'':'<label style="display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag_active"'+(a.active?' checked':'')+'> סוכן פעיל</label>')+'</div>'+
@@ -972,7 +975,8 @@ function openAgentEditor(a){
   '<div id="ag_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
   '</div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('agx').onclick=function(){ov.remove();};
- if(!isNew){if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';};if(a.role==='agent')_agLoadAreas(a.id);_agLoadAttendance(a.id);}
+ if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';var s2=$('ag_cap_sec');if(s2)s2.style.display=this.value==='agent'?'block':'none';};
+ if(!isNew){if(a.role==='agent')_agLoadAreas(a.id);_agLoadAttendance(a.id);}
  $('ag_save').onclick=function(){
   var name=$('ag_name').value.trim(),phone=$('ag_phone').value.trim()||null,role=$('ag_role').value,mgr=$('ag_mgr').value||null,pin=$('ag_pin').value.trim();
   var err=$('ag_err');err.textContent='';
@@ -986,7 +990,9 @@ function openAgentEditor(a){
     toast('הסוכן נוצר ✓');ov.remove();loadAgents();
    },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='יצירת סוכן';});
   } else {
-   var upd={name:name,phone:phone,role:role,manager_id:mgr,active:$('ag_active').checked};
+   var _capRaw=$('ag_cap')?$('ag_cap').value.trim():'';var _cap=(_capRaw==='')?null:parseFloat(_capRaw);
+   if(_cap!=null&&(isNaN(_cap)||_cap<0||_cap>100)){err.textContent='תקרת הנחה חייבת להיות בין 0 ל-100 (או ריק)';btn.disabled=false;btn.textContent='שמירת שינויים';return;}
+   var upd={name:name,phone:phone,role:role,manager_id:mgr,active:$('ag_active').checked,max_discount_pct:(role==='agent'?_cap:null)};
    sb.from('liberty_team_agents').update(upd).eq('id',a.id).then(function(r1){
     if(r1&&r1.error){err.textContent='שגיאה: '+r1.error.message;btn.disabled=false;btn.textContent='שמירת שינויים';return;}
     var fin=function(){toast('עודכן ✓');ov.remove();loadAgents();};
@@ -998,20 +1004,65 @@ function openAgentEditor(a){
  };
 }
 function approvalsView(){
- shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">אישורים · החזרות</div><div style="color:#cfe6e8;font-size:12px">אישור או דחייה של החזרות ממתינות</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">אישורים · החזרות</div><div style="color:#cfe6e8;font-size:12px">החזרות והנחות חורגות שממתינות לך</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  bindGo();loadApprovals();
 }
 function loadApprovals(){
- sb.from('liberty_returns_admin').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(100).then(function(r){
-  if(route!=='approvals')return;var d=(r&&r.data)||[];
-  if(!d.length){$('res').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px">✔ אין החזרות הממתינות לאישור.</div>';return;}
-  var h='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' ממתינות</div>';
-  d.forEach(function(x){var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';});ph+='</div>';}
-   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+esc(x.customer_name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.return_date||'')+(x.agent_name?' · ע״י '+esc(x.agent_name):'')+'</div><div style="font-size:12.5px;margin-top:5px">'+esc(x.reason||'')+'</div></div>'+(x.credit_agorot?'<div style="font-size:16px;font-weight:800;color:var(--bad);white-space:nowrap">'+ils(x.credit_agorot)+'</div>':'')+'</div>'+ph+'<div style="display:flex;gap:8px;margin-top:11px"><button class="apok cta" data-id="'+x.id+'" style="height:42px;background:var(--good)">✓ אישור</button><button class="apno cta" data-id="'+x.id+'" style="height:42px;background:var(--bads);color:var(--bad)">✕ דחייה</button></div></div>';});
+ Promise.all([
+  sb.from('liberty_returns_admin').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(100),
+  sb.from('liberty_order_approvals').select('*').order('created_at',{ascending:false}).limit(100)
+ ]).then(function(res){
+  if(route!=='approvals')return;
+  var rets=(res[0]&&res[0].data)||[],ords=(res[1]&&res[1].data)||[];
+  var err0=(res[0]&&res[0].error),err1=(res[1]&&res[1].error);
+  var h='';
+  if(err0||err1)h+='<div class="card" style="color:var(--bad);font-size:12.5px">שגיאה בטעינה: '+esc(((err0||err1).message)||'')+'</div>';
+  if(!rets.length&&!ords.length&&!err0&&!err1){
+   $('res').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px">✔ אין מה לאשר — לא החזרות ולא הנחות חורגות.</div>';return;}
+
+  /* ---- discount approvals ---- */
+  if(ords.length){
+   h+='<div style="font-size:12.5px;color:var(--bad);font-weight:800;margin:2px 2px 4px">🏷 '+ords.length+' הזמנות עם הנחה חורגת</div>';
+   ords.forEach(function(o){
+    var dt=o.created_at?new Date(o.created_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    var pct=(o.discount_pct!=null)?(+o.discount_pct).toFixed(1):'—';
+    var cap=(o.max_discount_pct!=null)?(+o.max_discount_pct)+'%':'ללא תקרה';
+    h+='<div class="card" style="border:1px solid #e6c3bd"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+
+     '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+esc(o.customer_name||'')+'</div>'+
+     '<div style="font-size:11.5px;color:var(--mut)">'+dt+(o.agent_name?' · '+esc(o.agent_name):'')+(o.order_no?' · הזמנה '+String(o.order_no).padStart(6,'0'):'')+'</div>'+
+     '<div style="font-size:12.5px;margin-top:6px;color:var(--bad);font-weight:700">הנחה '+pct+'% · תקרת הסוכן '+cap+'</div>'+
+     (o.approval_reason?'<div style="font-size:11.5px;color:var(--mut);margin-top:3px">'+esc(o.approval_reason)+'</div>':'')+
+     '</div><div style="text-align:left;white-space:nowrap"><div style="font-size:16px;font-weight:800;color:var(--acc)">'+ils(o.total_agorot||0)+'</div>'+
+     '<div style="font-size:11px;color:var(--mut)">הנחה '+ils(o.discount_agorot||0)+'</div></div></div>'+
+     '<div style="display:flex;gap:8px;margin-top:11px"><button class="odok cta" data-id="'+o.id+'" style="height:42px;background:var(--good)">✓ אישור ההנחה</button>'+
+     '<button class="odno cta" data-id="'+o.id+'" style="height:42px;background:var(--bads);color:var(--bad)">✕ דחייה</button>'+
+     '<button class="odsee" data-id="'+o.id+'" style="height:42px;padding:0 13px;background:var(--sur);border:1px solid var(--line);border-radius:11px;font-weight:700;font-size:12.5px;cursor:pointer">פירוט</button></div></div>';
+   });
+  }
+
+  /* ---- returns ---- */
+  if(rets.length){
+   h+='<div style="font-size:12.5px;color:var(--mut);font-weight:800;margin:12px 2px 4px">↩︎ '+rets.length+' החזרות ממתינות</div>';
+   rets.forEach(function(x){var ph='';var pa=x.photos||[];if(pa&&pa.length){ph='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';pa.forEach(function(u){ph+='<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>';});ph+='</div>';}
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">'+esc(x.customer_name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+(x.return_date||'')+(x.agent_name?' · ע״י '+esc(x.agent_name):'')+'</div><div style="font-size:12.5px;margin-top:5px">'+esc(x.reason||'')+'</div></div>'+(x.credit_agorot?'<div style="font-size:16px;font-weight:800;color:var(--bad);white-space:nowrap">'+ils(x.credit_agorot)+'</div>':'')+'</div>'+ph+'<div style="display:flex;gap:8px;margin-top:11px"><button class="apok cta" data-id="'+x.id+'" style="height:42px;background:var(--good)">✓ אישור</button><button class="apno cta" data-id="'+x.id+'" style="height:42px;background:var(--bads);color:var(--bad)">✕ דחייה</button></div></div>';});
+  }
   $('res').innerHTML=h;
+
   var setStatus=function(id,st){sb.from('returns').update({status:st,approved_by:me?me.id:null}).eq('id',id).then(function(rr){if(rr&&rr.error){toast('שגיאה: '+rr.error.message);return;}toast(st==='approved'?'ההחזרה אושרה ✓':'ההחזרה נדחתה');loadApprovals();},function(){toast('שגיאה');});};
   var ok=document.querySelectorAll('.apok');for(var i=0;i<ok.length;i++)ok[i].onclick=function(){var id=this.getAttribute('data-id');this.disabled=true;setStatus(id,'approved');};
   var no=document.querySelectorAll('.apno');for(var j=0;j<no.length;j++)no[j].onclick=function(){var id=this.getAttribute('data-id');this.disabled=true;setStatus(id,'rejected');};
+
+  var decide=function(id,okFlag,btn){
+   btn.disabled=true;btn.textContent=okFlag?'מאשר…':'דוחה…';
+   sb.rpc('order_approval_decide',{p_order:id,p_ok:okFlag}).then(function(r){
+    if(r&&r.error){toast('שגיאה: '+r.error.message);btn.disabled=false;btn.textContent=okFlag?'✓ אישור ההנחה':'✕ דחייה';return;}
+    var d=r.data||{};
+    if(d.ok===false){toast('ההזמנה כבר טופלה');loadApprovals();return;}
+    toast(okFlag?'ההנחה אושרה ✓':'ההזמנה נדחתה');loadApprovals();
+   },function(){toast('שגיאה');btn.disabled=false;btn.textContent=okFlag?'✓ אישור ההנחה':'✕ דחייה';});};
+  var dk=document.querySelectorAll('.odok');for(var k=0;k<dk.length;k++)dk[k].onclick=function(){decide(this.getAttribute('data-id'),true,this);};
+  var dn=document.querySelectorAll('.odno');for(var m=0;m<dn.length;m++)dn[m].onclick=function(){var b=this;confirmModal('לדחות את ההזמנה? ההזמנה תבוטל והסוכנת תראה זאת.',function(){decide(b.getAttribute('data-id'),false,b);},'דחייה');};
+  var ds=document.querySelectorAll('.odsee');for(var q=0;q<ds.length;q++)ds[q].onclick=function(){openOrderDetail(this.getAttribute('data-id'));};
  },function(e){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה: '+esc((e&&e.message)||'')+'</div>';});
 }
 function openAreaAssign(){
@@ -1052,6 +1103,78 @@ function openAreaAssign(){
 }
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 var _teamTab='overview',_teamRange={mode:'today',from:null,to:null};
+function alertsView(){
+ if(!isMgr()){shell('<div class="list"><div class="card">אין הרשאה</div></div>');return;}
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div><div style="color:#fff;font-size:19px;font-weight:700">🔔 התראות מנהל</div><div style="color:#cfe6e8;font-size:12px">שהמערכת תודיע לך — במקום שתבדוק</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ bindGo();refreshPushState(function(){loadAlertSettings();});
+}
+function loadAlertSettings(){
+ sb.rpc('alert_settings_get').then(function(r){
+  if(route!=='alerts')return;
+  if(r&&r.error){$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה: '+esc(r.error.message)+'</div>';return;}
+  renderAlerts(r.data||{});
+ },function(){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינה</div>';});
+}
+function renderAlerts(S){
+ var pushCard=_pushOn
+  ? '<div class="card" style="background:var(--goods);display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--goodd);font-weight:700">✅ התראות דחיפה פעילות במכשיר הזה</div>'
+  : '<div class="card" style="background:var(--warns);border:1px dashed var(--warn)"><div style="font-size:12.5px;color:var(--warn);font-weight:800;line-height:1.6">התראות דחיפה כבויות במכשיר הזה</div><div style="font-size:11.5px;color:var(--warn);margin-top:4px;line-height:1.6">בלי זה שום התראה לא תגיע אליך — המערכת תריץ את הבדיקות ולא יהיה למי לשלוח.</div><button class="cta" id="al_push" style="height:42px;margin-top:9px">🔔 הפעלת התראות במכשיר הזה</button></div>';
+ var tog=function(k,label,desc){
+  var on=S[k]!==false;
+  return '<label class="card altog" style="display:flex;align-items:flex-start;gap:11px;cursor:pointer;padding:12px 13px"><input type="checkbox" class="alchk" data-k="'+k+'"'+(on?' checked':'')+' style="width:20px;height:20px;flex:none;margin-top:2px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:var(--head)">'+label+'</div><div style="font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:2px">'+desc+'</div></div></label>';};
+ var num=function(id,label,val,hint,mode){
+  return '<label style="flex:1"><span class="lbl">'+label+'</span><input id="'+id+'" class="field" '+(mode||'')+' value="'+esc(val==null?'':String(val))+'"><div style="font-size:10.5px;color:var(--mut);margin-top:3px">'+hint+'</div></label>';};
+ var h=pushCard+
+  '<div style="font-size:12.5px;color:var(--mut);font-weight:700;padding:6px 2px 2px">מה לשלוח</div>'+
+  tog('on_not_started','סוכן שלא יצא לדרך','אם לסוכן יש מסלול להיום ועד השעה שנקבעה אין לו כניסה לעבודה ואף ביקור.')+
+  tog('on_pending_approval','הזמנה שממתינה לאישור','הנחה שחורגת מתקרת הסוכן — כולל הלקוח, הסוכן, הסכום ואחוז ההנחה.')+
+  tog('on_large_order','הזמנה גדולה','מעל הסכום שתקבע.')+
+  tog('on_payment','גבייה שנכנסה','כל תשלום שנרשם בשטח.')+
+  tog('on_eod','סיכום סוף יום','ביקורים · הזמנות · סכום · גבייה, לכל סוכן.')+
+  '<div style="font-size:12.5px;color:var(--mut);font-weight:700;padding:10px 2px 2px">ספים</div>'+
+  '<div class="card"><div style="display:flex;gap:9px">'+
+   num('al_start','שעת יציאה אחרונה',(S.start_deadline||'10:00').slice(0,5),'עד השעה הזו סוכן אמור להיות בדרך','type="time"')+
+   num('al_eod','שעת סיכום יומי',(S.eod_time||'19:00').slice(0,5),'מתי לשלוח את הסיכום','type="time"')+
+  '</div><div style="display:flex;gap:9px;margin-top:10px">'+
+   num('al_large','הזמנה גדולה (₪)',(S.large_order_agorot!=null?Math.round(S.large_order_agorot/100):5000),'מעל הסכום הזה תקבל התראה','inputmode="numeric"')+
+   num('al_pend','המתנה לאישור (דק׳)',(S.pending_minutes!=null?S.pending_minutes:15),'כמה זמן לחכות לפני שמזכירים לך','inputmode="numeric"')+
+  '</div><div style="display:flex;gap:9px;margin-top:10px">'+
+   num('al_fri','שישי — עד שעה',(S.friday_cutoff||'13:00').slice(0,5),'בשבת לא נשלחות התראות כלל','type="time"')+
+   '<div style="flex:1"></div>'+
+  '</div></div>'+
+  '<button class="cta" id="al_save" style="margin-top:4px">שמירת הגדרות</button>'+
+  '<div id="al_err" style="font-size:12.5px;text-align:center;margin-top:8px"></div>'+
+  '<div style="font-size:11px;color:var(--mut);line-height:1.7;padding:10px 4px 0">הבדיקות רצות כל 15 דקות. בשבת לא נשלח דבר, ובשישי רק עד השעה שנקבעה. כל התראה נשלחת פעם אחת בלבד — לא תקבל את אותה הזמנה שוב ושוב.</div>'+
+  '<button id="al_recent" style="width:100%;height:42px;margin-top:10px;background:var(--accs);color:var(--accd);border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">🗂 מה נשלח לאחרונה</button><div id="al_list"></div>';
+ $('res').innerHTML=h;
+ if($('al_push'))$('al_push').onclick=function(){var b=this;b.disabled=true;b.textContent='מפעילה…';enablePush(function(){loadAlertSettings();});};
+ $('al_save').onclick=function(){
+  var b=this,e=$('al_err');e.textContent='';e.style.color='var(--bad)';
+  var large=parseInt($('al_large').value,10),pend=parseInt($('al_pend').value,10);
+  if(isNaN(large)||large<0){e.textContent='סכום הזמנה גדולה לא תקין';return;}
+  if(isNaN(pend)||pend<1){e.textContent='זמן ההמתנה חייב להיות לפחות דקה';return;}
+  var pay={start_deadline:$('al_start').value||'10:00',eod_time:$('al_eod').value||'19:00',
+   friday_cutoff:$('al_fri').value||'13:00',large_order_agorot:large*100,pending_minutes:pend};
+  var chk=document.querySelectorAll('.alchk');for(var i=0;i<chk.length;i++)pay[chk[i].getAttribute('data-k')]=chk[i].checked;
+  b.disabled=true;b.textContent='שומר…';
+  sb.rpc('alert_settings_set',{p:pay}).then(function(r){
+   b.disabled=false;b.textContent='שמירת הגדרות';
+   if(r&&r.error){e.textContent='שגיאה: '+r.error.message;return;}
+   e.style.color='var(--good)';e.textContent='נשמר ✓';toast('הגדרות ההתראות נשמרו ✓');
+  },function(){b.disabled=false;b.textContent='שמירת הגדרות';e.textContent='שגיאה בשמירה';});
+ };
+ $('al_recent').onclick=function(){
+  var b=this;b.disabled=true;b.textContent='טוען…';
+  sb.rpc('manager_alerts_recent',{p_limit:30}).then(function(r){
+   b.disabled=false;b.textContent='🗂 מה נשלח לאחרונה';
+   var d=(r&&r.data)||[];var KIND={not_started:'לא יצא לדרך',pending_approval:'ממתין לאישור',large_order:'הזמנה גדולה',payment:'גבייה',eod:'סיכום יום'};
+   if(!d.length){$('al_list').innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:12.5px;padding:18px">עדיין לא נשלחו התראות.</div>';return;}
+   var hh='';d.forEach(function(x){var dt=x.sent_at?new Date(x.sent_at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    hh+='<div class="card" style="display:flex;justify-content:space-between;gap:9px;padding:10px 12px"><span style="font-size:13px;font-weight:700">'+esc(KIND[x.kind]||x.kind)+'</span><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div>';});
+   $('al_list').innerHTML=hh;
+  },function(){b.disabled=false;b.textContent='🗂 מה נשלח לאחרונה';toast('שגיאה בטעינה');});
+ };
+}
 function teamRangeBounds(){
  var now=new Date();var y=now.getFullYear(),mo=now.getMonth(),d=now.getDate();var startToday=new Date(y,mo,d);var m=_teamRange.mode;
  if(m==='custom'){var f=_teamRange.from?new Date(_teamRange.from+'T00:00:00'):startToday;var t=_teamRange.to?new Date(_teamRange.to+'T23:59:59'):new Date(y,mo,d,23,59,59);return {from:f.toISOString(),to:t.toISOString()};}
@@ -1060,24 +1183,40 @@ function teamRangeBounds(){
 }
 function teamRangeLabel(){return {today:'היום','7':'7 ימים','30':'30 יום',year:'מתחילת השנה',custom:'טווח נבחר'}[_teamRange.mode]||'';}
 function teamView(){
- shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">צוות ופעילות</div><div style="color:#cfe6e8;font-size:12px">ביצועי הצוות ותיעוד הפעולות · לפי טווח תאריכים</div></div></div></div><div class="list" id="res"></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">📊 ביצועים</div><div style="color:#cfe6e8;font-size:12px">צוות · מכירות · פעילות — טווח וסינון משותפים</div></div></div></div><div class="list" id="res"></div>');
  bindGo();
  var rng=[['today','היום'],['7','7 ימים'],['30','30 יום'],['year','השנה'],['custom','תאריכים']];
  var rchips=rng.map(function(c){return '<button class="trchip chip'+(_teamRange.mode===c[0]?' on':'')+'" data-r="'+c[0]+'" style="white-space:nowrap;flex:none">'+c[1]+'</button>';}).join('');
  var custom='<div id="tcustom" style="display:'+(_teamRange.mode==='custom'?'flex':'none')+';gap:8px;margin-top:2px"><label style="flex:1"><span class="lbl">מתאריך</span><input type="date" id="tc_from" class="field" value="'+(_teamRange.from||'')+'"></label><label style="flex:1"><span class="lbl">עד תאריך</span><input type="date" id="tc_to" class="field" value="'+(_teamRange.to||'')+'"></label></div>';
  var tab=function(t,l){var on=_teamTab===t;return '<button class="ttab" data-t="'+t+'" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:13px;font-weight:800;cursor:pointer;background:'+(on?'#fff':'transparent')+';color:'+(on?'var(--accd)':'var(--acc)')+'">'+l+'</button>';};
- var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('acts','פעילות')+'</div>';
- $('res').innerHTML='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+rchips+'</div>'+custom+tabs+'<div id="tbody" style="margin-top:6px"><div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div></div>';
+ var tabs='<div style="display:flex;background:var(--accs);border-radius:11px;padding:3px;margin-top:4px">'+tab('overview','סקירה')+tab('sales','מכירות')+tab('acts','פעילות')+'</div>';
+ var agentBar='<div style="margin-top:7px"><select id="tm_agent" class="field" style="height:38px;font-size:13px"><option value="">כל הסוכנים</option></select></div>';
+ $('res').innerHTML='<div style="display:flex;gap:7px;overflow:auto;padding:2px 0 4px">'+rchips+'</div>'+custom+agentBar+tabs+'<div id="tbody" style="margin-top:6px"><div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען…</div></div>';
  var rc=document.querySelectorAll('.trchip');for(var i=0;i<rc.length;i++)rc[i].onclick=function(){_teamRange.mode=this.getAttribute('data-r');if(_teamRange.mode!=='custom'){teamView();}else{var s=$('tcustom');if(s)s.style.display='flex';var all=document.querySelectorAll('.trchip');for(var j=0;j<all.length;j++)all[j].classList.toggle('on',all[j].getAttribute('data-r')==='custom');}};
  var tc=document.querySelectorAll('.ttab');for(var k=0;k<tc.length;k++)tc[k].onclick=function(){_teamTab=this.getAttribute('data-t');teamView();};
  if($('tc_from'))$('tc_from').onchange=function(){_teamRange.from=this.value;if(_teamRange.to)loadTeamTab();};
  if($('tc_to'))$('tc_to').onchange=function(){_teamRange.to=this.value;if(_teamRange.from)loadTeamTab();};
+ loadTeamData(function(t){
+  var sel=$('tm_agent');if(!sel)return;
+  var rows=(t.rows||[]).filter(function(x){return x.role==='agent';});
+  var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+x.id+'">'+esc(x.name)+'</option>';});
+  sel.innerHTML=o;sel.value=_taAgent||'';
+  sel.onchange=function(){_taAgent=this.value;loadTeamTab();};
+ });
  loadTeamTab();
 }
-function loadTeamTab(){if(_teamTab==='acts')renderTeamActs();else renderTeamOverview();}
+function loadTeamTab(){if(_teamTab==='acts')renderTeamActs();else if(_teamTab==='sales')renderTeamSales();else renderTeamOverview();}
+function renderTeamSales(){
+ var el=$('tbody');if(!el)return;
+ var b=teamRangeBounds();
+ _sq.from=b.from.slice(0,10);_sq.to=(b.to?b.to.slice(0,10):todayStr());
+ _sq.el='tbody';_sq.embed=true;_sq.agent=_taAgent||null;
+ el.innerHTML='<div style="color:var(--mut);font-size:13px;padding:8px 2px">טוען מכירות…</div>';
+ sqLoad();
+}
 function renderTeamActs(){
  var el=$('tbody');if(!el)return;
- el.innerHTML='<div class="card" style="padding:10px 12px"><label style="display:block"><span class="lbl">סינון לפי סוכן</span><select id="ta_agent" class="field"><option value="">כל הסוכנים</option></select></label></div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px"></div><div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
+ el.innerHTML='<div class="card" style="padding:10px 12px;display:none"><label style="display:block"><span class="lbl">סינון לפי סוכן</span><select id="ta_agent" class="field"><option value="">כל הסוכנים</option></select></label></div><div id="actchips" style="display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px"></div><div id="actlist"><div style="color:var(--mut);font-size:12.5px;padding:8px 2px">טוען…</div></div>';
  var b=teamRangeBounds();
  var reload=function(){loadActs('actlist',{agentId:_taAgent,kind:_taKind,showAgent:true,limit:120,from:b.from,to:b.to});};
  renderActChips('actchips',function(k){_taKind=k;reload();});
@@ -1453,7 +1592,7 @@ function buildDebtCard(c){
  if(!(c.debt_agorot>0))return '';
  var od=c.oldest_invoice?Math.floor((Date.now()-new Date(c.oldest_invoice).getTime())/86400000):null;
  var sev=od==null?{c:'var(--mut)',bg:'var(--surq)',t:'var(--mut)',l:''}:od>60?{c:'var(--bad)',bg:'var(--bads)',t:'var(--badd)',l:'קריטי · מעל 60 יום'}:od>30?{c:'var(--warn)',bg:'var(--warns)',t:'var(--warnd)',l:'מתעכב · 31–60 יום'}:{c:'var(--good)',bg:'var(--goods)',t:'var(--goodd)',l:'שוטף · עד 30 יום'};
- return '<div class="card" style="background:var(--bads)"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--badd);font-weight:700">חוב פתוח</div><div style="font-size:26px;font-weight:700;color:var(--bad);letter-spacing:-.01em">'+ils(c.debt_agorot)+'</div></div>'+(sev.l?'<span class="badge" style="background:'+sev.bg+';color:'+sev.t+'">'+sev.l+'</span>':'')+'</div>'+(od!=null?'<div class="bar" style="margin-top:9px;background:rgba(197,77,64,.18)"><div style="width:'+Math.min(100,Math.round(od/90*100))+'%;background:'+sev.c+'"></div></div><div style="font-size:11px;color:var(--badd);margin-top:5px">החוב הוותיק ביותר: לפני '+od+' יום</div>':'')+'</div>';
+ return '<div class="card" style="background:var(--bads)"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:var(--badd);font-weight:700">חוב פתוח</div><div style="font-size:26px;font-weight:700;color:var(--bad);letter-spacing:-.01em">'+ils(c.debt_agorot)+'</div></div>'+(sev.l?'<span class="badge" style="background:'+sev.bg+';color:'+sev.t+'">'+sev.l+'</span>':'')+'</div>'+(od!=null?'<div class="bar" style="margin-top:9px;background:rgba(197,77,64,.18)"><div style="width:'+Math.min(100,Math.round(od/90*100))+'%;background:'+sev.c+'"></div></div><div style="font-size:11px;color:var(--badd);margin-top:5px">החוב הוותיק ביותר: לפני '+od+' יום</div>':'')+agingStamp()+'</div>';
 }
 function loadInlineContacts(c){
  var el=$('cinline');if(!el)return;
@@ -1690,7 +1829,7 @@ function renderBc(){
 // ---------- collections ----------
 var _colFilter='all';
 function collectionsView(){
- shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">גבייה</div><div id="coltot" style="font-size:20px;font-weight:700;color:#fff">…</div></div><div id="colsub" style="font-size:12px;color:#bfe0e2;margin-top:2px"></div><div id="colfilters" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div class="list" id="colres"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ shell('<div style="background:var(--acc);padding:16px 16px 13px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">גבייה</div><div id="coltot" style="font-size:20px;font-weight:700;color:#fff">…</div></div><div id="colsub" style="font-size:12px;color:#bfe0e2;margin-top:2px"></div><div id="colfilters" style="display:flex;gap:7px;margin-top:11px;overflow:auto"></div></div><div id="colstamp" style="padding:8px 18px 0"></div><div class="list" id="colres"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  locTouch();LQ(function(){return custFilter('',false,true).filter(function(c){return c.debt_agorot>0})}).then(function(r){window.__col=(r.data||[]);renderCollections();});
 }
 function collAge(c){return c.oldest_invoice?Math.floor((Date.now()-new Date(c.oldest_invoice).getTime())/86400000):null;}
@@ -1700,6 +1839,7 @@ function renderCollections(){
  d.forEach(function(c){total+=c.debt_agorot;var a=collAge(c);if(a!=null&&a>60)cnt60++;});
  if($('coltot'))$('coltot').textContent=ils(total);
  if($('colsub'))$('colsub').textContent=d.length+' לקוחות · '+cnt60+' מעל 60 יום';
+ if($('colstamp'))$('colstamp').innerHTML=agingStamp();
  var filters=[['all','הכל'],['crit','קריטי'],['late','31–60'],['cur','עד 30']];
  if($('colfilters'))$('colfilters').innerHTML=filters.map(function(f){var on=_colFilter===f[0];return '<button class="chip colf" data-f="'+f[0]+'" style="'+(on?'background:#fff;color:var(--acc);border-color:#fff':'background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.25)')+'">'+f[1]+'</button>';}).join('');
  var groups=[['crit','קריטי · 60 יום ומעלה','var(--bad)','var(--badd)'],['late','מתעכב · 31–60 יום','var(--warn)','var(--warnd)'],['cur','שוטף · עד 30 יום','var(--good)','var(--goodd)']];
@@ -1760,6 +1900,7 @@ function ordersView(){
   '<div id="presults"></div>'+
   lines+
   (cart.items.length?'<button id="discbtn" style="width:100%;height:42px;background:#fff;border:1px dashed var(--acc);color:var(--acc);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">🎁 '+(cart.discount&&(cart.discount.value>0||(cart.discount.items&&cart.discount.items.length))?'שינוי הטבת סוכן':'הטבת סוכן / הנחה')+'</button>':'')+
+  (overCap(cartTotals())?'<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;margin-top:8px"><div style="font-size:12.5px;color:var(--warn);font-weight:800">⚠︎ ההנחה '+discPctOf(cartTotals()).toFixed(1)+'% חורגת מהתקרה ('+(+_discCap)+'%)</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">ההזמנה תישמר ותישלח לאישור המנהל.</div></div>':'')+
   '<div class="card" style="background:var(--surq)"><div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">סכום ביניים · '+_units+' יח׳</span><b>'+ils(t.sub)+'</b></div>'+(t.disc>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--good)"><span style="font-weight:700">🎁 '+esc(discLabel())+'</span><b>−'+ils(t.disc)+'</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0"><span style="color:var(--mut)">מע״מ 18%</span><b>'+ils(t.vat)+'</b></div>'+(t.freeq>0?'<div style="display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0;color:var(--warnd)"><span>🎁 יח׳ בונוס חינם</span><b>'+t.freeq+' יח׳</b></div>':'')+'<div style="display:flex;justify-content:space-between;font-size:18px;padding:9px 0 2px;border-top:1px solid var(--line);margin-top:5px"><span style="font-weight:700;color:var(--head)">סה״כ לתשלום</span><b style="color:var(--acc);letter-spacing:-.01em">'+ils(t.total)+'</b></div></div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">אופן ביצוע ההזמנה</div><div style="display:flex;gap:8px"><button class="chip chan'+(cartChannel==='inperson'?' on':'')+'" data-ch="inperson" style="flex:1">🤝 ביקור פיזי</button><button class="chip chan'+(cartChannel==='phone'?' on':'')+'" data-ch="phone" style="flex:1">📞 טלפונית</button></div></div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:7px">תשלום</div><div style="display:flex;gap:8px"><button class="chip pos'+(cartPaidOnSpot?' on':'')+'" data-p="1" style="flex:1">✅ שולם במקום</button><button class="chip pos'+(cartPaidOnSpot?'':' on')+'" data-p="0" style="flex:1">🧾 לחיוב / חוב</button></div>'+
@@ -1798,6 +1939,7 @@ function openDiscountSheet(){
  var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
  var linesHtml=cart.items.map(function(it){var pv=pre[it.sku];var disp=(pv!=null&&pv>0)?(kind==='amt'?(pv/100):pv):'';return '<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--line2)"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(it.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(it.sku)+' · '+ils(it.price*it.qty)+'</div></div><input class="field dslival" data-sku="'+esc(it.sku)+'" inputmode="decimal" style="width:84px;text-align:center;flex:none" placeholder="0" value="'+disp+'"></div>';}).join('');
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">🎁 הטבת סוכן</b><span id="dsx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
+  ((_discCap!=null)?'<div class="card" style="background:var(--warns);border:1px solid #e7c9a0"><div style="font-size:12.5px;color:var(--warn);font-weight:800">תקרת ההנחה שלך: '+(+_discCap)+'%</div><div style="font-size:11.5px;color:var(--warn);line-height:1.6;margin-top:3px">אפשר לתת יותר — אבל ההזמנה תישלח לאישור המנהל לפני שתאושר.</div></div>':'')+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">על מה חלה ההנחה</div><div style="display:flex;gap:8px"><button class="chip dsmode'+(mode==='order'?' on':'')+'" data-m="order" style="flex:1">כל ההזמנה</button><button class="chip dsmode'+(mode==='lines'?' on':'')+'" data-m="lines" style="flex:1">מוצרים נבחרים</button></div></div>'+
   '<div class="card"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">סוג הנחה</div><div style="display:flex;gap:8px"><button class="chip dskind'+(kind==='pct'?' on':'')+'" data-k="pct" style="flex:1">אחוז %</button><button class="chip dskind'+(kind==='amt'?' on':'')+'" data-k="amt" style="flex:1">סכום ₪</button></div></div>'+
   '<div class="card" id="ds_order" style="'+(mode==='order'?'':'display:none')+'"><div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:6px">ערך ההנחה על כל ההזמנה</div><input id="dsval" class="field" inputmode="decimal" placeholder="ערך ההנחה" value="'+(D.mode!=='lines'&&D.value?(kind==='amt'?(D.value/100):D.value):'')+'"></div>'+
@@ -1825,17 +1967,21 @@ function saveOrder(force){
  if(!cart.cust||!cart.items.length||!me)return;
  var t=cartTotals();
  if(!force&&t.sub<MIN_ORDER){confirmModal('סכום ההזמנה '+ils(t.sub)+' נמוך מהמינימום ₪600 (לפני מע״מ). חסרים עוד '+ils(MIN_ORDER-t.sub)+'. לשמור בכל זאת?',function(){saveOrder(true);},'שמירה בכל זאת');return;}
+ if(overCap(t)&&!_discAck){var _p=discPctOf(t).toFixed(1);confirmModal('ההנחה בהזמנה '+_p+'% חורגת מתקרת ההנחה שלך ('+(+_discCap)+'%). ההזמנה תישמר ותישלח לאישור המנהל. להמשיך?',function(){_discAck=true;saveOrder(force);},'שליחה לאישור');return;}
  $('saveord').disabled=true;$('saveord').textContent='שומר…';
  var snapName=cart.cust.name, snapItems=cart.items.slice(), isUpd=!!editingOrderId;
  var itemsFor=function(oid){return cart.items.map(function(it){return {order_id:oid,product_id:it.id,qty:it.qty,unit_price_agorot:it.price,bonus_buy:it.bonus_buy,bonus_get:it.bonus_get,is_commissionable:it.comm,line_total_agorot:it.price*it.qty}})};
- var finishOrder=function(){cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;clearCartDraft();route='myorders';render()};
+ var finishOrder=function(){_discAck=false;cart={cust:null,items:[]};editingOrderId=null;cartPaidOnSpot=true;cartChannel='inperson';cartPayMethod='cash';cartPayTerms='net30';cartPayPhotoData=null;cartPayPhotoFile=null;clearCartDraft();route='myorders';render()};
  var oid=editingOrderId||uuid();
  var orow={id:oid,customer_id:cart.cust.id,agent_id:(me?me.id:null),subtotal_agorot:t.sub,vat_agorot:t.vat,total_agorot:t.total,commissionable_agorot:t.comm,paid_on_spot:cartPaidOnSpot,discount_agorot:t.disc||0,channel:cartChannel,payment_method:cartPayMethod,payment_terms:(cartPaidOnSpot?null:cartPayTerms)};
  var _payFile=cartPayPhotoFile;
  if(t.disc>0)orow.note=discLabel();
+ var _needAppr=overCap(t);
+ if(_needAppr){orow.approval_status='pending';orow.approval_reason='הנחה '+discPctOf(t).toFixed(1)+'% חורגת מתקרה '+(+_discCap)+'%';}
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
  obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){
   if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
+  if(_needAppr)setTimeout(function(){toast('ההזמנה נשלחה לאישור המנהל — ההנחה חורגת מהתקרה');},900);
   orderSentModal(snapName,snapItems,t,isUpd,finishOrder,oid,(cart&&cart.cust)?cart.cust.id:null);
  });
 }
@@ -1904,7 +2050,40 @@ function newCustomerView(){
 var routeArea=null;
 var routeSel={};
 var routeBuilt=false;
-var routeRev=false;var routeDate=null;      // null = today; a YYYY-MM-DD string when planning a future day
+var routeRev=false;
+var _discCap=null,_discAck=false;
+var _agFresh=null,_pulse=null;
+function loadPulse(){try{sb.rpc('team_pulse').then(function(r){if(r&&!r.error&&r.data){_pulse=r.data;if(route==='home'&&isMgr())renderMgrPulse();}},function(){});}catch(e){}}
+function cmpChip(label,now,base,fmt){
+ if(base==null)return '';
+ var b=+base,n=+now||0;
+ if(!isFinite(b))return '';
+ var diff=n-b, pct=(b>0)?Math.round(diff/b*100):(n>0?100:0);
+ var up=diff>0, flat=(b>0?Math.abs(pct)<5:diff===0);
+ var col=flat?'var(--mut)':(up?'var(--good)':'var(--bad)');
+ var arrow=flat?'≈':(up?'▲':'▼');
+ var f=fmt||function(x){return Math.round(x*10)/10;};
+ return '<div style="font-size:11px;color:var(--mut);white-space:nowrap">'+esc(label)+' <b style="color:'+col+'">'+arrow+(b>0?' '+Math.abs(pct)+'%':'')+'</b> <span style="color:var(--mut)">(ממוצע '+f(b)+')</span></div>';}
+function renderMgrPulse(){
+ var el=$('mgrpulse');if(!el||!_pulse)return;
+ var t=_pulse.today||{},a=_pulse.dow_avg||{};
+ if(a.n==null||+a.n===0){el.innerHTML='';return;}
+ var dow=new Date().toLocaleDateString('he-IL',{weekday:'long'});
+ var h='<div style="border-top:1px solid var(--line);margin-top:9px;padding-top:9px"><div style="font-size:11px;color:var(--mut);font-weight:700;margin-bottom:6px">מול '+esc(dow)+' ממוצע ('+a.n+' שבועות אחרונים)</div><div style="display:flex;gap:12px;flex-wrap:wrap">'+
+  cmpChip('ביקורים',t.vis,a.vis)+cmpChip('הזמנות',t.ord,a.ord)+
+  cmpChip('סכום',t.amt,a.amt,function(x){return ils(x);})+cmpChip('גבייה',t.coll,a.coll,function(x){return ils(x);})+
+  '</div></div>';
+ el.innerHTML=h;}
+function loadAgingFresh(){try{sb.rpc('aging_freshness').then(function(r){_agFresh=(r&&r.data)||{};if(route==='collections')render();},function(){});}catch(e){}}
+function agingAge(){if(!_agFresh||!_agFresh.imported_at)return null;return Math.floor((Date.now()-new Date(_agFresh.imported_at).getTime())/86400000);}
+function agingStamp(){
+ if(!_agFresh||!_agFresh.imported_at)return '<div style="font-size:11px;color:var(--mut);margin-top:5px">נתוני החוב מיובאים מדוח גיול — טרם בוצע ייבוא</div>';
+ var d=new Date(_agFresh.imported_at),days=agingAge(),stale=(days!=null&&days>35);
+ var txt='נתוני החוב מדוח הגיול · עודכן '+d.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})+(days!=null?' · לפני '+days+' ימים':'');
+ return '<div style="font-size:11px;color:'+(stale?'var(--bad)':'var(--mut)')+';margin-top:5px;font-weight:'+(stale?'700':'400')+'">'+(stale?'⚠︎ ':'')+txt+(stale?' — כדאי לייבא דוח עדכני':'')+'</div>';}
+function loadDiscCap(){try{sb.rpc('my_discount_cap').then(function(r){var v=r&&r.data&&r.data.max_discount_pct;_discCap=(v==null||v==='')?null:+v;},function(){});}catch(e){}}
+function discPctOf(t){return (t&&t.sub>0)?(t.disc*100/t.sub):0;}
+function overCap(t){return (_discCap!=null)&&(discPctOf(t)>_discCap+0.001);}var routeDate=null;      // null = today; a YYYY-MM-DD string when planning a future day
 var routeEnded=false;    // set true after "end day" so the route screen shows the summary
 var _routeReport=null;   // last generated end-of-day report
 var _visitFrom=null;     // route name to return to after saving a visit
@@ -2592,7 +2771,7 @@ var SQ_DIMS=[{k:'product',l:'מוצר'},{k:'agent_name',l:'סוכן'},{k:'custom
  {k:'brand',l:'מותג'},{k:'category',l:'קטגוריה'},{k:'area_name',l:'אזור'},
  {k:'city',l:'עיר'},{k:'month',l:'חודש'},{k:'channel',l:'ערוץ הזמנה'}];
 var SQ_METRICS=[{k:'amount',l:'סכום מכירות'},{k:'units',l:'יחידות'},{k:'orders',l:'הזמנות'},{k:'comm',l:'מזכה עמלה'}];
-var _sq={from:'',to:'',metric:'amount',dr:'product',dc:'agent_name',q:'',rows:null,top:25};
+var _sq={from:'',to:'',metric:'amount',dr:'product',dc:'agent_name',q:'',piv:null,busy:false,seq:0,focusQ:false,el:'res',embed:false,agent:null,top:25};
 var SQ_SEP='|~|';
 function sqVal(r,k){
  if(!k)return '';
@@ -2627,84 +2806,81 @@ function salesQView(){
  if(!isMgr()){shell('<div class="list"><div class="card">אין הרשאה</div></div>');return;}
  if(!_sq.from)sqRange('this');
  shell('<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div><div style="color:#fff;font-size:19px;font-weight:700">שאילתות מכירות</div><div style="color:#cfe6e8;font-size:12px">פילוח חופשי לפי מוצר, סוכן, לקוח ועוד</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
- bindGo();sqLoad();}
+ bindGo();_sq.el='res';_sq.embed=false;_sq.agent=null;sqLoad();}
 function sqLoad(){
- var el=$('res');if(el)el.innerHTML='<div style="color:var(--mut);font-size:13px;padding:10px 2px">טוען נתונים…</div>';
- sb.from('liberty_sales_lines').select('order_id,created_at,channel,agent_name,customer_name,city,area_name,sku,product_name,brand,category,qty,is_commissionable,line_total_agorot')
-  .gte('created_at',_sq.from+'T00:00:00').lte('created_at',_sq.to+'T23:59:59').limit(20000)
-  .then(function(r){ if(r&&r.error){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad)">שגיאה: '+esc(r.error.message)+'</div>';return;}
-   _sq.rows=r.data||[];sqRender();},
-   function(){if($('res'))$('res').innerHTML='<div class="card" style="color:var(--bad)">שגיאה בטעינת הנתונים</div>';});}
-function sqFiltered(){
- var q=(_sq.q||'').trim().toLowerCase();if(!q)return _sq.rows||[];
- return (_sq.rows||[]).filter(function(r){
-  return [r.product_name,r.sku,r.customer_name,r.agent_name,r.brand,r.category,r.area_name,r.city]
-   .some(function(v){return v&&String(v).toLowerCase().indexOf(q)>-1;});});}
+ var el=$(_sq.el||'res');if(el&&!_sq.piv)el.innerHTML='<div style="color:var(--mut);font-size:13px;padding:10px 2px">טוען נתונים…</div>';
+ _sq.busy=true;if(el)sqBusy(true);
+ var seq=(_sq.seq=(_sq.seq||0)+1);
+ sb.rpc('sales_pivot',{p_from:_sq.from,p_to:_sq.to,p_row_dim:_sq.dr,p_col_dim:(_sq.dc||_sq.dr),p_metric:_sq.metric,p_search:(_sq.q||null),p_top:_sq.top,p_agent:(_sq.agent||null)})
+  .then(function(r){
+   if(seq!==_sq.seq)return;_sq.busy=false;
+   if(r&&r.error){var e1=$(_sq.el||'res');if(e1)e1.innerHTML='<div class="card" style="color:var(--bad)">שגיאה: '+esc(r.error.message)+'</div>';return;}
+   _sq.piv=r.data||{rows:[],cols:[],cells:{},grand:0};sqRender();},
+   function(e){if(seq!==_sq.seq)return;_sq.busy=false;var e2=$(_sq.el||'res');if(e2)e2.innerHTML='<div class="card" style="color:var(--bad)">שגיאה בטעינת הנתונים'+((e&&e.message)?': '+esc(e.message):'')+'</div>';});}
+function sqBusy(on){var b=$('sq_busy');if(b)b.style.display=on?'block':'none';}
+function sqCell(rk,ck){var c=(_sq.piv&&_sq.piv.cells)||{};var v=c[rk+SQ_SEP+ck];return v?+v:0;}
 function sqRender(){
- var el=$('res');if(!el)return;
- var rows=sqFiltered(),m=_sq.metric;
+ var el=$(_sq.el||'res');if(!el)return;
+ var P=_sq.piv||{rows:[],cols:[],cells:{},grand:0},m=_sq.metric;
  var chip=function(on,cls,attr,label){return '<button class="chip '+cls+(on?' on':'')+'" '+attr+'>'+label+'</button>';};
- var h='<div class="card"><div style="display:flex;gap:8px;align-items:end"><label style="flex:1"><span class="lbl">מתאריך</span><input id="sq_f" type="date" class="field" style="margin-top:4px" value="'+_sq.from+'"></label><label style="flex:1"><span class="lbl">עד</span><input id="sq_t" type="date" class="field" style="margin-top:4px" value="'+_sq.to+'"></label></div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+
-  chip(false,'sqr','data-r="this"','החודש')+chip(false,'sqr','data-r="prev"','חודש שעבר')+chip(false,'sqr','data-r="90"','90 יום')+chip(false,'sqr','data-r="year"','השנה')+'</div></div>';
+ var h=_sq.embed?'':'<div class="card"><div style="display:flex;gap:8px;align-items:end"><label style="flex:1"><span class="lbl">מתאריך</span><input id="sq_f" type="date" class="field" style="margin-top:4px" value="'+_sq.from+'"></label><label style="flex:1"><span class="lbl">עד</span><input id="sq_t" type="date" class="field" style="margin-top:4px" value="'+_sq.to+'"></label></div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+
+  (_sq.embed?'':chip(false,'sqr','data-r="this"','החודש')+chip(false,'sqr','data-r="prev"','חודש שעבר')+chip(false,'sqr','data-r="90"','90 יום')+chip(false,'sqr','data-r="year"','השנה')+'</div></div>');
  h+='<div class="card"><span class="lbl">מדד</span><div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">'+
   SQ_METRICS.map(function(x){return chip(m===x.k,'sqm','data-m="'+x.k+'"',x.l);}).join('')+'</div>'+
   '<div style="display:flex;gap:9px;margin-top:11px"><label style="flex:1"><span class="lbl">פילוח לפי</span><select id="sq_dr" class="field" style="margin-top:4px">'+
    SQ_DIMS.map(function(d){return '<option value="'+d.k+'"'+(_sq.dr===d.k?' selected':'')+'>'+d.l+'</option>';}).join('')+'</select></label>'+
   '<label style="flex:1"><span class="lbl">ופילוח משני</span><select id="sq_dc" class="field" style="margin-top:4px"><option value="">— ללא —</option>'+
    SQ_DIMS.map(function(d){return '<option value="'+d.k+'"'+(_sq.dc===d.k?' selected':'')+'>'+d.l+'</option>';}).join('')+'</select></label></div>'+
-  '<div style="margin-top:9px"><span class="lbl">סינון חופשי</span><input id="sq_q" class="field" style="margin-top:4px" placeholder="מוצר, מק״ט, לקוח, מותג, אזור…" value="'+esc(_sq.q)+'"></div></div>';
- if(!rows.length){el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px">אין מכירות בטווח שנבחר.</div>';sqBind();return;}
+  '<div style="margin-top:9px"><span class="lbl">סינון חופשי</span><input id="sq_q" class="field" style="margin-top:4px" placeholder="מוצר, מק״ט, לקוח, מותג, אזור…" value="'+esc(_sq.q)+'"></div>'+
+  '<div id="sq_busy" style="display:none;font-size:11.5px;color:var(--acc);font-weight:700;padding-top:8px">מחשב…</div></div>';
+ var rlist=P.rows||[],grand=+(P.grand||0);
+ if(!rlist.length){el.innerHTML=h+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:24px">אין מכירות בטווח שנבחר.</div>';sqBind();return;}
  var dr=_sq.dr,dc=_sq.dc;
- var grand=sqGet(sqAgg(rows,'_all',null,m),'סה״כ','');
- var rt=sqAgg(rows,dr,null,m);
- var rlist=rt.R.map(function(k){return {k:k,v:sqGet(rt,k,'')};}).sort(function(a,b){return b.v-a.v;});
- var shown=rlist.slice(0,_sq.top),restN=rlist.length-shown.length;
- h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px"><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">'+esc((SQ_METRICS.filter(function(x){return x.k===m;})[0]||{}).l)+'</div><div style="font-size:19px;font-weight:800;color:var(--accd)">'+sqFmt(grand,m)+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">שורות</div><div style="font-size:19px;font-weight:800;color:var(--goodd)">'+rows.length+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">ערכים</div><div style="font-size:19px;font-weight:800;color:var(--warnd)">'+rlist.length+'</div></div></div></div>';
+ var mlabel=esc((SQ_METRICS.filter(function(x){return x.k===m;})[0]||{}).l);
+ h+='<div class="card" style="background:var(--surq)"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px"><div class="stat" style="background:var(--accs)"><div style="font-size:11px;color:var(--accd);font-weight:700">'+mlabel+'</div><div style="font-size:19px;font-weight:800;color:var(--accd)">'+sqFmt(grand,m)+'</div></div><div class="stat" style="background:var(--goods)"><div style="font-size:11px;color:var(--goodd);font-weight:700">ערכים</div><div style="font-size:19px;font-weight:800;color:var(--goodd)">'+(P.row_count||rlist.length)+'</div></div><div class="stat" style="background:var(--warns)"><div style="font-size:11px;color:var(--warnd);font-weight:700">מוצג</div><div style="font-size:19px;font-weight:800;color:var(--warnd)">'+rlist.length+'</div></div></div>'+
+  (m==='orders'?'<div style="font-size:11px;color:var(--mut);margin-top:8px;line-height:1.5">במדד «הזמנות» כל הזמנה נספרת פעם אחת בכל תא — לכן סכום התאים גדול מהסה״כ. זה נכון ומכוון.</div>':'')+'</div>';
  if(!dc){
   h+='<div class="card">';
-  shown.forEach(function(o){var pct=grand?Math.round(o.v/grand*100):0;
-   h+='<div style="padding:7px 0;border-bottom:1px solid var(--line2)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--head);flex:1;min-width:0">'+esc(o.k)+'</span><span style="font-size:13.5px;font-weight:800;color:var(--acc);white-space:nowrap">'+sqFmt(o.v,m)+'</span><span style="font-size:11px;color:var(--mut);width:34px;text-align:left">'+pct+'%</span></div><div style="height:5px;border-radius:20px;background:var(--line2);margin-top:5px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--acc);border-radius:20px"></i></div></div>';});
-  if(restN>0)h+='<div style="font-size:12px;color:var(--mut);padding:8px 0 0">…ועוד '+restN+' ערכים</div>';
+  rlist.forEach(function(o){var v=+(o.total||0);var pct=grand?Math.round(v/grand*100):0;
+   h+='<div style="padding:7px 0;border-bottom:1px solid var(--line2)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:var(--head);flex:1;min-width:0">'+esc(o.label||o.key)+'</span><span style="font-size:13.5px;font-weight:800;color:var(--acc);white-space:nowrap">'+sqFmt(v,m)+'</span><span style="font-size:11px;color:var(--mut);width:34px;text-align:left">'+pct+'%</span></div><div style="height:5px;border-radius:20px;background:var(--line2);margin-top:5px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:var(--acc);border-radius:20px"></i></div></div>';});
+  if(P.truncated)h+='<div style="font-size:12px;color:var(--mut);padding:8px 0 0">מוצגים '+rlist.length+' מתוך '+(P.row_count||rlist.length)+' — צמצמי טווח או השתמשי בסינון.</div>';
   h+='</div>';
  } else {
-  var full=sqAgg(rows,dr,dc,m),ct=sqAgg(rows,dc,null,m);
-  var clist=ct.R.map(function(k){return {k:k,v:sqGet(ct,k,'')};}).sort(function(a,b){return b.v-a.v;}).slice(0,12);
+  var clist=(P.cols||[]).slice(0,12);
   h+='<div class="card" style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%"><tr><th style="text-align:right;padding:6px 8px;border-bottom:2px solid var(--line);position:sticky;right:0;background:#fff">'+esc((SQ_DIMS.filter(function(d){return d.k===dr;})[0]||{}).l)+'</th>';
-  clist.forEach(function(c){h+='<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11.5px">'+esc(c.k)+'</th>';});
+  clist.forEach(function(c){h+='<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);font-size:11.5px">'+esc(c.label||c.key)+'</th>';});
   h+='<th style="text-align:left;padding:6px 8px;border-bottom:2px solid var(--line);color:var(--acc)">סה״כ</th></tr>';
-  shown.forEach(function(o){
-   h+='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--line2);font-weight:700;position:sticky;right:0;background:#fff;max-width:190px;overflow:hidden;text-overflow:ellipsis">'+esc(o.k)+'</td>';
-   clist.forEach(function(c){var v=sqGet(full,o.k,c.k);
+  rlist.forEach(function(o){
+   h+='<tr><td style="padding:6px 8px;border-bottom:1px solid var(--line2);font-weight:700;position:sticky;right:0;background:#fff;max-width:190px;overflow:hidden;text-overflow:ellipsis">'+esc(o.label||o.key)+'</td>';
+   clist.forEach(function(c){var v=sqCell(o.key,c.key);
     h+='<td style="padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;color:'+(v?'var(--ink)':'#cfcabf')+'">'+(v?sqFmt(v,m):'·')+'</td>';});
-   h+='<td style="padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;font-weight:800;color:var(--acc)">'+sqFmt(o.v,m)+'</td></tr>';});
+   h+='<td style="padding:6px 8px;border-bottom:1px solid var(--line2);text-align:left;font-weight:800;color:var(--acc)">'+sqFmt(+(o.total||0),m)+'</td></tr>';});
   h+='<tr><td style="padding:7px 8px;font-weight:800;position:sticky;right:0;background:#fff">סה״כ</td>';
-  clist.forEach(function(c){h+='<td style="padding:7px 8px;text-align:left;font-weight:800">'+sqFmt(c.v,m)+'</td>';});
+  clist.forEach(function(c){h+='<td style="padding:7px 8px;text-align:left;font-weight:800">'+sqFmt(+(c.total||0),m)+'</td>';});
   h+='<td style="padding:7px 8px;text-align:left;font-weight:900;color:var(--acc)">'+sqFmt(grand,m)+'</td></tr></table>';
-  if(restN>0)h+='<div style="font-size:12px;color:var(--mut);padding:8px 2px 0">…ועוד '+restN+' שורות</div>';
+  if(P.truncated)h+='<div style="font-size:12px;color:var(--mut);padding:8px 2px 0">מוצגות '+rlist.length+' שורות מתוך '+(P.row_count||rlist.length)+'.</div>';
+  if((P.col_count||0)>clist.length)h+='<div style="font-size:12px;color:var(--mut);padding:4px 2px 0">מוצגות '+clist.length+' עמודות מתוך '+P.col_count+'.</div>';
   h+='</div>';
  }
  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="sq_share" class="cta" style="height:44px;background:#25d366">💬 שיתוף</button><button id="sq_print" class="cta" style="height:44px;background:var(--accs);color:var(--accd)">🖨️ הדפסה</button></div>';
- el.innerHTML=h;sqBind();}
+ el.innerHTML=h;sqBind();sqBusy(!!_sq.busy);}
 function sqText(){
- var rows=sqFiltered(),m=_sq.metric,dr=_sq.dr;
+ var P=_sq.piv||{rows:[],grand:0},m=_sq.metric;
  var ml=(SQ_METRICS.filter(function(x){return x.k===m;})[0]||{}).l;
- var dl=(SQ_DIMS.filter(function(d){return d.k===dr;})[0]||{}).l;
- var rt=sqAgg(rows,dr,null,m);
- var list=rt.R.map(function(k){return {k:k,v:sqGet(rt,k,'')};}).sort(function(a,b){return b.v-a.v;}).slice(0,_sq.top);
- var grand=sqGet(sqAgg(rows,'_all',null,m),'סה״כ','');
+ var dl=(SQ_DIMS.filter(function(d){return d.k===_sq.dr;})[0]||{}).l;
  var t=ml+' לפי '+dl+'\n'+_sq.from+' עד '+_sq.to+'\n\n';
- list.forEach(function(o,i){t+=(i+1)+'. '+o.k+' — '+sqFmt(o.v,m)+'\n';});
- t+='\nסה״כ: '+sqFmt(grand,m);
+ (P.rows||[]).forEach(function(o,i){t+=(i+1)+'. '+(o.label||o.key)+' — '+sqFmt(+(o.total||0),m)+'\n';});
+ t+='\nסה״כ: '+sqFmt(+(P.grand||0),m);
  return t;}
 function sqBind(){
- var re=function(){sqRender();};
  if($('sq_f'))$('sq_f').onchange=function(){_sq.from=this.value;sqLoad();};
  if($('sq_t'))$('sq_t').onchange=function(){_sq.to=this.value;sqLoad();};
  var rc=document.querySelectorAll('.sqr');for(var i=0;i<rc.length;i++)rc[i].onclick=function(){sqRange(this.getAttribute('data-r'));sqLoad();};
- var mc=document.querySelectorAll('.sqm');for(var j=0;j<mc.length;j++)mc[j].onclick=function(){_sq.metric=this.getAttribute('data-m');re();};
- if($('sq_dr'))$('sq_dr').onchange=function(){_sq.dr=this.value;re();};
- if($('sq_dc'))$('sq_dc').onchange=function(){_sq.dc=this.value;re();};
- if($('sq_q')){var q=$('sq_q');q.oninput=function(){clearTimeout(window.__sqT);var v=this.value;window.__sqT=setTimeout(function(){_sq.q=v;sqRender();var e=$('sq_q');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}},350);};}
+ var mc=document.querySelectorAll('.sqm');for(var j=0;j<mc.length;j++)mc[j].onclick=function(){_sq.metric=this.getAttribute('data-m');sqLoad();};
+ if($('sq_dr'))$('sq_dr').onchange=function(){_sq.dr=this.value;sqLoad();};
+ if($('sq_dc'))$('sq_dc').onchange=function(){_sq.dc=this.value;sqLoad();};
+ if($('sq_q')){var q=$('sq_q');q.oninput=function(){clearTimeout(window.__sqT);var v=this.value;window.__sqT=setTimeout(function(){_sq.q=v;_sq.focusQ=true;sqLoad();},450);};
+  if(_sq.focusQ){q.focus();q.setSelectionRange(q.value.length,q.value.length);}}
  if($('sq_share'))$('sq_share').onclick=function(){var t=sqText();if(navigator.share){navigator.share({text:t}).catch(function(){});}else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');};
  if($('sq_print'))$('sq_print').onclick=function(){window.print();};}
 /* ================= ORDER DOCUMENT / INVOICE PDF ================= */
@@ -3402,6 +3578,7 @@ function renderRoute(){
  if(route==='catalog')catalogView();
  else if(route==='customers')customersView();
  else if(route==='collections')collectionsView();
+ else if(route==='alerts')alertsView();
  else if(route==='orders')ordersView();
  else if(route==='myorders')myOrdersView();
  else if(route==='route')routeView();
