@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-63';
+var APP_VERSION='2026-08-26-64';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -3403,13 +3403,13 @@ function buildDocHtml(o,lines,doc,cust){
     +'<div>עוסק מורשה: '+esc(co.vat_id)+'</div></div>'
   +'</div>'
   +'<div style="display:flex;justify-content:space-between;margin-top:12px;gap:20px">'
-   +'<div style="line-height:1.7;font-size:11.5px"><div>תאריך: '+dHeDate(dd)+'</div><div>תאריך הדפסה: '+dHeDate(new Date())+'</div>'
-    +'<div><b>מספר הזמנה: '+esc(ordNo(o))+'</b></div>'+(doc.doc_number?'<div>מספר חשבונית מס: '+esc(doc.doc_number)+'</div>':'')+(doc.due_date?'<div>לתשלום עד: '+dHeDate(doc.due_date)+'</div>':'')+'</div>'
    +'<div style="line-height:1.7;text-align:right"><div style="font-weight:800">לכבוד:</div>'
     +'<div style="font-size:13px;font-weight:800">'+esc(o.customer_name||'')+'</div>'
     +(cust&&cust.address?'<div>'+esc(cust.address)+'</div>':'')
     +(cust&&cust.city?'<div>'+esc(cust.city)+'</div>':'')
     +(cust&&cust.legal_id?'<div>מס\' חברה: ע.מ '+esc(cust.legal_id)+'</div>':'')+'</div>'
+   +'<div style="line-height:1.7;font-size:11.5px;text-align:left"><div>תאריך: '+dHeDate(dd)+'</div><div>תאריך הדפסה: '+dHeDate(new Date())+'</div>'
+    +'<div><b>מספר הזמנה: '+esc(ordNo(o))+'</b></div>'+(doc.doc_number?'<div>מספר חשבונית מס: '+esc(doc.doc_number)+'</div>':'')+(doc.due_date?'<div>לתשלום עד: '+dHeDate(doc.due_date)+'</div>':'')+'</div>'
   +'</div>'
   +'<div style="text-align:center;font-size:16px;font-weight:800;margin:14px 0 9px;padding:6px;background:#eef5f5;border:1px solid #0f6b74;color:#0b5860">'+esc(title)+'</div>'
   +'<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f2efe9;font-weight:800">'
@@ -3446,15 +3446,42 @@ function docToPdf(html,fname,cb){
    wrap.remove();cb(pdf.output('blob'),fname);
   },function(e){wrap.remove();toast('שגיאה ביצירת המסמך');});
  },function(){toast('לא ניתן לטעון את מנוע ה-PDF — צריך אינטרנט');});}
-function sharePdf(blob,fname){
- try{
-  var file=new File([blob],fname,{type:'application/pdf'});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:fname}).catch(function(){});return;}
- }catch(e){}
+function pdfDownload(blob,fname){
  var u=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove();
- setTimeout(function(){URL.revokeObjectURL(u);},4000);
- toast('המסמך הורד למכשיר');}
+ setTimeout(function(){URL.revokeObjectURL(u);},8000);
+ toast('המסמך הורד למכשיר ✓');}
+/* Building the PDF takes several seconds, and by then the browser's "user activation"
+   from the original tap has expired — navigator.share() then rejects silently and
+   nothing happens. So we hand the finished file to a sheet whose own buttons provide
+   a fresh gesture. */
+function sharePdf(blob,fname){
+ var canShare=false;
+ try{canShare=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File([blob],fname,{type:'application/pdf'})]}));}catch(e){canShare=false;}
+ var kb=Math.max(1,Math.round(blob.size/1024));
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px">'+
+  '<div style="font-size:32px;text-align:center">📄</div>'+
+  '<div style="font-size:16px;font-weight:800;text-align:center;margin-top:6px">המסמך מוכן</div>'+
+  '<div style="font-size:12px;color:var(--mut);text-align:center;margin-top:4px;word-break:break-all">'+esc(fname)+' · '+kb+'KB</div>'+
+  (canShare?'<button class="cta" id="pdf_share" style="margin-top:15px;background:#25d366">📤 שיתוף</button>':'')+
+  '<button class="cta" id="pdf_dl" style="margin-top:9px;'+(canShare?'background:var(--accs);color:var(--accd)':'')+'">⬇︎ הורדה למכשיר</button>'+
+  '<button id="pdf_x" style="width:100%;height:42px;margin-top:9px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">סגירה</button>'+
+  '</div>';
+ document.body.appendChild(ov);
+ var close=function(){try{ov.remove();}catch(e){}};
+ ov.onclick=function(e){if(e.target===ov)close();};
+ var x=document.getElementById('pdf_x');if(x)x.onclick=close;
+ var dl=document.getElementById('pdf_dl');if(dl)dl.onclick=function(){pdfDownload(blob,fname);close();};
+ var sh=document.getElementById('pdf_share');
+ if(sh)sh.onclick=function(){
+  try{
+   var file=new File([blob],fname,{type:'application/pdf'});
+   navigator.share({files:[file],title:fname}).then(close,function(err){
+    if(err&&err.name==='AbortError'){close();return;}
+    toast('השיתוף לא נתמך — מוריד את הקובץ');pdfDownload(blob,fname);close();});
+  }catch(e){pdfDownload(blob,fname);close();}
+ };}
 function openOrderDoc(orderId){
  var ov=actModal('מסמך להזמנה');var body=ov.querySelector('.amb');
  Promise.all([
@@ -3514,7 +3541,7 @@ function openOrderDoc(orderId){
     if($('dc_save'))$('dc_save').onclick=function(){persist(this,'שמירת התיקונים');};
    }
    $('dc_share').onclick=function(){var b=this;b.disabled=true;b.textContent='מפיקה…';
-    docToPdf(buildDocHtml(o,lines,doc,cust),(DOC_TYPES[doc.doc_type]||'מסמך')+' '+(doc.doc_number||docRef(o))+'.pdf',function(blob,fn){
+    docToPdf(buildDocHtml(o,lines,doc,cust),(DOC_TYPES[doc.doc_type]||'מסמך')+' '+(doc.doc_number||ordNo(o))+'.pdf',function(blob,fn){
      b.disabled=false;b.textContent='📤 הפקה ושיתוף';sharePdf(blob,fn);});};
    $('dc_print').onclick=function(){
     var w=window.open('','_blank');if(!w){toast('החסימה מנעה פתיחת חלון');return;}
