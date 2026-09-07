@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-60';
+var APP_VERSION='2026-08-26-61';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -3573,7 +3573,8 @@ function targetsView(){
   var rateBadge=rate>0?'<span class="badge b-good">עמלה פעילה '+rate+'%</span>':'<span class="badge b-warn">טרם הופעלה עמלה</span>';
   function milestone(label,amt,prog,active,earnedNote){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800">'+label+'</div>'+(active?'<span class="badge b-good">✓ הושג</span>':'<span class="badge b-mut">'+prog+'% מהיעד</span>')+'</div><div class="bar"><div style="width:'+prog+'%;'+(active?'background:var(--good)':'')+'"></div></div><div style="display:flex;justify-content:space-between;margin-top:7px;font-size:12px"><span style="color:var(--mut)">'+ils(achieved)+' / '+ils(amt)+'</span><span style="color:var(--mut)">'+earnedNote+'</span></div></div>'}
   var _pctT2=Math.min(100,Math.round(achieved/T2*1000)/10);
-  var _wdDone=workDaysDone(),_wdLeft=workDaysLeft(),_wdAll=_wdDone+_wdLeft;
+  var _T0=todayStr();
+  var _wdDone=workDaysDone(),_wdLeft=workDaysLeft(),_wdAll=ilWorkDays(_T0,1,ilMonthDays(_T0));
   var _pace=(_wdDone>0)?Math.round(achieved/_wdDone*_wdAll):0;
   var _perDay=(_wdLeft>0)?Math.max(0,Math.ceil((T2-achieved)/_wdLeft)):0;
   var _monthName=new Date().toLocaleDateString('he-IL',{month:'long',timeZone:IL_TZ});
