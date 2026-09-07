@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-57';
+var APP_VERSION='2026-08-26-58';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -1105,7 +1105,9 @@ function openAreaAssign(){
 function soonView(title,sub){shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="color:#fff;font-size:19px;font-weight:700">'+esc(title)+'</div></div></div><div class="list"><div class="card" style="text-align:center;padding:30px 18px"><div style="font-size:34px">🛠️</div><div style="font-size:15px;font-weight:800;margin-top:8px">'+esc(title)+'</div><div style="font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.6">'+esc(sub||'בבנייה — יגיע בשלב הבא.')+'</div></div></div>');bindGo();}
 var _teamTab='overview',_teamRange={mode:'today',from:null,to:null};
 var _teamOv=null,_lastActs=null;
-function perfPeriodLabel(){var b=teamRangeBounds();return (b.from||'').slice(0,10)+' – '+((b.to||'').slice(0,10)||todayStr());}
+function perfDay(iso){if(!iso)return todayStr();var d=new Date(iso);if(isNaN(d))return String(iso).slice(0,10);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function perfPeriodLabel(){var b=teamRangeBounds();var f=perfDay(b.from),t=b.to?perfDay(b.to):todayStr();return (f===t)?f:(f+' – '+t);}
 function perfAgentLabel(){if(!_taAgent)return 'כל הסוכנים';var sel=$('tm_agent');if(sel){for(var i=0;i<sel.options.length;i++)if(sel.options[i].value===_taAgent)return sel.options[i].text;}return '';}
 function perfNum(v,m){var n=+v||0;return (m==='amount'||m==='comm')?Math.round(n)/100:n;}
 /* builds {title, head:[...], rows:[[...]], money:[colIdx...]} from whatever the open tab is showing */
@@ -1165,7 +1167,7 @@ function perfExportXlsx(){
 function perfFileName(ext){
  var t={sales:'מכירות',overview:'סקירת-צוות',acts:'פעילות'}[_teamTab]||'דוח';
  var b=teamRangeBounds();
- return 'liberty-'+t+'-'+(b.from||'').slice(0,10)+'.'+ext;
+ return 'liberty-'+t+'-'+perfDay(b.from)+'.'+ext;
 }
 function perfExportPdf(){
  var M=perfModel();if(!M){toast('אין נתונים לייצוא בטאב הזה');return;}
