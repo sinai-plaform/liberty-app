@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-70';
+var APP_VERSION='2026-08-26-71';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -728,7 +728,7 @@ function updateSync(){
  var txt,cls;
  if(OFF.syncing){cls='sb-sync';txt='מסנכרן… '+OFF.pending+' ממתינות'}
  else if(!OFF.online){cls='sb-off';txt='אין חיבור · עובדת אופליין'+(OFF.pending?' · '+OFF.pending+' ממתינות':'')}
- else{cls='sb-wait';txt=OFF.pending+' פעולות ממתינות לשליחה'}
+ else{var _fl=(OFF.q||[]).filter(function(o){return o.tries&&!o.net}).length;if(_fl){cls='sb-off';txt='⚠︎ '+_fl+(_fl===1?' פעולה לא נשלחה':' פעולות לא נשלחו')+' · יש חיבור · הקישי לפרטים'}else{cls='sb-wait';txt=OFF.pending+' פעולות ממתינות לשליחה'}}
  el.className=cls;
  el.innerHTML='<span class="sbdot"></span><span>'+txt+'</span>'+((OFF.online&&OFF.pending&&!OFF.syncing)?'<b class="sbbtn">שלחי עכשיו</b>':'');
  var b=el.querySelector('.sbbtn');if(b)b.onclick=function(e){e.stopPropagation();obFlush()};
@@ -5852,7 +5852,7 @@ FEAT_HOME.push(function(){
 });
 
 /* ================= live map ================= */
-var MP_TILES='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+var MP_TILES='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 var MP_GCOL={green:'#1c7a4f',yellow:'#f0b429',orange:'#e8613f',gray:'#a8a29a','new':'#0f6b74'};
 var _mp={map:null,lay:null,markers:{},gen:0,view:null,filter:null,drawer:true,radius:10,me:null,geoAsked:false,card:null,resize:null,apptToday:{},apptIds:{},failed:false};
 var _lfP=null;
@@ -5969,7 +5969,7 @@ function mpInitMap(){
  var box=$('mpmap');box.innerHTML='';mpFit();
  var m=L.map('mpmap',{preferCanvas:true,zoomControl:true,attributionControl:true,tap:true});
  m.attributionControl.setPrefix(false);m.attributionControl.setPosition('topright');
- L.tileLayer(MP_TILES,{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(m);
+ L.tileLayer(MP_TILES,{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
  _mp.map=m;_mp.lay={areas:L.layerGroup().addTo(m),rings:L.layerGroup().addTo(m),pins:L.layerGroup().addTo(m),me:L.layerGroup().addTo(m),top:L.layerGroup().addTo(m)};
  if(_mp.view)m.setView([_mp.view.lat,_mp.view.lng],_mp.view.z);
  else{var pts=[];(LOC.customers||[]).forEach(function(c){if(c.lat!=null&&c.lng!=null&&c.lifecycle!=='disqualified')pts.push([c.lat,c.lng])});
