@@ -26,7 +26,7 @@ input,button,select,textarea{font-family:inherit}input,textarea{outline:none}
 .badge{font-size:11px;font-weight:600;border-radius:6px;padding:3px 8px;display:inline-block;letter-spacing:-.01em}
 .b-good{background:var(--goods);color:var(--goodd)}.b-warn{background:var(--warns);color:var(--warnd)}
 .b-bad{background:var(--bads);color:var(--badd)}.b-mut{background:var(--line2);color:var(--mut)}.b-acc{background:var(--acc);color:#fff}.badge[hidden]{display:none}
-#nav{position:fixed;bottom:0;right:0;left:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(10px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;z-index:20}
+#nav{position:fixed;bottom:0;right:0;left:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:8px 4px calc(10px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;z-index:20}
 #nav button{background:none;border:none;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--mut);font-weight:500;cursor:pointer}
 #nav button.on{color:var(--acc);font-weight:700}
 #nav svg{stroke:var(--mut2)}#nav button.on svg{stroke:var(--acc)}
@@ -84,7 +84,7 @@ textarea.field{height:auto;min-height:80px;padding:11px 13px;resize:vertical}
 a{color:var(--acc)}
 /* ===== Landscape / wide mode (rotated phones + desktop): side nav rail + wider content ===== */
 @media (orientation:landscape) and (min-width:700px){
- #nav{top:0;bottom:0;inset-inline-start:0;inset-inline-end:auto;left:auto;right:auto;width:76px;max-width:76px;margin:0;grid-template-columns:1fr;grid-auto-rows:min-content;align-content:center;justify-items:center;gap:4px;border-top:none;border-inline-end:1px solid var(--line);padding:6px 4px;overflow-y:auto}
+ #nav{top:0;bottom:0;inset-inline-start:0;inset-inline-end:auto;left:auto;right:auto;width:76px;max-width:76px;margin:0;grid-template-columns:1fr;grid-auto-flow:row;grid-auto-rows:min-content;align-content:center;justify-items:center;gap:4px;border-top:none;border-inline-end:1px solid var(--line);padding:6px 4px;overflow-y:auto}
  #nav button{width:100%;padding:8px 0;font-size:10.5px;gap:3px}
  #nav button svg{width:21px;height:21px}
  #view{max-width:1120px;margin-inline-start:76px;margin-inline-end:auto;padding-inline-start:18px;padding-bottom:16px;min-height:100dvh}
@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-69';
+var APP_VERSION='2026-08-26-70';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -207,8 +207,8 @@ function quickOrderDoc(oid,custName,custId,items,t,btn){
  },1200);
 }
 var ICONS={home:'<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',cat:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',ord:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.5a2 2 0 0 0 2 1.5h7.9a2 2 0 0 0 2-1.6L21 8H6"/>',pay:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/>'};
-var TABS=[['home','היום שלי','home'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
-ICONS.box='<path d="M21 8l-9-5-9 5v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/>';ICONS.rt='<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>';ICONS.clk='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';ICONS.gear='<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>';
+var TABS=[['home','היום שלי','home'],['map','מפה','map'],['catalog','קטלוג','cat'],['customers','לקוחות','cust'],['orders','הזמנה','ord'],['collections','גבייה','pay']];
+ICONS.map='<path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v13.5M15 6.5V20"/>';ICONS.box='<path d="M21 8l-9-5-9 5v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5M12 13v8"/>';ICONS.rt='<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>';ICONS.clk='<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';ICONS.gear='<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>';
 // driver («נהג») gets its own tab set — same nav component, different tabs
 var DRV_TABS=[['home','היום','home'],['drvload','העמסה','box'],['drvroute','מסלול','rt'],['drvhist','היסטוריה','clk'],['drvmore','הגדרות','gear']];
 function isDriver(){return !!(me&&me.role==='driver');}
@@ -347,7 +347,7 @@ function ilEndISO(ymdStr){return new Date(new Date(ilStartISO(ymdStr)).getTime()
 function ilShift(ymdStr,days){return ilYmd(new Date(new Date(ilStartISO(ymdStr)).getTime()+days*86400000+12*3600000));}
 function ilMonthStart(ymdStr){return (ymdStr||todayStr()).slice(0,7)+'-01';}
 function ilNowMinutes(){var m=_ilParts(new Date());return m?(+m.hour*60+ +m.minute):(new Date().getHours()*60+new Date().getMinutes());}
-function ilDow(ymdStr){return new Date(ilStartISO(ymdStr||todayStr())).getUTCDay();}
+function ilDow(ymdStr){var s=String(ymdStr||todayStr());return new Date(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))).getUTCDay();}
 function todayStr(){return ilYmd();}
 function localDate(ts){return ilYmd(ts);}
 var __drSaveTmr=null;
@@ -791,7 +791,8 @@ function boot(){
   if(!me){noMeView();return}
   loadCart();
   route='home';
-  try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.items&&cart.items.length){route='orders';}}catch(e){}
+  try{var _h=(location.hash||'').replace('#','');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(_h)>-1){route=_h;history.replaceState(null,'',location.pathname+location.search);}}catch(e){}
+  try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(route==='home'&&_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.items&&cart.items.length){route='orders';}}catch(e){}
   render();
   obCount();obFlush();
   restoreDailyRoute();
@@ -849,7 +850,7 @@ function checkUpdate(){
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden){if(_updSeen)_applyUpd();else checkUpdate();if(typeof checkReminders==='function')checkReminders();}});
 
-function svgIcon(n){var s='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';var p={route:'<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>',visits:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.3"/>',reports:'<path d="M4 20V11M10 20V4M16 20v-6M21.5 20h-19"/>',targets:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.7" fill="var(--acc)"/>',newcust:'<circle cx="9.5" cy="8" r="3.3"/><path d="M3.6 20a6.4 6.4 0 0 1 11.8 0M19 8v6M22 11h-6"/>',broadcast:'<path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/>',admin:'<path d="M3 4h7v7H3zM14 4h7v7h-7zM14 15h7v5h-7zM3 15h7v5H3z"/>',stats:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'};return s+(p[n]||'')+'</svg>';}
+function svgIcon(n){var s='<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">';var p={route:'<circle cx="6" cy="19" r="2.3"/><circle cx="18" cy="5" r="2.3"/><path d="M8.3 19H14a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.7"/>',visits:'<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.3"/>',reports:'<path d="M4 20V11M10 20V4M16 20v-6M21.5 20h-19"/>',targets:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.7" fill="var(--acc)"/>',newcust:'<circle cx="9.5" cy="8" r="3.3"/><path d="M3.6 20a6.4 6.4 0 0 1 11.8 0M19 8v6M22 11h-6"/>',broadcast:'<path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/>',admin:'<path d="M3 4h7v7H3zM14 4h7v7h-7zM14 15h7v5h-7zM3 15h7v5H3z"/>',stats:'<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5" rx="0.5"/><rect x="12" y="8" width="3" height="9" rx="0.5"/><rect x="17" y="5" width="3" height="12" rx="0.5"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',plan:'<path d="M4 5h16M4 12h10M4 19h6"/><path d="m15 17 2 2 4-4"/>'};return s+(p[n]||'')+'</svg>';}
 // agent-only personal dashboard (moved off the customer-facing home)
 function actRow(a,showAgent){
  var m={order:['🧾','הזמנה'],visit:['📝','ביקור'],payment:['💰','גבייה'],customer_new:['➕','לקוח חדש'],customer_upd:['✏️','עדכון פרטי לקוח']}[a.kind]||['•','פעולה'];
@@ -989,7 +990,7 @@ function loadTeamData(cb){
 function mgrQa(go,label,icon){return '<button class="card qa" data-go="'+go+'" style="border:none;cursor:pointer;color:inherit;padding:15px 4px;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="width:44px;height:44px;border-radius:12px;background:var(--accs);display:flex;align-items:center;justify-content:center">'+svgIcon(icon)+'</span><span style="font-size:11.5px;font-weight:700;color:var(--head)">'+label+'</span></button>';}
 function mgrHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=mgrQa('team','ביצועים','stats')+mgrQa('approvals','אישורים','reports')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('import','ייבוא נתונים','admin')+mgrQa('alerts','התראות','clock')+mgrQa('logistics','לוגיסטיקה','route')+mgrQa('dispatch','לוח שיגור','reports')+mgrQa('prospects','פוטנציאלים','newcust');
+ var qa=mgrQa('team','ביצועים','stats')+mgrQa('approvals','אישורים','reports')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('import','ייבוא נתונים','admin')+mgrQa('alerts','התראות','clock')+mgrQa('logistics','לוגיסטיקה','route')+mgrQa('dispatch','לוח שיגור','reports')+mgrQa('prospects','פוטנציאלים','newcust')+mgrQa('wkreport','דוח שבועי','reports')+mgrQa('moreport','דוח חודשי','stats');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -1697,7 +1698,7 @@ function homeView(){
  if(isMgr()){mgrHomeView();return;}
  if(isDriver()){driverHomeView();return;}
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- var qa=qaBtn('route','מסלול','route')+qaBtn('visits','ביקורים','visits')+qaBtn('reminders','תזכורות','clock')+qaBtn('mystats','הנתונים שלי','stats')+qaBtn('reports','דוחות','reports')+qaBtn('newcust','לקוח חדש','newcust')+qaBtn('broadcast','תפוצה','broadcast')+(isMgr()?qaBtn('prodadmin','ניהול','admin'):'');
+ var qa=qaBtn('route','מסלול','route')+qaBtn('visits','ביקורים','visits')+qaBtn('reminders','תזכורות','clock')+qaBtn('mystats','הנתונים שלי','stats')+qaBtn('wkreport','דוח שבועי','reports')+qaBtn('moreport','דוח חודשי','stats')+qaBtn('calendar','לוח שנה','cal')+qaBtn('monthplan','תוכנית חודשית','plan')+qaBtn('reports','דוחות','reports')+qaBtn('newcust','לקוח חדש','newcust')+qaBtn('broadcast','תפוצה','broadcast')+(isMgr()?qaBtn('prodadmin','ניהול','admin'):'');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
    '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#bfe0e2;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
@@ -1708,8 +1709,10 @@ function homeView(){
   '<div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px">'+
    '<div id="apptnext"></div>'+
    '<div id="routecard"></div>'+
+   '<div id="hf_plan"></div>'+
    '<div id="covcard"></div>'+
    '<div id="fucard"></div>'+
+   '<div id="hf_rep"></div>'+
    '<div id="proscard"></div>'+
    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">'+qa+'</div>'+
    '<div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים.</div>'+
@@ -1719,7 +1722,7 @@ function homeView(){
  bindGo();
  $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
  locTouch();
- renderApptNext();renderHomeRoute();renderHomeCoverage();renderHomeFollowups();renderHomeProspects();
+ renderApptNext();renderHomeRoute();renderHomeCoverage();renderHomeFollowups();renderHomeProspects();featHome();
 }
 var _cheerPending=false,_revealTarget=null;
 function wdayState(){try{var v=localStorage.getItem('lib_wday_'+todayStr());return v?JSON.parse(v):null;}catch(e){return null;}}
@@ -2850,11 +2853,12 @@ function ordersView(){
   lines+='<div class="card" style="display:flex;flex-direction:column;gap:0"><div style="display:flex;align-items:center;gap:10px">'+thumb(it.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;line-height:1.25;color:var(--head)">'+esc(it.name)+'</div><div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(it.sku)+' · '+ils(it.price)+' ליח׳</div></div><div style="text-align:left"><div class="step"><button data-i="'+i+'" data-d="1">+</button><input class="qtyin" data-i="'+i+'" inputmode="numeric" value="'+it.qty+'"><button data-i="'+i+'" data-d="-1">−</button></div><div style="font-size:15px;font-weight:700;margin-top:5px;color:var(--acc);letter-spacing:-.01em">'+ils(it.price*it.qty)+'</div></div></div>'+strip+'</div>'}
  if(!cart.items.length)lines='<div class="card" style="color:var(--mut);font-size:13px;text-align:center;padding:22px">אין פריטים. הוסיפי מוצרים מהקטלוג או בחיפוש למטה.</div>';
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">'+(editingOrderId?'עריכת הזמנה':'הזמנה חדשה')+'</div><a href="#" id="myord" style="font-size:13px;font-weight:600;color:#cfe6e8">'+(editingOrderId?'« ביטול עריכה':'ההזמנות שלי »')+'</a></div></div>'+
-  '<div class="list">'+
+  '<div class="list ordwrap"><div class="ordcolA"><div id="cdho"></div>'+
   (cart.items.length?'<div style="font-size:11.5px;color:var(--good);font-weight:600;text-align:center;padding:2px 0 4px">💾 טיוטה נשמרת אוטומטית — לא תאבד גם ללא אינטרנט</div>':'')+
   '<div class="card">'+custBtn+'</div>'+
   '<div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#857f76" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="pq" placeholder="הוספת מוצר — שם או מק״ט…"></div>'+
   '<div id="presults"></div>'+
+  '</div><div class="ordcolB">'+
   lines+
   (cart.items.length?'<button id="discbtn" style="width:100%;height:42px;background:#fff;border:1px dashed var(--acc);color:var(--acc);border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">🎁 '+(cart.discount&&(cart.discount.value>0||(cart.discount.items&&cart.discount.items.length))?'שינוי הטבת סוכן':'הטבת סוכן / הנחה')+'</button>':'')+
   (overCap(cartTotals())?'<div class="card" style="background:var(--warns);border:1px solid #e7c9a0;margin-top:8px"><div style="font-size:12.5px;color:var(--warn);font-weight:800">⚠︎ ההנחה '+discPctOf(cartTotals()).toFixed(1)+'% חורגת מהתקרה ('+(+_discCap)+'%)</div><div style="font-size:11.5px;color:var(--warn);margin-top:3px">ההזמנה תישמר ותישלח לאישור המנהל.</div></div>':'')+
@@ -2870,7 +2874,7 @@ function ordersView(){
     ))+'</div>'+
   (belowMin?'<div class="card" style="background:#fff4e5;border:1px solid #f0c98a;padding:12px 14px"><div style="font-size:13.5px;font-weight:800;color:var(--warnd)">⚠️ מתחת למינימום הזמנה</div><div style="font-size:12.5px;color:var(--warn);margin-top:4px;font-weight:600">מינימום להזמנה הוא ₪600 (לפני מע״מ). חסרים עוד '+ils(missMin)+'.</div></div>':'')+
   '<button class="cta" id="saveord"'+((!cart.cust||!cart.items.length)?' disabled':'')+'>'+(editingOrderId?'עדכון הזמנה · ':'שמירת הזמנה · ')+ils(t.total)+'</button>'+
-  '</div>');
+  '</div></div></div>');
  var pos=document.querySelectorAll('.pos');for(var pi=0;pi<pos.length;pi++){pos[pi].onclick=function(){cartPaidOnSpot=this.getAttribute('data-p')==='1';render()}}
  var chn=document.querySelectorAll('.chan');for(var ci2=0;ci2<chn.length;ci2++){chn[ci2].onclick=function(){cartChannel=this.getAttribute('data-ch');saveCart();render()}}
  var paym=document.querySelectorAll('.paym');for(var pm=0;pm<paym.length;pm++){paym[pm].onclick=function(){cartPayMethod=this.getAttribute('data-m');saveCart();render()}}
@@ -2884,6 +2888,7 @@ function ordersView(){
  var steps=document.querySelectorAll('.step button');for(var s=0;s<steps.length;s++){steps[s].onclick=function(){var i=+this.getAttribute('data-i'),d=+this.getAttribute('data-d');cart.items[i].qty+=d;if(cart.items[i].qty<=0)cart.items.splice(i,1);render()}}
  var qis=document.querySelectorAll('.qtyin');for(var qq=0;qq<qis.length;qq++){qis[qq].onclick=function(e){e.stopPropagation();this.select()};qis[qq].onchange=function(){var i=+this.getAttribute('data-i');var v=parseInt(this.value,10);if(isNaN(v)||v<=0){cart.items.splice(i,1)}else{cart.items[i].qty=v}render()}}
  var pq=$('pq');pq.addEventListener('input',function(){clearTimeout(tmr);tmr=setTimeout(function(){var q=pq.value.trim();if(!q){$('presults').innerHTML='';return}LQ(function(){return prodSearch(q,8)}).then(function(r){var h='';(r.data||[]).forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:20px;color:var(--acc);font-weight:800">+</div></div>'});$('presults').innerHTML=h;var ar=document.querySelectorAll('.addr');for(var a=0;a<ar.length;a++){ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'))}}})},180)});
+ try{ordersFeat()}catch(e){}
 }
 function openDiscountSheet(){
  if(!cart.items.length)return;
@@ -2936,7 +2941,7 @@ function saveOrder(force){
  var _needAppr=overCap(t);
  if(_needAppr){orow.approval_status='pending';orow.approval_reason='הנחה '+discPctOf(t).toFixed(1)+'% חורגת מתקרה '+(+_discCap)+'%';}
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
- obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){
+ obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){try{cartDraftClear()}catch(e){}
   if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
   if(_needAppr)setTimeout(function(){toast('ההזמנה נשלחה לאישור המנהל — ההנחה חורגת מהתקרה');},900);
   orderSentModal(snapName,snapItems,t,isUpd,finishOrder,oid,(cart&&cart.cust)?cart.cust.id:null);
@@ -3056,10 +3061,10 @@ function apptWaText(a,custName){
  return 'שלום! מאשרת את הפגישה שלנו ל'+day+' בשעה '+apptTime(a)+'.'+(a.note?'\n'+a.note:'')+'\nנתראה, '+((me&&me.name)||'')+' · ליברטי';
 }
 /* create / edit a meeting */
-function openApptSheet(cust,existing,after){
+function openApptSheet(cust,existing,after,presetDate){
  if(!cust||!cust.id){toast('צריך לבחור לקוח');return;}
  var T=todayStr();
- var dv=existing?(existing.il_date||ilYmd(existing.starts_at)):T;
+ var dv=existing?(existing.il_date||ilYmd(existing.starts_at)):(presetDate||T);
  var tv=existing?apptTime(existing):'10:00';
  var ov=document.createElement('div');ov.className='ovl';ov.style.cssText='justify-content:flex-start';
  ov.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:92vh"><div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">📅 '+(existing?'עריכת פגישה':'קביעת פגישה')+'</b><span id="apx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="list" style="overflow:auto">'+
@@ -3072,7 +3077,7 @@ function openApptSheet(cust,existing,after){
   (existing?'<button id="ap_cancel" style="width:100%;height:44px;margin-top:9px;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:12px;font-weight:700;cursor:pointer">ביטול הפגישה</button>':'')+
   '<div id="ap_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
   '</div></div>';
- document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('apx').onclick=function(){ov.remove();};
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('apx').onclick=function(){ov.remove();};try{apptHintBind(ov,cust,existing)}catch(e){}
  var dur=existing?existing.duration_min:30;
  var db=ov.querySelectorAll('.apdur');
  for(var i=0;i<db.length;i++)db[i].onclick=function(){dur=+this.getAttribute('data-m');for(var j=0;j<db.length;j++)db[j].classList.toggle('on',db[j]===this);};
@@ -3086,7 +3091,7 @@ function openApptSheet(cust,existing,after){
   if(!d||!t){err.textContent='נא למלא תאריך ושעה';return;}
   var iso=apptISO(d,t);
   if(new Date(iso).getTime()<Date.now()-60000){err.textContent='השעה שנבחרה כבר עברה';return;}
-  b.disabled=true;b.textContent='שומרת…';
+  b.disabled=true;apptConflictCheck(d,t,dur,cust,existing,function(ok){if(!ok){b.disabled=false;return;}b.textContent='שומרת…';
   var row={agent_id:me.id,customer_id:cust.id,starts_at:iso,duration_min:dur,note:$('ap_n').value.trim()||null,status:'scheduled',updated_at:new Date().toISOString()};
   var q=existing?sb.from('appointments').update(row).eq('id',existing.id):sb.from('appointments').insert(row);
   q.then(function(r){
@@ -3104,6 +3109,7 @@ function openApptSheet(cust,existing,after){
    apptOfferWa({starts_at:iso,note:row.note},cust);
    after&&after(row);
   },function(){err.textContent='שגיאה בשמירה';b.disabled=false;b.textContent=existing?'שמירת שינויים':'קביעת פגישה';});
+  });
  };
 }
 /* offer to send the customer a WhatsApp confirmation */
@@ -3384,7 +3390,8 @@ function routeScore(c){
   if(dv==null){sc+=70;rs.push({t:(ts?'אין ביקור מתועד':'אין ביקור/הזמנה מתועדים'),c:'var(--mut)'});}
   else if(dv>=30){sc+=120+Math.min(80,dv-30);rs.push({t:'לא ביקרת '+dv+' ימים',c:'var(--bad)'});}
   else if(dv>=21){sc+=50;rs.push({t:'ללא ביקור '+dv+' ימים',c:'var(--warn)'});}
-  else{var vf=c.visit_frequency_days;if(vf&&dv>=vf){sc+=40;rs.push({t:'עברה תדירות הביקור ('+vf+' ימים)',c:'var(--acc)'});}}
+  else{var vf=c.visit_frequency_days;if(vf&&dv>=vf){sc+=40;rs.push({t:'עברה תדירות הביקור ('+vf+' ימים)',c:'var(--acc)'});var _vfHit=true;}}
+  if(dv!=null&&dv<30&&!dueNow&&!_vfHit){var _cad=custCadence(c);if(_cad&&dv>=_cad){sc+=45;rs.push({t:'הגיע תור הביקור (כל '+_cad+' ימים)',c:'var(--acc)'});}} // v70 cadence boost
   if(dord!=null&&dord>=45){sc+=30;rs.push({t:'הזמנה אחרונה לפני '+dord+' ימים',c:'var(--warn)'});}
  }
  if(prio==='high'){sc+=60;rs.push({t:'עדיפות גבוהה 🔥',c:'var(--bad)'});}
@@ -4712,6 +4719,7 @@ function startReminderScheduler(){if(_remTimer)clearInterval(_remTimer);_remTime
 function checkReminders(){if(!me||!_reminders.length)return;var now=Date.now();for(var i=0;i<_reminders.length;i++){var rm=_reminders[i];if(rm.done||_remFired[rm.id])continue;if(new Date(rm.due_at).getTime()<=now){_remFired[rm.id]=1;if(rm.kind==='no_sale')nsFireChecked(rm);else fireReminder(rm);}}}
 function fireReminder(rm){
  if(rm.kind==='no_sale'){fireNoSaleReminder(rm);return;}
+ if(rpIsRep(rm)){rpFireRem(rm);return;}
  playReminderSound(rm.kind);
  var cn=remCustName(rm.customer_id);
  try{if('Notification'in window&&Notification.permission==='granted')new Notification(rm.kind==='collection'?'💰 תזכורת גבייה':'🔔 תזכורת',{body:(cn?cn+' — ':'')+rm.text,tag:rm.id});}catch(e){}
@@ -4888,6 +4896,7 @@ function renderRemList(){
  if(!_reminders.length){el.innerHTML=pc+'<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px;line-height:1.6">אין תזכורות פעילות.<br>הוסיפי תזכורת ותקפוץ לך בזמן שקבעת.</div>';bindPushCard(el);return;}
  var now=Date.now();var h=pc;
  _reminders.slice().sort(function(a,b){return new Date(a.due_at)-new Date(b.due_at);}).forEach(function(rm){
+  if(rpIsRep(rm)){h+=rpRemRow(rm);return;}
   var due=new Date(rm.due_at);var over=due.getTime()<=now;var cn=remCustName(rm.customer_id);
   var ns=rm.kind==='no_sale';var col=rm.kind==='collection'?'var(--bad)':'var(--acc)';var ic=rm.kind==='collection'?'💰':(ns?'📞':'🔔');
   var dt=due.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'})+' · '+due.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
@@ -4903,7 +4912,7 @@ function renderRemArchive(){
  var el=$('res');if(!el)return;renderRemTabs();
  if(!_remDone.length){el.innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:26px;line-height:1.6">אין תזכורות שבוצעו עדיין.</div>';return;}
  var h='<div class="card" style="background:var(--goods);font-size:12px;color:var(--goodd);font-weight:700">✓ '+_remDone.length+' תזכורות שבוצעו · ארכיון</div>';
- _remDone.forEach(function(rm){var due=new Date(rm.due_at);var cn=remCustName(rm.customer_id);var ic=rm.kind==='collection'?'💰':(rm.kind==='no_sale'?'📞':'🔔');var dt=due.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})+' · '+due.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+ _remDone.forEach(function(rm){var due=new Date(rm.due_at);var cn=remCustName(rm.customer_id);var ic=rm.kind==='collection'?'💰':(rm.kind==='no_sale'?'📞':(rpIsRep(rm)?(rm.kind==='monthly_report'?'📈':'📊'):'🔔'));var dt=due.toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'})+' · '+due.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   h+='<div class="card" style="border-inline-start:4px solid var(--good)"><div style="display:flex;align-items:flex-start;gap:9px"><span style="font-size:16px;flex:none;opacity:.7">'+ic+'</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#7c766c;line-height:1.4;text-decoration:line-through;text-decoration-color:#c9c3b8">'+esc(rm.text)+'</div>'+(cn?'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(cn)+'</div>':'')+'<div style="font-size:11px;color:var(--good);font-weight:700;margin-top:2px">✓ בוצע · '+dt+'</div></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="rmrestore cta" data-id="'+rm.id+'" style="height:34px;font-size:12px;background:var(--accs);color:var(--accd)">↩︎ החזרה לפעילות</button><button class="rmpurge cta" data-id="'+rm.id+'" style="height:34px;font-size:12px;background:var(--bads);color:var(--bad);flex:none;width:48px">🗑</button></div></div>';
  });
  el.innerHTML=h;
@@ -5108,6 +5117,11 @@ function renderRoute(){
  else if(route==='drvroute')driverRouteView();
  else if(route==='drvhist')driverHistView();
  else if(route==='drvmore')driverMoreView();
+ else if(route==='map')mapView();
+ else if(route==='monthplan')monthPlanView();
+ else if(route==='wkreport')wkReportView();
+ else if(route==='moreport')moReportView();
+ else if(route==='calendar')calendarView();
  else homeView();
 }
 function drPill(label,val,color){return '<div style="background:#fbfaf8;border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:66px"><div style="font-size:10px;color:var(--mut);font-weight:700">'+label+'</div><div style="font-size:15px;font-weight:700;color:'+color+'">'+val+'</div></div>'}
@@ -5602,6 +5616,1221 @@ function driverMoreView(){
  $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
 }
 render();
+/* push-notification click while the app is open → jump to the report screen */
+try{if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='nav'||!d.url)return;var h=(String(d.url).split('#')[1]||'');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(h)>-1&&me){route=h;render();}});}catch(e){}
+
+/* ================= v70 FEATURES ================= */
+var FEAT_HOME=[];function featHome(){for(var i=0;i<FEAT_HOME.length;i++){try{FEAT_HOME[i]()}catch(e){try{console.error('featHome',e)}catch(e2){}}}}
+/*@@FEAT_MAP@@*/
+/* ---- v70 MAP: visit cadence + monthly coverage plan (monthPlanView) + live map (mapView) ---- */
+// cadence = target days between visits. override (visit_frequency_days) > potential 45 / grade; high priority caps at 14; disqualified → null
+var CAD_GRADE={green:14,yellow:21,orange:30,'new':30,gray:56};
+function custCadence(c){
+ if(!c||c.lifecycle==='disqualified')return null;
+ var vf=+c.visit_frequency_days;if(vf>0)return vf;
+ var cad=(c.lifecycle==='potential')?45:(CAD_GRADE[custGrade(c)]||30);
+ if(c.priority==='high')cad=Math.min(cad,14);
+ return cad;
+}
+function lastVisitTs(id){var lt=(_ltMap||{})[id];if(!lt||!lt.v)return null;var t=new Date(lt.v).getTime();return t||null;}
+function daysSinceVisit(id){var lv=lastVisitTs(id);return lv?Math.floor((Date.now()-lv)/86400000):null;}
+function _cdDays(a,b){return Math.round((parseYmd(b)-parseYmd(a))/86400000);}
+function cadMonthEnd(ds){ds=ds||todayStr();return ymd(new Date(+ds.slice(0,4),+ds.slice(5,7),0));}
+function cadWeekEnd(){var t=todayStr();return dateAdd(t,6-parseYmd(t).getDay());} // Sun–Sat week (pure date math)
+// last visit + cadence (today when never visited); null when excluded
+function nextDueYmd(c){var cad=custCadence(c);if(cad==null)return null;var lv=lastVisitTs(c.id);if(!lv)return todayStr();return dateAdd(ilYmd(new Date(lv)),cad);}
+function visitDue(c){var d=nextDueYmd(c);return d!=null&&d<=cadWeekEnd();}
+function visitedThisMonth(c){var lv=c?lastVisitTs(c.id):null;return !!lv&&ilYmd(new Date(lv))>=ilMonthStart(todayStr());}
+function cadOverdue(c){var d=nextDueYmd(c);if(!d)return 0;var n=_cdDays(d,todayStr());return n>0?n:0;}
+// needs a visit this month = due by month end OR already visited this month
+function cadNeedsMonth(c){if(custCadence(c)==null)return false;return visitedThisMonth(c)||nextDueYmd(c)<=cadMonthEnd();}
+function cadRemaining(c){return cadNeedsMonth(c)&&!visitedThisMonth(c);}
+function workDaysLeft(){var t=todayStr(),e=cadMonthEnd(t),n=0,d=t;while(d<=e){if(parseYmd(d).getDay()<=4)n++;d=dateAdd(d,1);}return n;}
+function mpNextWorkDay(){var d=dateAdd(todayStr(),1);for(var i=0;i<7;i++){if(parseYmd(d).getDay()<=4)return d;d=dateAdd(d,1);}return tomorrowStr();}
+function mpAreaName(code){var A=LOC.areas||[];for(var i=0;i<A.length;i++){if(+A[i].code===+code)return A[i].name||'';}var cs=LOC.customers||[];for(var j=0;j<cs.length;j++){if(+cs[j].area_code===+code&&cs[j].area_name)return cs[j].area_name;}return '';}
+function monthStats(){
+ var need=0,done=0,byArea={};
+ (LOC.customers||[]).forEach(function(c){
+  if(!cadNeedsMonth(c))return;need++;var v=visitedThisMonth(c);if(v)done++;
+  if(c.area_code==null)return;
+  var a=byArea[c.area_code]||(byArea[c.area_code]={code:+c.area_code,name:mpAreaName(c.area_code),need:0,done:0,over:0,rem:[]});
+  a.need++;if(v)a.done++;else{a.rem.push(c);if(cadOverdue(c)>0)a.over++;}
+ });
+ var areas=Object.keys(byArea).map(function(k){return byArea[k]}).sort(function(a,b){return a.code-b.code});
+ var wd=workDaysLeft(),rem=need-done;
+ return {need:need,done:done,rem:rem,wd:wd,perDay:wd?Math.ceil(rem/wd):rem,areas:areas};
+}
+// remaining month split into weeks: contiguous area blocks (by area number, starting at the most-overdue area), balanced by working days
+function monthWeekSplit(st){
+ var t=todayStr(),e=cadMonthEnd(t),ms=ilMonthStart(t),weeks=[],d=t;
+ while(d<=e){var w=parseYmd(d).getDay(),ws=dateAdd(d,-w),wk=weeks[weeks.length-1];if(!wk||wk.ws!==ws){wk={ws:ws,wd:0,areas:[],n:0};weeks.push(wk);}if(w<=4)wk.wd++;d=dateAdd(d,1);}
+ weeks=weeks.filter(function(w){return w.wd>0});if(!weeks.length)return [];
+ var fdow=parseYmd(ms).getDay();
+ weeks.forEach(function(w){var a=w.ws<ms?ms:w.ws,b=dateAdd(w.ws,6);if(b>e)b=e;w.from=a;w.to=b;w.no=Math.floor((parseYmd(a).getDate()+fdow-1)/7)+1;w.cur=(w.ws===dateAdd(t,-parseYmd(t).getDay()));});
+ var ar=st.areas.filter(function(a){return a.rem.length>0});if(!ar.length)return weeks;
+ var si=0;ar.forEach(function(a,i){var b=ar[si];if(a.over>b.over||(a.over===b.over&&a.rem.length>b.rem.length))si=i;});
+ ar=ar.slice(si).concat(ar.slice(0,si));
+ var total=0,totWd=0;ar.forEach(function(a){total+=a.rem.length});weeks.forEach(function(w){totWd+=w.wd});
+ var wi=0,cum=0,target=weeks[0].wd/totWd*total;
+ ar.forEach(function(a){
+  if(wi<weeks.length-1&&weeks[wi].n>0&&cum+a.rem.length/2>target){wi++;target+=weeks[wi].wd/totWd*total;}
+  weeks[wi].areas.push(a.code);weeks[wi].n+=a.rem.length;cum+=a.rem.length;
+ });
+ return weeks;
+}
+function mpDueLabel(c){
+ var od=cadOverdue(c);
+ if(od>0)return '<span style="color:var(--bad);font-weight:800">🔴 באיחור '+od+' ימים</span>';
+ if(visitedThisMonth(c)){var lv=lastVisitTs(c.id);return '<span style="color:var(--good);font-weight:800">✓ בוקר '+heDate(ilYmd(new Date(lv)))+'</span>';}
+ var nd=nextDueYmd(c);
+ if(nd===todayStr())return '<span style="color:var(--warn);font-weight:800">🟠 היום</span>';
+ return '<span style="color:var(--warn);font-weight:800">🟡 עד '+heDate(nd)+'</span>';
+}
+function mpLastTxt(id){var d=daysSinceVisit(id);if(d==null)return 'לא בוקר';if(d===0)return 'ביקור אחרון היום';return 'ביקור אחרון לפני '+d+' ימים';}
+function mpBar(pct,col){pct=Math.max(0,Math.min(100,pct));return '<div class="bar" style="height:7px"><div style="width:'+pct+'%;background:'+(col||'var(--acc)')+'"></div></div>';}
+function mpCovCol(r){return r>=0.7?'var(--good)':(r>=0.4?'var(--warn)':'var(--bad)');}
+// add ids to the current route selection (keeps a built route built; widens the area filter when needed)
+function mpAddToRoute(ids){
+ ids.forEach(function(id){routeSel[id]=true});
+ var acs=routeSelAreas();
+ if(routeArea==null||(typeof routeArea==='number'&&!(acs.length===1&&acs[0]===routeArea)))routeArea=(acs.length===1)?acs[0]:ROUTE_SELV;
+ saveDailyRoute();
+}
+function mpRouteLbl(){var d=curRouteDate();return d===todayStr()?'למסלול היום':'למסלול '+heDate(d);}
+
+/* ================= monthly coverage plan ================= */
+var _mpl={f:null,day:'today',more:false};
+function monthPlanView(){
+ var t=todayStr();
+ if(_mpl.f==null){try{_mpl.f=localStorage.getItem('mpl_f')||'late'}catch(e){_mpl.f='late'}}
+ shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📆 תוכנית חודשית · '+HEMONTHS[+t.slice(5,7)-1]+'</div><button id="mplmap" style="border:none;background:rgba(255,255,255,.16);color:#fff;height:30px;padding:0 10px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer">🗺️ מפה</button></div></div><div class="list" id="mplres"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ $('mplmap').onclick=function(){route='map';render()};
+ loadFollowups(function(){if(route==='monthplan'&&$('mplres'))mplRender();});
+}
+function mplRender(){
+ var el=$('mplres');if(!el)return;
+ var st=monthStats(),t=todayStr();
+ if(!(LOC.customers||[]).length){el.innerHTML='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:22px">אין עדיין לקוחות לתכנון.</div>';return;}
+ var pct=st.need?Math.round(st.done*100/st.need):0;
+ var h='<div class="card" id="mplprog" style="box-shadow:0 6px 18px rgba(36,33,29,.06)">'+
+  '<div style="font-size:12px;color:var(--mut);font-weight:700">בוקרו החודש</div>'+
+  '<div style="display:flex;align-items:baseline;gap:6px;margin:2px 0 8px"><span id="mpldone" style="font-size:30px;font-weight:800;color:var(--acc);letter-spacing:-.02em">'+st.done+'</span><span style="font-size:15px;color:var(--mut);font-weight:700">מתוך <span id="mplneed">'+st.need+'</span></span><span style="margin-inline-start:auto;font-size:13px;font-weight:800;color:'+mpCovCol(st.need?st.done/st.need:1)+'">'+pct+'%</span></div>'+
+  mpBar(pct,mpCovCol(st.need?st.done/st.need:1))+
+  '<div id="mplpace" style="font-size:12.5px;color:var(--ink);font-weight:600;margin-top:9px;line-height:1.5">'+(st.rem<=0?'✓ כל הלקוחות של החודש בוקרו':(st.wd?'נותרו '+st.rem+' לקוחות · '+st.wd+' ימי עבודה (א׳–ה׳) ← ~'+st.perDay+' ביקורים ביום':'נותרו '+st.rem+' לקוחות · אין ימי עבודה נוספים החודש'))+'</div>'+
+  '<div style="font-size:11px;color:var(--mut);margin-top:4px;line-height:1.5">כל לקוח לפי התדירות שלו: ירוק 14 · צהוב 21 · כתום/חדש 30 · פוטנציאלי 45 · אפור 56 ימים</div></div>';
+ // areas
+ var nd=mpNextWorkDay();var ndl=(nd===tomorrowStr())?'מחר':('יום '+HEDAYS[parseYmd(nd).getDay()]+' '+heDate(nd));
+ h+='<div style="display:flex;align-items:center;gap:7px;margin-top:4px"><div style="font-size:14px;font-weight:800;color:var(--head);flex:1">לפי אזור</div><span style="font-size:11.5px;color:var(--mut);font-weight:700">לתכנן ל:</span><button class="chip mplday'+(_mpl.day==='today'?' on':'')+'" data-d="today" style="padding:5px 12px;font-size:12px">היום</button><button class="chip mplday'+(_mpl.day==='next'?' on':'')+'" data-d="next" style="padding:5px 12px;font-size:12px">'+ndl+'</button></div>';
+ st.areas.forEach(function(a){
+  var r=a.need?a.done/a.need:1;
+  h+='<div class="card mplarea" data-a="'+a.code+'"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;min-width:0;font-size:14px;font-weight:800">אזור '+a.code+(a.name?' · '+esc(a.name):'')+' — <span style="color:'+mpCovCol(r)+'">'+a.done+'/'+a.need+'</span></div>'+(a.over?'<span class="badge b-bad">'+a.over+' באיחור</span>':'')+'</div>'+
+   '<div style="margin:8px 0 9px">'+mpBar(a.need?a.done*100/a.need:100,mpCovCol(r))+'</div>'+
+   (a.rem.length?'<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-size:11.5px;color:var(--mut)">נותרו '+a.rem.length+' לקוחות</div><button class="chip mplgo" data-a="'+a.code+'" style="background:var(--acc);color:#fff;border-color:var(--acc);font-weight:800;padding:6px 12px;font-size:12.5px">תכנני יום לאזור</button></div>':'<div style="font-size:11.5px;color:var(--good);font-weight:700">✓ האזור מכוסה החודש</div>')+'</div>';
+ });
+ // week split
+ var wk=monthWeekSplit(st);
+ if(wk.length&&st.rem>0){
+  h+='<div class="card" id="mplweeks" style="background:#fbfaf8"><div style="font-size:13.5px;font-weight:800;color:var(--head);margin-bottom:6px">🗓 חלוקה מוצעת לשבועות</div>';
+  wk.forEach(function(w){
+   h+='<div class="mplwk" style="padding:7px 0;border-top:1px solid var(--line);font-size:12.5px"><div style="font-weight:800">שבוע '+w.no+' <span style="color:var(--mut);font-weight:600">('+parseYmd(w.from).getDate()+'–'+heDate(w.to)+')</span>'+(w.cur?' <span class="badge b-acc" style="font-size:10px;padding:1px 6px">השבוע</span>':'')+'</div><div style="color:var(--ink);margin-top:2px">'+(w.areas.length?(w.areas.length===1?'אזור ':'אזורים ')+w.areas.join(', ')+' · <b>'+w.n+'</b> לקוחות':'<span style="color:var(--mut)">—</span>')+'</div></div>';
+  });
+  h+='<div style="font-size:11px;color:var(--mut);line-height:1.5;margin-top:5px">מתחילים מהאזור עם הכי הרבה לקוחות באיחור וממשיכים לאזורים הסמוכים לפי המספר, כך שכל שבוע יקבל עומס דומה לפי ימי העבודה בו.</div></div>';
+ }
+ // customer list
+ var F=[['late','באיחור'],['week','השבוע'],['done','בוקרו'],['all','הכל']];
+ var base=(LOC.customers||[]).filter(function(c){return custCadence(c)!=null});
+ var we=cadWeekEnd();
+ var fl={late:function(c){return cadOverdue(c)>0},week:function(c){var d=nextDueYmd(c);return d>=t&&d<=we&&!visitedThisMonth(c)},done:function(c){return visitedThisMonth(c)},all:function(){return true}};
+ var cnt={};F.forEach(function(f){cnt[f[0]]=base.filter(fl[f[0]]).length});
+ h+='<div style="font-size:14px;font-weight:800;color:var(--head);margin-top:6px">לקוחות</div><div class="catchips" style="margin-top:0">';
+ F.forEach(function(f){h+='<button class="chip mplf'+(_mpl.f===f[0]?' on':'')+'" data-f="'+f[0]+'">'+f[1]+' · '+cnt[f[0]]+'</button>'});
+ h+='</div>';
+ var rows=base.filter(fl[_mpl.f]||fl.all);
+ rows.sort(function(a,b){var x=nextDueYmd(a),y=nextDueYmd(b);if(_mpl.f==='done'){return (lastVisitTs(b.id)||0)-(lastVisitTs(a.id)||0)}return x<y?-1:(x>y?1:heb(a.name,b.name))});
+ if(!rows.length)h+='<div class="card" style="text-align:center;color:var(--mut);font-size:13px;padding:18px">אין לקוחות ברשימה הזו 👌</div>';
+ var lim=_mpl.more?rows.length:60;
+ rows.slice(0,lim).forEach(function(c){
+  var cad=custCadence(c);
+  h+='<div class="card mplrow" data-id="'+c.id+'" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.name)+gradeBadge(c,true)+(routeSel[c.id]?' <span class="badge b-acc" style="font-size:10px">★ במסלול</span>':'')+'</div><div style="font-size:11px;color:var(--mut);margin-top:2px">'+esc(c.city||'')+(c.area_code!=null?' · אזור '+c.area_code:'')+' · '+mpLastTxt(c.id)+' · כל '+cad+' ימים'+(+c.visit_frequency_days>0?' ✎':'')+'</div></div><div style="font-size:11.5px;white-space:nowrap;text-align:left">'+mpDueLabel(c)+'</div></div>';
+ });
+ if(rows.length>lim)h+='<button class="chip" id="mplmore" style="align-self:center">הצגת עוד '+(rows.length-lim)+'</button>';
+ el.innerHTML=h;
+ var q=function(s){return el.querySelectorAll(s)};
+ var i;
+ var fs=q('.mplf');for(i=0;i<fs.length;i++)fs[i].onclick=function(){_mpl.f=this.getAttribute('data-f');_mpl.more=false;try{localStorage.setItem('mpl_f',_mpl.f)}catch(e){}mplRender();};
+ var ds=q('.mplday');for(i=0;i<ds.length;i++)ds[i].onclick=function(){_mpl.day=this.getAttribute('data-d');mplRender();};
+ var gs=q('.mplgo');for(i=0;i<gs.length;i++)gs[i].onclick=function(e){e.stopPropagation();mplPlanArea(+this.getAttribute('data-a'),_mpl.day);};
+ var rs=q('.mplrow');for(i=0;i<rs.length;i++)rs[i].onclick=function(){mplCadSheet(this.getAttribute('data-id'));};
+ if($('mplmore'))$('mplmore').onclick=function(){_mpl.more=true;mplRender();};
+}
+// up to 9 most urgent customers of the area still needing a visit this month (overdue days, then route score)
+function mplAreaPicks(code){
+ var list=(LOC.customers||[]).filter(function(c){return +c.area_code===+code&&cadRemaining(c)});
+ var sc={};list.forEach(function(c){sc[c.id]=routeScore(c).score||0});
+ list.sort(function(a,b){var d=cadOverdue(b)-cadOverdue(a);if(d)return d;return sc[b.id]-sc[a.id]});
+ return list.slice(0,9).map(function(c){return c.id});
+}
+function mplAskReplace(n,go){
+ var ov=actModal('יש כבר מסלול');var body=ov.querySelector('.amb');
+ body.innerHTML='<div style="font-size:13.5px;line-height:1.6">במסלול כבר יש '+n+' עצירות אחרות. מה לעשות?</div><button class="cta" id="mplrep">החלפת המסלול</button><button id="mpladd" style="width:100%;height:46px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">הוספה למסלול הקיים</button>';
+ $('mplrep').onclick=function(){ov.remove();go(true)};$('mpladd').onclick=function(){ov.remove();go(false)};
+}
+function mplPlanArea(code,which){
+ var picks=mplAreaPicks(code);
+ if(!picks.length){toast('אין באזור '+code+' לקוחות שמחכים לביקור החודש');return;}
+ var T=todayStr(),ds=(which==='next')?mpNextWorkDay():T;
+ if(ds===T){
+  if(routeDate&&routeDate!==T){ // was planning another day → switch back to today's (local) route
+   cancelRouteSave();routeDate=null;_routeReport=null;var lr=routeLocalLoad();
+   routeSel=(lr&&lr.sel)||{};routeArea=lr?(lr.area||null):null;routeBuilt=!!(lr&&lr.built);routeRev=!!(lr&&lr.rev);
+  }
+  var go=function(replace){
+   if(replace)routeSel={};
+   picks.forEach(function(id){routeSel[id]=true});
+   var acs=routeSelAreas();routeArea=(acs.length===1)?acs[0]:ROUTE_SELV;
+   routeBuilt=false;routeEnded=false;saveDailyRoute();
+   toast(picks.length+' לקוחות מאזור '+code+' נבחרו למסלול היום ✓');route='route';render();
+  };
+  var others=routeSelIds().filter(function(id){return picks.indexOf(id)<0});
+  if(others.length)mplAskReplace(others.length,go);else go(false);
+  return;
+ }
+ if(navigator.onLine===false||!me){toast('זמין רק עם קליטה');return;}
+ sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',ds).limit(1).then(function(r){
+  if(r&&r.error){netMark(false,r.error);toast('לא הצלחתי לטעון — נסי שוב');return;}
+  var ex=(r&&r.data&&r.data[0])||null;
+  var exIds=(ex&&ex.status!=='archived'&&ex.selected_ids)||[];
+  var go=function(replace){
+   var merged=replace?[]:exIds.slice();picks.forEach(function(id){if(merged.indexOf(id)<0)merged.push(id)});
+   var acs=areaCodesOf(merged);
+   var row={agent_id:me.id,route_date:ds,area_code:acs.length?acs[0]:null,area_codes:acs,origin:(ex&&ex.origin&&ex.origin.lat!=null)?ex.origin:getOrigin(),selected_ids:merged,built:false,reversed:!!(ex&&ex.reversed),status:'active',updated_at:new Date().toISOString()};
+   sb.from('daily_routes').upsert(row,{onConflict:'agent_id,route_date'}).then(function(r2){
+    if(r2&&r2.error){netMark(false,r2.error);toast('לא הצלחתי לשמור — נסי שוב');return;}
+    netMark(true);toast(picks.length+' לקוחות מאזור '+code+' נבחרו ל'+heDate(ds)+' ✓');planFor(ds);
+   },function(e){netMark(false,e);toast('לא הצלחתי לשמור — נסי שוב');});
+  };
+  var others=exIds.filter(function(id){return picks.indexOf(id)<0});
+  if(others.length)mplAskReplace(others.length,go);else go(false);
+ },function(e){netMark(false,e);toast('זמין רק עם קליטה');});
+}
+function mplCadSheet(id){
+ var c=custById(id);if(!c)return;
+ var ov=actModal('תדירות ביקור');var body=ov.querySelector('.amb');
+ var draw=function(){
+  var cur=+c.visit_frequency_days>0?+c.visit_frequency_days:null;var cad=custCadence(c);
+  var h='<div class="card" style="background:var(--accs)"><div style="font-size:15px;font-weight:800;color:var(--accd)">'+esc(c.name)+gradeBadge(c,true)+'</div><div style="font-size:11.5px;color:var(--accd);margin-top:2px">'+esc(c.city||'')+(c.area_code!=null?' · אזור '+c.area_code:'')+' · '+mpLastTxt(c.id)+'</div><div style="font-size:12.5px;margin-top:6px">'+mpDueLabel(c)+'</div></div>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--head)">כל כמה ימים לבקר?</div><div style="display:flex;gap:7px;flex-wrap:wrap">';
+  [14,21,30,45,60].forEach(function(v){h+='<button class="chip mplcad'+(cur===v?' on':'')+'" data-v="'+v+'" style="min-width:52px">'+v+'</button>'});
+  h+='<button class="chip mplcad'+(cur==null?' on':'')+'" data-v="auto">אוטומטי'+(cur==null?' ('+cad+')':'')+'</button></div>';
+  h+='<div style="font-size:11.5px;color:var(--mut);line-height:1.5">«אוטומטי» = לפי ציון הלקוח ('+GRADE_L[custGrade(c)][1]+').</div>';
+  h+='<button class="cta" id="mplcard" style="height:46px;font-size:15px">כרטיס לקוח</button>';
+  body.innerHTML=h;
+  var b=body.querySelectorAll('.mplcad');for(var i=0;i<b.length;i++)b[i].onclick=function(){var a=this.getAttribute('data-v');setCad(a==='auto'?null:+a);};
+  $('mplcard').onclick=function(){ov.remove();openCustomer(c.id)};
+ };
+ var setCad=function(v){
+  if(navigator.onLine===false){toast('זמין רק עם קליטה');return;}
+  var old=c.visit_frequency_days;if((+old>0?+old:null)===v)return;
+  c.visit_frequency_days=v;draw();if(route==='monthplan')mplRender();
+  sb.from('customers').update({visit_frequency_days:v}).eq('id',c.id).then(function(r){
+   if(r&&r.error){c.visit_frequency_days=old;netMark(false,r.error);toast('לא נשמר — נסי שוב');draw();if(route==='monthplan')mplRender();return;}
+   netMark(true);try{kvPut('snap:customers',LOC.customers)}catch(e){}toast(v?'נשמר: כל '+v+' ימים ✓':'חזר לתדירות אוטומטית ✓');
+  },function(e){c.visit_frequency_days=old;netMark(false,e);toast('זמין רק עם קליטה');draw();if(route==='monthplan')mplRender();});
+ };
+ draw();
+}
+FEAT_HOME.push(function(){
+ if(!$('hf_plan')||!me)return;
+ loadFollowups(function(){
+  var el=$('hf_plan');if(!el||route!=='home')return;
+  var st=monthStats();if(!st.need){el.innerHTML='';return;}
+  var r=st.done/st.need;
+  el.innerHTML='<div class="card" id="hfplancard" style="cursor:pointer;box-shadow:0 6px 18px rgba(36,33,29,.06)"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;font-size:13.5px;font-weight:800;color:var(--head)">📆 כיסוי חודשי: '+st.done+'/'+st.need+'</div><a href="#" id="hfmaplink" style="font-size:12px;font-weight:700;text-decoration:none">🗺️ פתחי מפה</a></div><div style="margin:7px 0 6px">'+mpBar(Math.round(r*100),mpCovCol(r))+'</div><div style="font-size:12px;color:var(--mut);font-weight:600">'+(st.rem>0?'נותרו '+st.rem+(st.wd?' · ~'+st.perDay+' ביום':''):'✓ כל הלקוחות של החודש בוקרו')+'</div></div>';
+  $('hfplancard').onclick=function(){route='monthplan';render()};
+  $('hfmaplink').onclick=function(e){e.preventDefault();e.stopPropagation();route='map';render()};
+ });
+});
+
+/* ================= live map ================= */
+var MP_TILES='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+var MP_GCOL={green:'#1c7a4f',yellow:'#f0b429',orange:'#e8613f',gray:'#a8a29a','new':'#0f6b74'};
+var _mp={map:null,lay:null,markers:{},gen:0,view:null,filter:null,drawer:true,radius:10,me:null,geoAsked:false,card:null,resize:null,apptToday:{},apptIds:{},failed:false};
+var _lfP=null;
+function mapLoadLeaflet(){
+ if(window.L&&window.L.map)return Promise.resolve(window.L);
+ if(_lfP)return _lfP;
+ _lfP=new Promise(function(res,rej){
+  var base='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
+  if(!document.getElementById('lfcss')){var l=document.createElement('link');l.id='lfcss';l.rel='stylesheet';l.href=base+'leaflet.css';document.head.appendChild(l);}
+  var s=document.createElement('script');s.src=base+'leaflet.js';s.async=true;
+  var tm=setTimeout(function(){fail()},15000);
+  var fail=function(){clearTimeout(tm);_lfP=null;try{s.remove()}catch(e){}rej(new Error('leaflet'))};
+  s.onload=function(){clearTimeout(tm);if(window.L&&window.L.map)res(window.L);else fail()};
+  s.onerror=fail;
+  document.head.appendChild(s);
+ });
+ return _lfP;
+}
+function mapDestroy(){
+ if(_mp.map){try{var ce=_mp.map.getCenter();_mp.view={lat:ce.lat,lng:ce.lng,z:_mp.map.getZoom()}}catch(e){}try{_mp.map.remove()}catch(e){}}
+ _mp.map=null;_mp.lay=null;_mp.markers={};_mp.card=null;_mp.gen++;
+ if(_mp.resize){window.removeEventListener('resize',_mp.resize);window.removeEventListener('orientationchange',_mp.resize);_mp.resize=null;}
+}
+(function(){var _rr=renderRoute;renderRoute=function(){if(route!=='map'&&(_mp.map||_mp.resize))mapDestroy();return _rr.apply(this,arguments)};})();
+function mpCss(){
+ if(document.getElementById('mpcss'))return;
+ var s=document.createElement('style');s.id='mpcss';
+ s.textContent='#mpwrap{position:fixed;top:112px;bottom:64px;left:0;right:0;max-width:520px;margin:0 auto;z-index:1;isolation:isolate;background:#ece8e0;overflow:hidden}'+
+ '#mpmap{position:absolute;inset:0;z-index:0}#mpmap .leaflet-container,#mpmap.leaflet-container{font-family:inherit;background:#ece8e0}'+
+ '.mpchips{display:flex;gap:6px;overflow-x:auto;margin-top:9px;scrollbar-width:none;padding-bottom:1px}.mpchips::-webkit-scrollbar{display:none}'+
+ '.mpchips .chip{padding:5px 11px;font-size:12.5px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);flex:none}.mpchips .chip.on{background:#fff;color:var(--accd);border-color:#fff;font-weight:800}'+
+ '.mpchips .chip i{font-style:normal;opacity:.75;font-size:11px;margin-inline-start:3px}'+
+ '#mploc{position:absolute;top:84px;left:10px;z-index:5;border:none;background:#fff;color:var(--ink);font-weight:800;font-size:12.5px;height:34px;padding:0 11px;border-radius:10px;box-shadow:0 2px 10px rgba(28,26,23,.22);cursor:pointer}'+
+ '#mpdrawer{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;background:#fff;border-radius:16px;box-shadow:0 8px 28px rgba(28,26,23,.24);max-height:46%;display:flex;flex-direction:column;overflow:hidden}'+
+ '#mpdrawer.full{top:8px;max-height:none}'+
+ '.mpdh{display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;font-size:14.5px;font-weight:800;color:var(--head);flex:none}'+
+ '.mpdh .chev{margin-inline-start:auto;color:var(--mut);font-size:13px;transition:transform .15s}#mpdrawer.closed .chev{transform:rotate(180deg)}#mpdrawer.closed .mpdb{display:none}'+
+ '.mpdb{overflow:auto;padding:0 12px 12px;-webkit-overflow-scrolling:touch}'+
+ '.mprad{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--mut);font-weight:700;margin-bottom:4px;flex-wrap:wrap}.mprad .chip{padding:3px 10px;font-size:12px}'+
+ '.mprec{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-top:1px solid var(--line);cursor:pointer}'+
+ '.mprec .rk{width:22px;height:22px;border-radius:50%;background:var(--accs);color:var(--accd);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}'+
+ '#mpcard{position:absolute;left:8px;right:8px;bottom:8px;z-index:7;background:#fff;border-radius:16px;box-shadow:0 8px 28px rgba(28,26,23,.26);padding:13px 14px 12px}'+
+ '#mpcard .mpbtns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}'+
+ '#mpcard .mpbtns button,#mpcard .mpbtns a{height:40px;border-radius:11px;border:1px solid var(--line);background:#fbfaf8;color:var(--ink);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;text-decoration:none;font-family:inherit}'+
+ '#mpcard .mpbtns .pri{background:var(--acc);color:#fff;border-color:var(--acc)}#mpcard .mpbtns .inr{background:var(--goods);color:var(--goodd);border-color:#bfe0cc}'+
+ '.mpstop{background:none;border:none}.mpstop b{position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--acc);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}.mpstop span{position:absolute;left:0;top:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:800;font-family:inherit}'+
+ '.mpappt{background:none;border:none;font-size:17px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}'+
+ '.mparea{background:none;border:none}.mparea span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;background:rgba(255,255,255,.93);border:1.5px solid currentColor;border-radius:9px;padding:2px 8px;font-size:11px;font-weight:800;box-shadow:0 2px 6px rgba(28,26,23,.18);direction:rtl;font-family:inherit}'+
+ '#mpmap.mpz .mparea{display:none}.mparea em{font-style:normal}.mparea .ls,#mpmap.mpzs .mparea .lf{display:none}#mpmap.mpzs .mparea .ls{display:inline}#mpmap.mpzs .mparea span{padding:1px 6px;font-size:10.5px}'+
+ '.mpleg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:10.5px;color:var(--mut);font-weight:600;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}.mpleg i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-inline-end:3px}'+
+ '@media (orientation:landscape) and (min-width:700px){#mpdrawer,#mpcard{left:auto;right:8px;width:340px}#mpdrawer{top:30px;bottom:8px;max-height:none}#mpdrawer.closed{bottom:auto}#mpdrawer.full{width:auto;left:8px;top:8px}}'+
+ '.mpfb{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:18px;text-align:center;color:var(--mut);font-size:13px}';
+ document.head.appendChild(s);
+}
+function mpFit(){
+ var w=$('mpwrap'),hd=$('mphdr');if(!w||!hd)return;
+ var hr=hd.getBoundingClientRect(),vh=window.innerHeight,bottom=0,n=document.getElementById('nav');
+ if(n){var nr=n.getBoundingClientRect();if(nr.top>vh/2)bottom=Math.max(0,vh-nr.top);}
+ w.style.top=Math.round(hr.bottom)+'px';w.style.bottom=Math.round(bottom)+'px';w.style.left=Math.round(hr.left)+'px';w.style.right='auto';w.style.width=Math.round(hr.width)+'px';w.style.maxWidth='none';w.style.margin='0';
+}
+function mpFilterOk(c,f){
+ if(!c||c.lat==null||c.lng==null||c.lifecycle==='disqualified')return false;
+ f=f||_mp.filter;
+ if(f==='due')return !!_ltMap&&cadRemaining(c);
+ if(f==='debt')return c.debt_agorot>0;
+ if(f==='appt')return !!_mp.apptIds[c.id];
+ if(f==='green')return custGrade(c)==='green';
+ return true;
+}
+var MP_FILTERS=[['all','הכל'],['due','לביקור החודש'],['debt','חוב'],['appt','פגישות'],['green','ירוקים']];
+function mpChipsHtml(){
+ var cs=LOC.customers||[];
+ return MP_FILTERS.map(function(f){var n=0;for(var i=0;i<cs.length;i++)if(mpFilterOk(cs[i],f[0]))n++;return '<button class="chip mpf'+(_mp.filter===f[0]?' on':'')+'" data-f="'+f[0]+'">'+f[1]+'<i>'+n+'</i></button>'}).join('');
+}
+function mpBindChips(){
+ var el=$('mpchips');if(!el)return;el.innerHTML=mpChipsHtml();
+ var b=el.querySelectorAll('.mpf');for(var i=0;i<b.length;i++)b[i].onclick=function(){_mp.filter=this.getAttribute('data-f');try{localStorage.setItem('mp_filter',_mp.filter)}catch(e){}mpBindChips();mpDraw();if(_mp.card&&!_mp.markers[_mp.card])mpCloseCard();};
+}
+function mapView(){
+ mapDestroy();var gen=_mp.gen;
+ if(_mp.filter==null){var f=null;try{f=localStorage.getItem('mp_filter')}catch(e){}_mp.filter=(f&&MP_FILTERS.some(function(x){return x[0]===f}))?f:'all';}
+ mpCss();
+ shell('<div id="mphdr" style="background:var(--acc);padding:11px 14px 10px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:8px"><div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em;flex:1">🗺️ המפה שלי</div><button id="mpplan" style="border:none;background:rgba(255,255,255,.16);color:#fff;height:30px;padding:0 10px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer">📆 תוכנית חודשית</button></div><div class="mpchips" id="mpchips"></div></div>'+
+  '<div id="mpwrap"><div id="mpmap" dir="ltr"><div class="mpfb">טוען מפה…</div></div><button id="mploc">📍 איפה אני</button><div id="mpcard" hidden></div><div id="mpdrawer"></div></div>');
+ var v=$('view');if(v){v.style.minHeight='0';v.style.paddingBottom='0';}
+ mpBindChips();mpFit();
+ _mp.resize=function(){mpFit();if(_mp.map)try{_mp.map.invalidateSize()}catch(e){}};
+ window.addEventListener('resize',_mp.resize);window.addEventListener('orientationchange',_mp.resize);
+ $('mpplan').onclick=function(){route='monthplan';render()};
+ $('mploc').onclick=function(){mpLocate(true)};
+ mpRenderDrawer();
+ loadFollowups(function(){if(gen!==_mp.gen)return;mpBindChips();mpRenderDrawer();mpDraw();});
+ mpLoadAppts(gen);
+ if(!_mp.me&&!_mp.geoAsked){_mp.geoAsked=true;mpLocate(false);}
+ mapLoadLeaflet().then(function(){if(gen!==_mp.gen||route!=='map'||!$('mpmap'))return;_mp.failed=false;try{mpInitMap()}catch(e){try{console.warn('map init',e)}catch(e2){}mpFallback()}},function(){if(gen!==_mp.gen||route!=='map')return;mpFallback();});
+}
+function mpLoadAppts(gen){
+ var T=todayStr();
+ loadAppts(T,function(list){
+  if(gen!==_mp.gen)return;var m={},ids={};(list||[]).forEach(function(a){if(a.customer_id){m[a.customer_id]=a;ids[a.customer_id]=true}});_mp.apptToday=m;
+  var fin=function(up){if(gen!==_mp.gen)return;(up||[]).forEach(function(a){if(a.customer_id&&a.status!=='cancelled')ids[a.customer_id]=true});_mp.apptIds=ids;mpBindChips();mpDraw();};
+  if(navigator.onLine===false||!me){fin([]);return;}
+  try{loadApptsUpcoming(fin)}catch(e){fin([])}
+ });
+}
+function mpFallback(){
+ _mp.failed=true;
+ var m=$('mpmap');if(m)m.innerHTML='<div class="mpfb"><div class="card" style="max-width:340px;line-height:1.6"><div style="font-size:26px">🗺️</div><div style="font-weight:800;color:var(--head)">המפה לא נטענה</div><div>נראה שאין קליטה כרגע. הנה ההמלצות שלך בינתיים.</div><button class="chip" id="mpretry" style="margin-top:8px">נסי שוב</button></div></div>';
+ if($('mpretry'))$('mpretry').onclick=function(){mapView()};
+ if($('mploc'))$('mploc').style.display='none';
+ _mp.drawer=true;mpRenderDrawer();
+}
+function mpInitMap(){
+ var box=$('mpmap');box.innerHTML='';mpFit();
+ var m=L.map('mpmap',{preferCanvas:true,zoomControl:true,attributionControl:true,tap:true});
+ m.attributionControl.setPrefix(false);m.attributionControl.setPosition('topright');
+ L.tileLayer(MP_TILES,{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(m);
+ _mp.map=m;_mp.lay={areas:L.layerGroup().addTo(m),rings:L.layerGroup().addTo(m),pins:L.layerGroup().addTo(m),me:L.layerGroup().addTo(m),top:L.layerGroup().addTo(m)};
+ if(_mp.view)m.setView([_mp.view.lat,_mp.view.lng],_mp.view.z);
+ else{var pts=[];(LOC.customers||[]).forEach(function(c){if(c.lat!=null&&c.lng!=null&&c.lifecycle!=='disqualified')pts.push([c.lat,c.lng])});
+  var dr=$('mpdrawer'),dh=dr?dr.offsetHeight:0,dw=dr?dr.offsetWidth:0,side=dw&&dw<box.offsetWidth*0.6;
+  if(pts.length)m.fitBounds(pts,{paddingTopLeft:[20,20],paddingBottomRight:side?[dw+16,20]:[20,Math.min(dh+12,box.offsetHeight*0.55)],maxZoom:13});else{var o=getOrigin();m.setView([o.lat,o.lng],11);}}
+ var zc=function(){var el=$('mpmap');if(el){el.classList.toggle('mpz',m.getZoom()>=13);el.classList.toggle('mpzs',m.getZoom()<10);}};m.on('zoomend',zc);zc();
+ m.on('click',function(){mpCloseCard()});
+ mpDraw();mpDrawMe();
+ setTimeout(function(){if(_mp.map===m)try{m.invalidateSize()}catch(e){}},60);
+}
+function mpDraw(){
+ var m=_mp.map,Y=_mp.lay;if(!m||!Y)return;
+ Y.areas.clearLayers();Y.rings.clearLayers();Y.pins.clearLayers();Y.top.clearLayers();_mp.markers={};
+ var fu=!!_ltMap,cs=LOC.customers||[];
+ cs.forEach(function(c){
+  if(!mpFilterOk(c))return;
+  var g=custGrade(c),dsv=fu?daysSinceVisit(c.id):null,recent=(dsv!=null&&dsv<7),due=fu&&visitDue(c);
+  if(due)L.circleMarker([c.lat,c.lng],{radius:11.5,color:'#d32f2f',weight:3.5,opacity:recent?.6:.95,fill:false,interactive:false}).addTo(Y.rings);
+  var isNew=(g==='new'),pot=(c.lifecycle==='potential');
+  var mk=L.circleMarker([c.lat,c.lng],{radius:7.5,color:isNew?'#0f6b74':(pot?'#24211d':'#ffffff'),weight:isNew||pot?2.2:1.6,dashArray:pot?'3 3':null,fillColor:isNew?'#ffffff':MP_GCOL[g],fillOpacity:recent?.38:.95,opacity:recent?.45:1,bubblingMouseEvents:false});
+  mk.on('click',function(){mapOpenCard(c.id)});
+  mk.addTo(Y.pins);_mp.markers[c.id]=mk;
+ });
+ // today's route stops (numbered in nearest-neighbour order from the origin)
+ var sel=cs.filter(function(c){return routeSel[c.id]&&c.lat!=null&&c.lng!=null&&c.lifecycle!=='disqualified'});
+ nnOrder(sel,getOrigin()).forEach(function(c,i){
+  L.marker([c.lat,c.lng],{icon:L.divIcon({className:'mpstop',html:'<b></b><span>'+(i+1)+'</span>',iconSize:[24,24],iconAnchor:[12,33]}),zIndexOffset:800,keyboard:false}).on('click',function(){mapOpenCard(c.id)}).addTo(Y.top);
+ });
+ // today's appointments
+ for(var id in _mp.apptToday){var c=custById(id);if(!c||c.lat==null||c.lng==null)continue;(function(c){L.marker([c.lat,c.lng],{icon:L.divIcon({className:'mpappt',html:'📅',iconSize:[18,18],iconAnchor:[-4,22]}),zIndexOffset:900,keyboard:false}).on('click',function(){mapOpenCard(c.id)}).addTo(Y.top);})(c);}
+ // area coverage labels at the centroid of each area's customers
+ if(fu){var st=monthStats(),cen={};
+  cs.forEach(function(c){if(c.area_code==null||c.lat==null||c.lng==null||c.lifecycle==='disqualified')return;var a=cen[c.area_code]||(cen[c.area_code]={la:0,ln:0,n:0});a.la+=c.lat;a.ln+=c.lng;a.n++;});
+  st.areas.forEach(function(a){var q=cen[a.code];if(!q||!q.n||!a.need)return;var r=a.done/a.need;var col=r>=0.7?'#1c7a4f':(r>=0.4?'#b7791f':'#c0392b');
+   L.marker([q.la/q.n,q.ln/q.n],{icon:L.divIcon({className:'mparea',html:'<span style="color:'+col+'"><em class="lf">אזור '+a.code+' · '+a.done+'/'+a.need+' החודש</em><em class="ls">'+a.code+' · '+a.done+'/'+a.need+'</em></span>',iconSize:null}),interactive:false,keyboard:false,zIndexOffset:-100}).addTo(Y.areas);});
+ }
+ mpDrawMe();
+}
+function mpDrawMe(){
+ var Y=_mp.lay;if(!_mp.map||!Y)return;Y.me.clearLayers();if(!_mp.me)return;
+ if(_mp.me.acc&&_mp.me.acc<3000)L.circle([_mp.me.lat,_mp.me.lng],{radius:_mp.me.acc,color:'#1a73e8',weight:1,opacity:.35,fillColor:'#1a73e8',fillOpacity:.08,interactive:false}).addTo(Y.me);
+ L.circleMarker([_mp.me.lat,_mp.me.lng],{radius:8,color:'#ffffff',weight:3,fillColor:'#1a73e8',fillOpacity:1,interactive:false}).addTo(Y.me);
+}
+function mpLocate(center){
+ var gen=_mp.gen;
+ var useOrigin=function(msg){if(center){if(msg)toast(msg);var o=getOrigin();if(_mp.map)_mp.map.flyTo([o.lat,o.lng],12,{duration:.6});}};
+ if(!navigator.geolocation){useOrigin('המיקום לא זמין — מציגה את נקודת המוצא');return;}
+ try{navigator.geolocation.getCurrentPosition(function(p){
+  _mp.me={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};
+  if(route!=='map')return;mpDrawMe();mpRenderDrawer();
+  if(center&&gen===_mp.gen&&_mp.map)_mp.map.flyTo([_mp.me.lat,_mp.me.lng],Math.max(13,_mp.map.getZoom()),{duration:.6});
+ },function(){if(gen!==_mp.gen)return;useOrigin('לא הצלחתי לאתר מיקום — מציגה את נקודת המוצא');},{enableHighAccuracy:true,timeout:9000,maximumAge:120000});}catch(e){useOrigin('המיקום לא זמין — מציגה את נקודת המוצא');}
+}
+// recommendations near me (or the route origin): routeScore + cadence bonus − distance
+function mapRecs(){
+ var o=_mp.me||getOrigin(),R=_mp.radius,T=todayStr(),we=cadWeekEnd(),out=[];
+ (LOC.customers||[]).forEach(function(c){
+  if(!c||c.lat==null||c.lng==null||c.lifecycle==='disqualified'||routeSel[c.id])return;
+  var d=hav(o,c);if(d>R)return;
+  var s=routeScore(c);if(s.recent||s.excluded||s.gray||s.lowprio)return;
+  var bonus=0,cr=null,cad=custCadence(c);
+  if(cad!=null&&_ltMap&&!visitedThisMonth(c)){var nd=nextDueYmd(c),od=cadOverdue(c);
+   if(nd<=T){bonus=40+Math.min(30,od*2);cr=(lastVisitTs(c.id)?(od>0?'באיחור '+od+' ימים לפי התדירות (כל '+cad+')':'הגיע תור הביקור (כל '+cad+' ימים)'):null);}
+   else if(nd<=we){bonus=15;cr='תור הביקור עד '+heDate(nd);}}
+  if(s.score<=0&&!bonus)return;
+  var rs=[];if(cr)rs.push({t:cr,c:'var(--bad)'});
+  var srt=(s.reasons||[]).filter(function(x){return !(cr&&/^הגיע תור הביקור/.test(x.t))});
+  // with a cadence reason, «days since visit» reasons are redundant → only as a last resort
+  var vis=/לא ביקרת|ללא ביקור|אין ביקור|עברה תדירות/,dup=function(x){return !!cr&&vis.test(x.t)};
+  var pool=srt.filter(function(x){return !dup(x)});
+  pool.filter(function(x){return x.c==='var(--bad)'}).concat(pool.filter(function(x){return x.c!=='var(--bad)'}),srt.filter(dup)).forEach(function(x){if(rs.length<2)rs.push(x)});
+  out.push({c:c,km:d,score:Math.round(s.score+bonus-d*3),reasons:rs});
+ });
+ out.sort(function(a,b){return b.score-a.score});
+ return out.slice(0,5);
+}
+function mpRenderDrawer(){
+ var el=$('mpdrawer');if(!el)return;
+ el.className=(_mp.failed?'full':'')+(_mp.drawer||_mp.failed?'':' closed');
+ if(_mp.card&&!_mp.failed){el.style.display='none';}else el.style.display='';
+ var recs=_ltMap?mapRecs():[];
+ var o=_mp.me?'📍 ליד המיקום שלי':('📍 ליד '+esc(getOrigin().name||'נקודת המוצא'));
+ var h='<div class="mpdh" id="mpdh"><span>✨ מה כדאי עכשיו</span><span style="font-size:11px;color:var(--mut);font-weight:700">'+o+'</span><span class="chev">▾</span></div><div class="mpdb">';
+ h+='<div class="mprad"><span>רדיוס (ק״מ):</span>';[5,10,20,40].forEach(function(r){h+='<button class="chip mpr'+(_mp.radius===r?' on':'')+'" data-r="'+r+'">'+r+'</button>'});h+='</div>';
+ if(!_ltMap)h+='<div style="font-size:12.5px;color:var(--mut);padding:8px 2px">טוען המלצות…</div>';
+ else if(!recs.length)h+='<div style="font-size:12.5px;color:var(--mut);padding:8px 2px;line-height:1.5">אין המלצות ברדיוס הזה 👌 — נסי רדיוס גדול יותר.</div>';
+ recs.forEach(function(x,i){
+  h+='<div class="mprec" data-id="'+x.c.id+'" data-score="'+x.score+'" data-km="'+x.km.toFixed(2)+'"><span class="rk">'+(i+1)+'</span><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;align-items:baseline"><div style="flex:1;min-width:0;font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x.c.name)+gradeBadge(x.c)+'</div><span style="font-size:11.5px;color:var(--mut);font-weight:700;white-space:nowrap">'+x.km.toFixed(1)+' ק״מ</span></div><div style="font-size:11.5px;margin-top:2px;line-height:1.45">'+x.reasons.map(function(r){return '<span style="color:'+r.c+';font-weight:700">'+esc(r.t)+'</span>'}).join(' · ')+'</div></div></div>';
+ });
+ if(recs.length)h+='<button class="cta" id="mpaddall" style="height:42px;font-size:14px;margin-top:8px">➕ הוסף את כולם '+mpRouteLbl()+'</button>';
+ h+='<div class="mpleg"><span><i style="background:#1c7a4f"></i>ירוק</span><span><i style="background:#f0b429"></i>צהוב</span><span><i style="background:#e8613f"></i>כתום</span><span><i style="background:#a8a29a"></i>אפור</span><span><i style="border:2px solid #0f6b74;box-sizing:border-box"></i>חדש</span><span><i style="border:2.5px solid #d32f2f;box-sizing:border-box"></i>הגיע תור</span><span><i style="background:#1c7a4f;opacity:.35"></i>בוקר השבוע</span></div>';
+ h+='</div>';
+ el.innerHTML=h;
+ $('mpdh').onclick=function(){if(_mp.failed)return;_mp.drawer=!_mp.drawer;mpRenderDrawer();};
+ var rb=el.querySelectorAll('.mpr');for(var i=0;i<rb.length;i++)rb[i].onclick=function(){_mp.radius=+this.getAttribute('data-r');mpRenderDrawer();};
+ var it=el.querySelectorAll('.mprec');for(var j=0;j<it.length;j++)it[j].onclick=function(){mpFlyTo(this.getAttribute('data-id'))};
+ if($('mpaddall'))$('mpaddall').onclick=function(){var ids=recs.map(function(x){return x.c.id});mpAddToRoute(ids);toast(ids.length+' לקוחות נוספו '+mpRouteLbl()+' ✓');mpDraw();mpRenderDrawer();};
+}
+function mpFlyTo(id){
+ var c=custById(id);if(!c)return;
+ if(_mp.map&&c.lat!=null){if(!_mp.markers[id]&&_mp.filter!=='all'){_mp.filter='all';mpBindChips();mpDraw();}_mp.map.flyTo([c.lat,c.lng],Math.max(14,_mp.map.getZoom()),{duration:.6});}
+ mapOpenCard(id);
+}
+function mpCloseCard(){_mp.card=null;var el=$('mpcard');if(el){el.hidden=true;el.innerHTML='';}var d=$('mpdrawer');if(d)d.style.display='';}
+function mapOpenCard(id){
+ var c=custById(id),el=$('mpcard');if(!c||!el)return;
+ _mp.card=id;
+ var g=custGrade(c),GL=GRADE_L[g],cad=custCadence(c),inR=!!routeSel[id],ap=_mp.apptToday[id];
+ var due='';if(cad!=null&&_ltMap){var od=cadOverdue(c),nd=nextDueYmd(c);due=od>0?'<span style="color:var(--bad);font-weight:800">🔴 באיחור '+od+' ימים</span> · כל '+cad+' ימים':(visitedThisMonth(c)&&nd>cadMonthEnd()?'<span style="color:var(--good);font-weight:700">✓ בוקר החודש</span> · ביקור הבא '+heDate(nd):'ביקור הבא עד <b>'+heDate(nd)+'</b> · כל '+cad+' ימים');}
+ var flags=[];
+ if(c.debt_agorot>0)flags.push('<span class="badge b-bad">💰 יש חוב</span>');
+ if((_rmMap||{})[id])flags.push('<span class="badge b-warn">🔔 תזכורת פתוחה</span>');
+ if(ap)flags.push('<span class="badge b-acc">📅 פגישה היום '+esc(apptTime(ap))+'</span>');
+ if(c.lifecycle==='potential')flags.push('<span class="badge b-mut">פוטנציאלי</span>');
+ el.innerHTML='<div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:15.5px;font-weight:800;color:var(--head);line-height:1.3">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">'+esc(c.city||'')+(c.area_code!=null?' · אזור '+c.area_code:'')+' · <span style="color:var(--ink);font-weight:700">'+GL[0]+' '+GL[1]+'</span></div></div><button id="mpcx" style="border:none;background:#f2efe9;width:30px;height:30px;border-radius:50%;font-size:17px;color:var(--mut);cursor:pointer;flex:none">×</button></div>'+
+  '<div style="font-size:12.5px;margin-top:7px;line-height:1.55">'+(_ltMap?mpLastTxt(id).replace('לא בוקר','עדיין לא בוקר'):'')+(due?'<br>'+due:'')+'</div>'+
+  (flags.length?'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px">'+flags.join('')+'</div>':'')+
+  '<div class="mpbtns"><button id="mpcopen" class="pri">כרטיס לקוח</button><button id="mpcroute" class="'+(inR?'inr':'')+'">'+(inR?'✓ במסלול':'➕ '+mpRouteLbl())+'</button>'+
+  (c.lat!=null&&c.lng!=null?'<a id="mpcnav" href="https://waze.com/ul?ll='+c.lat+','+c.lng+'&navigate=yes" target="_blank" rel="noopener">🚗 ניווט</a>':'<button disabled style="opacity:.5">אין מיקום</button>')+
+  '<button id="mpcappt">📅 פגישה</button></div>';
+ el.hidden=false;
+ var d=$('mpdrawer');if(d)d.style.display='none';
+ $('mpcx').onclick=mpCloseCard;
+ $('mpcopen').onclick=function(){openCustomer(id)};
+ $('mpcroute').onclick=function(){
+  if(routeSel[id]){delete routeSel[id];if(!routeSelCount())routeBuilt=false;saveDailyRoute(true);toast('הוסר מהמסלול');}
+  else{mpAddToRoute([id]);toast('נוסף '+mpRouteLbl()+' ✓');}
+  mpDraw();mpRenderDrawer();mapOpenCard(id);
+ };
+ $('mpcappt').onclick=function(){var gen=_mp.gen;openApptSheet(c,null,function(){apptInvalidate();if(gen===_mp.gen)mpLoadAppts(gen);});};
+}
+/*@@FEAT_REPORTS@@*/
+/* ---- v70: weekly + monthly activity reports — deliberately WITHOUT any money (no ₪, sums, commission) ---- */
+var _rpWk=null,_rpWkAt=0,_rpMo=null,_rpMoAt=0,_rpAgent=null,_rpAgents=null,_rpAllOpen=false,_rpMoAll=false,_rpMarked={},_rpPopped={},_rpSeq=0,_rpWkM=null,_rpMoM=null;
+var RP_NOORD=['ללא הזמנה','לא נכח','פוטנציאלי'];
+function rpIsRep(rm){return !!rm&&(rm.kind==='weekly_report'||rm.kind==='monthly_report');}
+function rpDow(ds){return new Date(ds+'T12:00:00Z').getUTCDay();}
+function rpAdd(ds,n){var d=new Date(ds+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function rpDiff(a,b){return Math.round((new Date(b+'T12:00:00Z')-new Date(a+'T12:00:00Z'))/86400000);}
+function rpWeekStart(ds){return rpAdd(ds,-rpDow(ds));}
+function rpDM(ds){return ds?(+ds.slice(8,10))+'/'+(+ds.slice(5,7)):'';}
+function rpDayName(ds){return 'יום '+HEDAYS[rpDow(ds)]+' '+rpDM(ds);}
+function rpDayShort(ds){return HEDAYS_S[rpDow(ds)]+'׳ '+rpDM(ds);}
+function rpWeekLabel(from){var to=rpAdd(from,6);return 'שבוע '+(from.slice(0,7)===to.slice(0,7)?(+from.slice(8,10))+'–'+rpDM(to):rpDM(from)+'–'+rpDM(to));}
+function rpYmPrev(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1;if(m<1){m=12;y--;}return y+'-'+pad2(m);}
+function rpYmNext(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7)+1;if(m>12){m=1;y++;}return y+'-'+pad2(m);}
+function rpYmEnd(ym){return new Date(Date.UTC(+ym.slice(0,4),+ym.slice(5,7),0)).toISOString().slice(0,10);}
+function rpYmLabel(ym){return HEMONTHS[+ym.slice(5,7)-1]+' '+ym.slice(0,4);}
+function rpMoDefault(){var T=todayStr();return +T.slice(8,10)<=3?rpYmPrev(T.slice(0,7)):T.slice(0,7);}
+function rpTime(iso){try{return new Date(iso).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit',timeZone:IL_TZ});}catch(e){return '';}}
+function rpPct(a,b){return b?Math.round(a*100/b):0;}
+/* her free text may mention prices — strip anything that looks like money */
+function rpNoMoney(t){return String(t||'').replace(/₪\s*[\d.,]+|[\d.,]+\s*(₪|ש["״']?ח|שקלים|שקל|nis)/gi,'…').replace(/₪/g,'');}
+function rpOkOrder(o){return !!o&&o.status!=='cancelled'&&o.status!=='draft'&&o.approval_status!=='rejected';}
+function rpV(v){return {id:v.id,cid:v.customer_id||null,name:v.customer_name||'',city:v.city||'',at:v.arrived_at,day:ilYmd(v.arrived_at),outcome:v.outcome||'',note:rpNoMoney(v.summary||'').trim(),pend:!!v._pend};}
+function rpO(o){return {id:o.id,cid:o.customer_id||null,name:o.customer_name||'',at:o.created_at,day:ilYmd(o.created_at),pend:!!o._pend};}
+function rpKey(x){return x.cid||('n:'+(x.name||''));}
+function rpCity(x){var c=x.cid?custById(x.cid):null;return (c&&c.city)||x.city||'';}
+function rpNameOf(x){var c=x.cid?custById(x.cid):null;return x.name||(c&&c.name)||'לקוח';}
+/* first order of the same customer on the visit day or up to 3 days after */
+function rpMatch(v,O){var lim=rpAdd(v.day,3),k=rpKey(v),best=null;for(var i=0;i<O.length;i++){var o=O[i];if(rpKey(o)===k&&o.day>=v.day&&o.day<=lim&&(!best||o.at<best.at))best=o;}return best;}
+function rpOrderedFrom(v,O){var k=rpKey(v);for(var i=0;i<O.length;i++){if(rpKey(O[i])===k&&O[i].day>=v.day)return true;}return false;}
+/* cache-then-network single query → Promise {data,off}; offline reads the SQ cache only */
+function rpQ(builder,key){return new Promise(function(res){var done=false,cache=null;
+ var fin=function(d,off){if(done)return;done=true;res({data:d||[],off:!!off});};
+ if(navigator.onLine===false){kvGet('q:'+key,function(v){fin(v,true);});return;}
+ var t=setTimeout(function(){fin(cache,true);},9000);
+ try{SQ(builder,key,function(r){if(r.cached&&!r.error){cache=r.data;return;}clearTimeout(t);fin(r.data,!!r.error);});}catch(e){clearTimeout(t);fin(cache,true);}
+});}
+function rpPendV(){var out=[];try{pendOf('visit').forEach(function(o){var r=o.payload&&o.payload.row;if(!r||!r.arrived_at)return;out.push({id:r.id||('pv'+o.id),customer_id:r.customer_id,customer_name:o.payload.customer_name||'',arrived_at:r.arrived_at,outcome:r.outcome,summary:r.summary,_pend:true});});}catch(e){}return out;}
+function rpPendO(){var out=[];try{pendOf('order').forEach(function(o){var r=o.payload&&o.payload.order;if(!r)return;out.push({id:r.id||('po'+o.id),customer_id:r.customer_id,customer_name:o.payload.customer_name||'',created_at:o.payload.created_at||new Date(o.ts).toISOString(),status:'pending',_pend:true});});}catch(e){}return out;}
+function rpMerge(rows,extra,fld,lo,hi){var seen={};rows.forEach(function(r){if(r&&r.id)seen[r.id]=1;});extra.forEach(function(r){var d=ilYmd(r[fld]);if(!seen[r.id]&&d>=lo&&d<=hi)rows.push(r);});return rows;}
+/* one loader for agent (my views) and manager (team views filtered by agent) — only non-money fields are kept */
+function rpFetch(agent,vFrom,vTo,oFrom,oTo,withRem){
+ var mine=!isMgr(),tag=mine?'me':agent;
+ var vq=(mine?sb.from('liberty_my_visits').select('id,customer_id,customer_name,arrived_at,outcome,summary'):sb.from('liberty_team_visits').select('*').eq('agent_id',agent)).gte('arrived_at',ilStartISO(vFrom)).lte('arrived_at',ilEndISO(vTo)).order('arrived_at');
+ var oq=(mine?sb.from('liberty_my_orders').select('id,customer_id,customer_name,created_at,status'):sb.from('liberty_team_orders').select('*').eq('agent_id',agent)).gte('created_at',ilStartISO(oFrom)).lte('created_at',ilEndISO(oTo)).order('created_at');
+ var rp=Promise.resolve({data:[]});
+ if(withRem){if(mine&&_remLoaded)rp=Promise.resolve({data:(_reminders||[]).slice()});else rp=rpQ(sb.from('liberty_reminders').select('*').eq('agent_id',mine?me.id:agent).eq('done',false),'rp:r:'+tag);}
+ return Promise.all([rpQ(vq,'rp:v:'+tag+':'+vFrom+':'+vTo),rpQ(oq,'rp:o:'+tag+':'+oFrom+':'+oTo),rp]).then(function(res){
+  var V=(res[0].data||[]).slice(),O=(res[1].data||[]).slice();
+  if(mine){rpMerge(V,rpPendV(),'arrived_at',vFrom,vTo);rpMerge(O,rpPendO(),'created_at',oFrom,oTo);}
+  return {V:V.map(rpV),O:O.filter(rpOkOrder).map(rpO),R:(res[2].data||[]).filter(function(r){return r&&!r.done&&!rpIsRep(r)&&r.kind!=='collection';}),off:!!(res[0].off||res[1].off)};
+ });
+}
+function rpAgentId(){return isMgr()?_rpAgent:(me&&me.id);}
+function rpAgentName(){if(!isMgr())return me?me.name:'';var a=(_rpAgents||[]).filter(function(x){return x.id===_rpAgent;})[0];return a?a.name:'';}
+function rpAgentsInit(after){
+ if(!isMgr()){after();return;}
+ var draw=function(){var el=$('rp_agents');if(!el)return;var L=_rpAgents||[];
+  if(!L.length){el.innerHTML='<div style="font-size:12.5px;color:var(--mut)">'+(navigator.onLine===false?'רשימת הסוכנים זמינה רק עם קליטה':'אין סוכנים להצגה')+'</div>';return;}
+  if(!_rpAgent||!L.some(function(a){return a.id===_rpAgent;}))_rpAgent=L[0].id;
+  el.innerHTML=L.map(function(a){return '<button class="chip rpag'+(a.id===_rpAgent?' on':'')+'" data-id="'+esc(a.id)+'" style="flex:none">'+esc(a.name||'סוכן')+'</button>';}).join('');
+  if($('rp_sub'))$('rp_sub').textContent='סוכן: '+rpAgentName()+' · ללא סכומים';
+  var bs=el.querySelectorAll('.rpag');for(var i=0;i<bs.length;i++)bs[i].onclick=function(){_rpAgent=this.getAttribute('data-id');_rpAllOpen=false;_rpMoAll=false;draw();after();};};
+ if(_rpAgents){draw();after();return;}
+ rpQ(sb.from('liberty_team_agents').select('id,name,role,active'),'rp:agents').then(function(r){
+  _rpAgents=(r.data||[]).filter(function(a){return (!a.role||a.role==='agent')&&a.active!==false;});
+  if(!$('rp_agents'))return;draw();after();});
+}
+/* opening a report closes its "report ready" reminders */
+function rpMarkDone(kind){
+ if(!me)return;try{_reminders=(_reminders||[]).filter(function(r){return r.kind!==kind;});}catch(e){}
+ if(navigator.onLine===false)return;if(_rpMarked[kind]&&Date.now()-_rpMarked[kind]<120000)return;_rpMarked[kind]=Date.now();
+ try{sb.from('reminders').update({done:true}).eq('agent_id',me.id).eq('kind',kind).eq('done',false).then(function(){},function(){});}catch(e){}
+}
+function rpOpenKind(kind){var mo=kind==='monthly_report';if(mo){_rpMo=rpMoDefault();_rpMoAt=Date.now();}else{_rpWk=rpWeekStart(todayStr());_rpWkAt=Date.now();_rpAllOpen=false;}route=mo?'moreport':'wkreport';render();}
+function rpOpenRem(id){var rm=(_reminders||[]).filter(function(r){return r.id===id;})[0];rpOpenKind(rm&&rm.kind==='monthly_report'?'monthly_report':'weekly_report');}
+/* reminders list row for kind weekly_report / monthly_report (no customer) */
+function rpRemRow(rm){
+ var w=rm.kind!=='monthly_report',id=esc(String(rm.id||'')),due=new Date(rm.due_at);
+ var dt=isNaN(due.getTime())?'':due.toLocaleDateString('he-IL',{weekday:'short',day:'numeric',month:'numeric'});
+ var op='onclick="rpOpenRem(\''+id+'\')"';
+ return '<div class="card rprem" data-id="'+id+'" style="border-inline-start:4px solid var(--acc);background:var(--accs)"><div class="rpremopen" '+op+' style="display:flex;align-items:center;gap:9px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:var(--accd)">'+(w?'📊 הדוח השבועי מוכן':'📈 הדוח החודשי מוכן')+'</div><div style="font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.45">'+esc(rpNoMoney(rm.text||''))+(dt?' · '+dt:'')+'</div></div><span style="font-size:12.5px;font-weight:800;color:var(--acc);flex:none">פתיחה ›</span></div><div style="display:flex;gap:8px;margin-top:9px"><button class="cta" '+op+' style="height:38px;font-size:12.5px">פתיחת הדוח</button><button class="rmdone cta" data-id="'+id+'" style="height:38px;font-size:12.5px;background:#efece7;color:var(--ink);flex:none;width:82px;box-shadow:none">✓ בוצע</button></div></div>';
+}
+/* in-app scheduler: one gentle popup per kind per session (never a customer popup) */
+function rpFireRem(rm){
+ var mo=rm.kind==='monthly_report';
+ if(route===(mo?'moreport':'wkreport')){rpMarkDone(rm.kind);return;}
+ if(_rpPopped[rm.kind])return;_rpPopped[rm.kind]=1;
+ try{playReminderSound('report');}catch(e){}
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet rpfire" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px;border-top:5px solid var(--acc)"><div style="font-size:36px;text-align:center">'+(mo?'📈':'📊')+'</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:2px">'+(mo?'הדוח החודשי מוכן':'הדוח השבועי מוכן')+'</div><div style="font-size:13.5px;text-align:center;line-height:1.6;margin-top:8px;color:var(--head)">'+esc(rpNoMoney(rm.text||''))+'</div><button class="cta rpfo" style="margin-top:14px">פתיחת הדוח</button><button class="rpfl" style="width:100%;height:44px;margin-top:9px;background:#efece7;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">אחר כך</button></div>';
+ document.body.appendChild(ov);
+ ov.querySelector('.rpfo').onclick=function(){ov.remove();rpOpenKind(rm.kind);};
+ ov.querySelector('.rpfl').onclick=function(){ov.remove();};
+}
+/* ---------- shared UI bits ---------- */
+function rpHdr(title,sub,navId,lbl){
+ var nb='border:none;background:rgba(255,255,255,.18);color:#fff;width:40px;height:34px;border-radius:9px;font-size:19px;line-height:1;cursor:pointer;flex:none';
+ return '<div style="background:var(--acc);padding:16px 16px 12px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer;flex:none">‹</button><div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">'+title+'</div><div id="rp_sub" style="color:#cfe6e8;font-size:12px">'+esc(sub)+'</div></div></div>'+
+  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;background:rgba(255,255,255,.1);border-radius:12px;padding:5px"><button id="'+navId+'_prev" aria-label="הקודם" style="'+nb+'">‹</button><div id="rp_lbl" style="color:#fff;font-weight:800;font-size:15px;text-align:center;flex:1">'+esc(lbl)+'</div><button id="'+navId+'_next" aria-label="הבא" style="'+nb+'">›</button></div></div>';
+}
+function rpTile(k,label,val,sub,col,dv){return '<div class="rptile" data-k="'+k+'"'+(dv!=null?' data-dv="'+dv+'"':'')+' style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 10px;min-width:0"><div style="font-size:11px;color:var(--mut);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</div><div class="rpval" style="font-size:21px;font-weight:800;color:'+(col||'var(--accd)')+';letter-spacing:-.01em;line-height:1.25">'+val+'</div>'+(sub||'')+'</div>';}
+function rpSecHd(t,n){return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-size:14px;font-weight:800;color:var(--head)">'+t+'</div>'+(n!=null?'<span class="badge b-mut">'+n+'</span>':'')+'</div>';}
+function rpActions(){return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="rp_wa" class="cta" style="height:46px;font-size:14px;background:#25d366;box-shadow:none">📤 שיתוף בוואטסאפ</button><button id="rp_pdf" class="cta" style="height:46px;font-size:14px;background:var(--accs);color:var(--accd);box-shadow:none">🖨 PDF / הדפסה</button></div>';}
+function rpOffNote(off){return off?'<div class="card" style="background:var(--warns);color:var(--warnd);font-size:12.5px;font-weight:700">📴 אין קליטה — מוצגים נתונים שמורים (ייתכן שחלקיים)</div>':'';}
+function rpBindCust(root,sel){var rs=(root||document).querySelectorAll(sel);for(var i=0;i<rs.length;i++)rs[i].onclick=function(){var c=this.getAttribute('data-cid');if(c)openCustomer(c);};}
+function rpShareWa(text){try{window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');}catch(e){}}
+function rpPrint(html,fname){
+ var ov=actModal('🖨 PDF / הדפסה');var b=ov.querySelector('.amb');
+ b.innerHTML='<button class="cta" id="rp_dopdf">📄 קובץ PDF לשיתוף</button><button class="cta" id="rp_doprn" style="background:var(--accs);color:var(--accd);box-shadow:none">🖨 הדפסה</button><div style="font-size:11.5px;color:var(--mut);text-align:center">הדוח כולל פעילות בלבד — ללא סכומים.</div>';
+ $('rp_dopdf').onclick=function(){ov.remove();if(navigator.onLine===false){toast('יצירת PDF זמינה רק עם קליטה — אפשר להדפיס');return;}toast('מכינה PDF…');docToPdf(html,fname,function(bl,fn){sharePdf(bl,fn);});};
+ $('rp_doprn').onclick=function(){ov.remove();rpDoPrint(html);};
+}
+function rpDoPrint(html){
+ var old=$('rp_print');if(old)old.remove();
+ if(!$('rp_pcss')){var st=document.createElement('style');st.id='rp_pcss';st.textContent='#rp_print{display:none}@media print{body>*:not(#rp_print){display:none!important}#rp_print{display:block!important}#rp_print #docpage{width:auto!important;padding:0!important}}';document.head.appendChild(st);}
+ var d=document.createElement('div');d.id='rp_print';d.innerHTML=html;document.body.appendChild(d);
+ setTimeout(function(){try{window.print();}catch(e){}},60);
+}
+function rpDocWrap(title,sub,body){return '<div id="docpage" dir="rtl" style="width:760px;padding:26px 28px;background:#fff;font-family:\'IBM Plex Sans Hebrew\',Heebo,Arial,sans-serif;color:#24211d">'+
+ '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f6b74;padding-bottom:10px"><div><div style="font-size:19px;font-weight:800;color:#0f6b74">'+esc(title)+'</div><div style="font-size:11.5px;color:#6b655c;margin-top:3px">'+esc(sub)+'</div></div><div style="text-align:left;font-size:10.5px;color:#6b655c">ליברטי<br>הופק '+new Date().toLocaleDateString('he-IL')+'</div></div>'+body+
+ '<div style="margin-top:16px;font-size:9.5px;color:#8a847a;text-align:center;border-top:1px solid #eae6df;padding-top:7px">דוח פעילות · ללא סכומים · הופק ממערכת סוכני השטח של ליברטי</div></div>';}
+function rpDocTiles(pairs){return '<table style="width:100%;border-collapse:separate;border-spacing:6px;margin-top:10px"><tr>'+pairs.map(function(p){return '<td style="background:#eef5f5;border-radius:8px;padding:8px 6px;text-align:center"><div style="font-size:10.5px;color:#0a4f56;font-weight:700">'+esc(p[0])+'</div><div style="font-size:18px;font-weight:800;color:#0a4f56">'+esc(String(p[1]))+'</div>'+(p[2]?'<div style="font-size:9.5px;color:#6b655c">'+esc(p[2])+'</div>':'')+'</td>';}).join('')+'</tr></table>';}
+function rpDocSec(title,head,rows){
+ if(!rows.length)return '<div style="margin-top:14px;font-size:13px;font-weight:800;color:#0f6b74">'+esc(title)+'</div><div style="font-size:11px;color:#8a847a;margin-top:4px">אין</div>';
+ return '<div style="margin-top:14px;font-size:13px;font-weight:800;color:#0f6b74">'+esc(title)+'</div><table style="width:100%;border-collapse:collapse;margin-top:5px"><tr>'+head.map(function(h){return '<th style="padding:5px 6px;border-bottom:2px solid #0f6b74;text-align:right;font-size:10.5px;white-space:nowrap">'+esc(h)+'</th>';}).join('')+'</tr>'+
+  rows.map(function(r,ri){return '<tr style="background:'+(ri%2?'#faf9f7':'#fff')+'">'+r.map(function(v,ci){return '<td style="padding:5px 6px;border-bottom:1px solid #eae6df;text-align:right;font-size:10.5px;vertical-align:top'+(ci===0?';font-weight:600':'')+'">'+esc(String(v==null?'':v))+'</td>';}).join('')+'</tr>';}).join('')+'</table>';}
+/* ================= WEEKLY ================= */
+function rpWeekModel(from,D){
+ var to=rpAdd(from,6),T=todayStr();
+ var vis=D.V.filter(function(v){return v.day>=from&&v.day<=to;}).sort(function(a,b){return a.at<b.at?-1:(a.at>b.at?1:0);});
+ var ords=D.O.filter(function(o){return o.day>=from&&o.day<=to;}).sort(function(a,b){return a.at<b.at?-1:1;});
+ var custs={},days={},conv=0;
+ vis.forEach(function(v){v.ord=rpMatch(v,D.O);if(v.ord)conv++;custs[rpKey(v)]=1;days[v.day]=1;});
+ var att={},attL=[];
+ vis.forEach(function(v){if(RP_NOORD.indexOf(v.outcome)<0||v.ord||rpOrderedFrom(v,D.O))return;var k=rpKey(v);
+  if(!att[k]){att[k]={k:k,cid:v.cid,name:v.name,city:v.city,day:v.day,v:v,rem:[]};attL.push(att[k]);}else{att[k].v=v;att[k].day=v.day;}});
+ (D.R||[]).forEach(function(r){var d=ilYmd(r.due_at);if(!d||d>to)return;var x={cid:r.customer_id||null,name:r.customer_name||remCustName(r.customer_id)||''};
+  var k=x.cid?rpKey(x):('r:'+r.id);var a=att[k];if(!a){a=att[k]={k:k,cid:x.cid,name:x.name||'תזכורת',day:d,v:null,rem:[]};attL.push(a);}
+  a.rem.push({text:rpNoMoney(r.text||''),day:d,over:d<T,kind:r.kind});});
+ attL.forEach(function(a){a.act=rpAction(a);a.over=a.rem.some(function(r){return r.over;});});
+ attL.sort(function(a,b){return a.day<b.day?-1:(a.day>b.day?1:0);});
+ var phone=ords.filter(function(o){return !custs[rpKey(o)];});
+ return {from:from,to:to,vis:vis,ords:ords,att:attL,phone:phone,t:{visits:vis.length,custs:Object.keys(custs).length,orders:ords.length,conv:rpPct(conv,vis.length),days:Object.keys(days).length}};
+}
+function rpAction(a){if(a.v){if(a.v.outcome==='לא נכח')return 'לתאם פגישה';if(a.v.outcome==='פוטנציאלי')return 'להתקשר';return 'לחזור בעוד שבועיים';}var r=a.rem[0]||{};return r.kind==='no_sale'?'להתקשר':'לטפל בתזכורת';}
+function rpOrdBadge(v){return v.ord?'<span class="badge b-good" style="flex:none">✓ הזמין '+rpDM(v.ord.day)+'</span>':'<span class="badge b-mut" style="flex:none">✗ לא הזמין</span>';}
+function wkReportView(){
+ var T=todayStr(),cur=rpWeekStart(T);
+ if(!_rpWk||_rpWk>cur||Date.now()-_rpWkAt>600000){_rpWk=cur;_rpAllOpen=false;}_rpWkAt=Date.now();
+ shell(rpHdr('📊 דוח שבועי',isMgr()?'דוח פעילות לסוכן · ללא סכומים':'הפעילות שלך · ללא סכומים','rpw',rpWeekLabel(_rpWk))+'<div class="list" id="rp_body">'+(isMgr()?'<div id="rp_agents" style="display:flex;gap:6px;overflow-x:auto;padding:0 2px 2px"><div style="font-size:12.5px;color:var(--mut)">טוען סוכנים…</div></div>':'')+'<div id="rp_res" style="display:flex;flex-direction:column;gap:9px"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>');
+ $('rpw_prev').onclick=function(){_rpWk=rpAdd(_rpWk,-7);_rpWkAt=Date.now();_rpAllOpen=false;rpWkLoad();};
+ $('rpw_next').onclick=function(){var c=rpWeekStart(todayStr());if(_rpWk>=c)return;_rpWk=rpAdd(_rpWk,7);_rpWkAt=Date.now();_rpAllOpen=false;rpWkLoad();};
+ rpMarkDone('weekly_report');
+ rpAgentsInit(rpWkLoad);
+}
+function rpWkLoad(){
+ var from=_rpWk,to=rpAdd(from,6),seq=++_rpSeq,ag=rpAgentId(),cur=rpWeekStart(todayStr());
+ if($('rp_lbl'))$('rp_lbl').textContent=rpWeekLabel(from);
+ var nx=$('rpw_next');if(nx){nx.disabled=from>=cur;nx.style.opacity=from>=cur?'.35':'1';}
+ var res=$('rp_res');if(!res)return;
+ if(!ag){res.innerHTML='<div class="card" style="color:var(--mut);font-size:13px;text-align:center">בחרו סוכן</div>';return;}
+ res.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
+ rpFetch(ag,from,to,from,rpAdd(to,3),true).then(function(D){
+  if(seq!==_rpSeq||route!=='wkreport'||!$('rp_res'))return;
+  _rpWkM=rpWeekModel(from,D);rpWkRender(_rpWkM,D.off);
+ },function(){if(seq===_rpSeq&&$('rp_res'))$('rp_res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינת הדוח</div>';});
+}
+function rpWkRender(M,off){
+ var t=M.t,h=rpOffNote(off);
+ h+='<div id="rp_tiles" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+rpTile('visits','ביקורים',t.visits)+rpTile('custs','לקוחות שונים',t.custs)+rpTile('orders','הזמנות',t.orders,'','var(--goodd)')+rpTile('conv','המרה',t.conv+'%','<div style="font-size:10px;color:var(--mut)">ביקור שהוביל להזמנה</div>','var(--goodd)')+rpTile('days','ימי עבודה',t.days)+'</div>';
+ // attention
+ h+='<div class="card" id="rp_att" style="border-inline-start:4px solid var(--warn)">'+rpSecHd('⚠︎ דורש תשומת לב',M.att.length);
+ if(!M.att.length)h+='<div style="font-size:12.5px;color:var(--good);font-weight:700;margin-top:8px">אין פריטים פתוחים השבוע ✓</div>';
+ M.att.forEach(function(a){var c=rpCity(a);
+  h+='<div class="rpatt" data-cid="'+esc(a.cid||'')+'" style="padding:9px 0 8px;border-top:1px solid var(--line2);margin-top:8px;cursor:pointer"><div style="display:flex;gap:8px;align-items:baseline"><div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--head)">'+esc(a.name)+'</div><span style="font-size:11px;color:var(--mut);flex:none">'+rpDayShort(a.day)+'</span></div>'+
+   '<div style="font-size:11.5px;color:var(--mut)">'+esc([c,a.v?a.v.outcome:'תזכורת פתוחה'].filter(Boolean).join(' · '))+'</div>'+
+   (a.v&&a.v.note?'<div style="font-size:12.5px;color:#6b655c;line-height:1.5;margin-top:3px">📝 '+esc(a.v.note)+'</div>':'')+
+   a.rem.map(function(r){return '<div style="font-size:12px;color:'+(r.over?'var(--bad)':'var(--warnd)')+';margin-top:3px;line-height:1.45">🔔 '+esc(r.text)+' · '+(r.over?'באיחור מ-':'עד ')+rpDM(r.day)+'</div>';}).join('')+
+   '<div style="margin-top:6px"><span class="badge b-warn">👉 '+esc(a.act)+'</span></div></div>';});
+ h+='</div>';
+ // all visits (collapsed)
+ h+='<div class="card" id="rp_all"><button id="rp_alltg" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:0;cursor:pointer;color:inherit;font-family:inherit"><span style="font-size:14px;font-weight:800;color:var(--head)">כל הביקורים ('+M.vis.length+')</span><span style="font-size:12.5px;color:var(--acc);font-weight:800">'+(_rpAllOpen?'הסתר ▴':'הצג ▾')+'</span></button><div id="rp_allbody" style="display:'+(_rpAllOpen?'block':'none')+'">';
+ if(!M.vis.length)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:8px">אין ביקורים בשבוע הזה.</div>';
+ var lastDay='';M.vis.forEach(function(v){
+  if(v.day!==lastDay){lastDay=v.day;var n=M.vis.filter(function(x){return x.day===v.day;}).length;h+='<div style="font-size:12px;font-weight:800;color:var(--accd);background:var(--accs);border-radius:8px;padding:4px 9px;margin-top:10px">'+rpDayName(v.day)+' · '+n+' ביקורים</div>';}
+  var c=rpCity(v);
+  h+='<div class="rpv" data-cid="'+esc(v.cid||'')+'" style="padding:8px 2px;border-bottom:1px solid var(--line2);cursor:pointer"><div style="display:flex;gap:8px;align-items:center"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(v.name)+(v.pend?' <span class="badge b-warn">⏳ ממתין</span>':'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc([c,rpTime(v.at),v.outcome].filter(Boolean).join(' · '))+'</div></div>'+rpOrdBadge(v)+'</div><div class="rpnote" style="font-size:12.5px;color:'+(v.note?'#6b655c':'var(--mut2)')+';line-height:1.5;margin-top:3px">'+(v.note?esc(v.note):'—')+'</div></div>';});
+ h+='</div></div>';
+ // orders without a visit
+ h+='<div class="card" id="rp_phone">'+rpSecHd('📞 הזמנות ללא ביקור (טלפון/וואטסאפ)',M.phone.length);
+ if(!M.phone.length)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:6px">אין השבוע.</div>';
+ M.phone.forEach(function(o){h+='<div class="rpph" data-cid="'+esc(o.cid||'')+'" style="display:flex;align-items:center;gap:8px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--head)">'+esc(o.name)+'</div><span style="font-size:11.5px;color:var(--mut);flex:none">'+rpDayShort(o.day)+'</span><span class="badge b-good" style="flex:none">✓ הזמין</span></div>';});
+ h+='</div>'+rpActions();
+ var res=$('rp_res');res.innerHTML=h;
+ $('rp_alltg').onclick=function(){_rpAllOpen=!_rpAllOpen;$('rp_allbody').style.display=_rpAllOpen?'block':'none';this.lastChild.textContent=_rpAllOpen?'הסתר ▴':'הצג ▾';};
+ rpBindCust(res,'.rpatt,.rpv,.rpph');
+ $('rp_wa').onclick=function(){rpShareWa(rpWkText(M));};
+ $('rp_pdf').onclick=function(){rpPrint(rpWkDoc(M),'liberty-דוח-שבועי-'+M.from+'.pdf');};
+}
+function rpWkText(M){
+ var t=M.t,L=['📊 דוח שבועי'+(rpAgentName()?' — '+rpAgentName():''),rpWeekLabel(M.from),'ביקורים: '+t.visits+' · לקוחות: '+t.custs+' · הזמנות: '+t.orders+' · המרה: '+t.conv+'% · ימי עבודה: '+t.days];
+ if(M.att.length){L.push('','⚠︎ דורש תשומת לב:');M.att.forEach(function(a){L.push('• '+a.name+' ('+rpDayShort(a.day)+')'+(a.v&&a.v.note?' — '+a.v.note:'')+a.rem.map(function(r){return ' — 🔔 '+r.text;}).join('')+' → '+a.act);});}
+ if(M.vis.length){L.push('','📋 ביקורים:');var ld='';M.vis.forEach(function(v){if(v.day!==ld){ld=v.day;L.push(rpDayName(v.day)+':');}L.push('• '+v.name+' — '+(v.ord?'✓ הזמין '+rpDM(v.ord.day):'✗ לא הזמין')+(v.note?' — '+v.note:''));});}
+ if(M.phone.length){L.push('','📞 הזמנות ללא ביקור:');M.phone.forEach(function(o){L.push('• '+o.name+' — '+rpDM(o.day)+' ✓');});}
+ return L.join('\n');
+}
+function rpWkDoc(M){
+ var t=M.t,to=rpAdd(M.from,6);
+ var body=rpDocTiles([['ביקורים',t.visits],['לקוחות שונים',t.custs],['הזמנות',t.orders],['המרה',t.conv+'%'],['ימי עבודה',t.days]])+
+  rpDocSec('⚠︎ דורש תשומת לב',['לקוח','יום','הערה','פעולה מוצעת'],M.att.map(function(a){return [a.name,rpDayShort(a.day),[(a.v&&a.v.note)||''].concat(a.rem.map(function(r){return '🔔 '+r.text;})).filter(Boolean).join(' · '),a.act];}))+
+  rpDocSec('כל הביקורים ('+M.vis.length+')',['לקוח','יום','עיר','שעה','הערה','הזמנה'],M.vis.map(function(v){return [v.name,rpDayShort(v.day),rpCity(v),rpTime(v.at),v.note||'—',v.ord?'✓ '+rpDM(v.ord.day):'✗'];}))+
+  rpDocSec('הזמנות ללא ביקור (טלפון/וואטסאפ)',['לקוח','תאריך','הזמנה'],M.phone.map(function(o){return [o.name,rpDayShort(o.day),'✓'];}));
+ return rpDocWrap('דוח שבועי · '+rpWeekLabel(M.from),(rpAgentName()?'סוכן: '+rpAgentName()+' · ':'')+heDate(M.from)+' – '+heDate(to),body);
+}
+/* ================= MONTHLY ================= */
+function rpActive(c){return (c.lifecycle||'active')==='active';}
+function rpMoStats(ym,D,C){
+ var from=ym+'-01',to=rpYmEnd(ym);
+ var vis=D.V.filter(function(v){return v.day>=from&&v.day<=to;}),ords=D.O.filter(function(o){return o.day>=from&&o.day<=to;});
+ var conv=0,cs={},seen={},n=0;
+ vis.forEach(function(v){if(rpMatch(v,D.O))conv++;var k=rpKey(v);if(!seen[k]){seen[k]=1;n++;}if(v.cid)cs[v.cid]=1;if(v.name)cs['n:'+v.name]=1;});
+ var act=(C||[]).filter(rpActive),covN=act.filter(function(c){return cs[c.id]||cs['n:'+c.name];}).length;
+ return {vis:vis,ords:ords,visits:vis.length,custs:n,orders:ords.length,conv:rpPct(conv,vis.length),cov:act.length?rpPct(covN,act.length):null,covN:covN,act:act,cs:cs};
+}
+function rpMoModel(ym,D,C,LT){
+ var cur=rpMoStats(ym,D,C),prev=rpMoStats(rpYmPrev(ym),D,C);
+ var from=ym+'-01',to=rpYmEnd(ym),T=todayStr(),ref=to<T?to:T,winFrom=rpYmPrev(ym)+'-01';
+ var areas={};cur.act.forEach(function(c){var k=c.area_code==null?'?':String(c.area_code);var a=areas[k]||(areas[k]={code:c.area_code,name:c.area_name||(c.area_code!=null?areaNameOf(c.area_code):'')||(k==='?'?'ללא אזור':'אזור '+k),tot:0,vis:0});a.tot++;if(cur.cs[c.id]||cur.cs['n:'+c.name])a.vis++;});
+ var areaL=Object.keys(areas).map(function(k){return areas[k];}).sort(function(a,b){return (a.code==null?999:+a.code)-(b.code==null?999:+b.code);});
+ var wk=[],d=from;while(d<=to){var e=rpAdd(d,6-rpDow(d));if(e>to)e=to;var lo=d,n=cur.vis.filter(function(v){return v.day>=lo&&v.day<=e;}).length;wk.push({from:d,to:e,n:n,future:d>T});d=rpAdd(e,1);}
+ var last={};D.V.forEach(function(v){if(v.day>ref||!v.cid)return;if(!last[v.cid]||v.day>last[v.cid])last[v.cid]=v.day;});
+ var ltm=null;if(LT){ltm={};LT.forEach(function(x){if(x.last_visit_at)ltm[x.customer_id]=ilYmd(x.last_visit_at);});}
+ var notV=cur.act.filter(function(c){return !(cur.cs[c.id]||cur.cs['n:'+c.name]);}).map(function(c){
+  var lv=last[c.id]||null,st='d';
+  if(!lv){var l2=ltm?ltm[c.id]:undefined;if(ltm&&!l2)st='never';else if(l2&&l2<winFrom)lv=l2;else st='old';}
+  return {cid:c.id,name:c.name,city:c.city,lv:lv,st:lv?'d':st,days:lv?rpDiff(lv,ref):null};});
+ var rank=function(x){return x.st==='never'?1e6:(x.st==='old'?5e5:x.days);};
+ notV.sort(function(a,b){return rank(b)-rank(a)||heb(a.name,b.name);});
+ var lim=rpAdd(ref,-60),lastO={};D.O.forEach(function(o){if(o.day>ref)return;var k=rpKey(o);if(!lastO[k]||o.day>lastO[k].day)lastO[k]=o;});
+ var stopped=Object.keys(lastO).map(function(k){return lastO[k];}).filter(function(o){return o.day<lim;}).map(function(o){return {cid:o.cid,name:o.name,day:o.day,days:rpDiff(o.day,ref)};}).sort(function(a,b){return a.days-b.days;});
+ var cnt={};cur.ords.forEach(function(o){var k=rpKey(o);(cnt[k]=cnt[k]||{cid:o.cid,name:o.name,n:0}).n++;});
+ var top=Object.keys(cnt).map(function(k){return cnt[k];}).sort(function(a,b){return b.n-a.n||heb(a.name,b.name);}).slice(0,5);
+ return {ym:ym,cur:cur,prev:prev,areas:areaL,wk:wk,notV:notV,stopped:stopped,top:top,ref:ref,hasC:(C||[]).length>0};
+}
+function rpDelta(a,b,unit){
+ if(a==null||b==null)return '';var d=a-b;unit=unit||'';
+ if(!d)return '<div class="rpdelta" style="font-size:10.5px;color:var(--mut);font-weight:700">= ללא שינוי</div>';
+ return '<div class="rpdelta" style="font-size:10.5px;font-weight:800;color:'+(d>0?'var(--good)':'var(--bad)')+';line-height:1.35">'+(d>0?'▲ ':'▼ ')+Math.abs(d)+unit+'<div style="font-weight:600;color:var(--mut)">קודם: '+b+unit+'</div></div>';
+}
+function rpDeltaTxt(a,b,unit){if(a==null||b==null)return '';var d=a-b;return d?(d>0?' ▲':' ▼')+Math.abs(d)+(unit||''):' =';}
+function moReportView(){
+ var T=todayStr(),curYm=T.slice(0,7);
+ if(!_rpMo||_rpMo>curYm||Date.now()-_rpMoAt>600000){_rpMo=rpMoDefault();_rpMoAll=false;}_rpMoAt=Date.now();
+ shell(rpHdr('📈 דוח חודשי',isMgr()?'דוח חודשי לסוכן · ללא סכומים':'סיכום החודש שלך · ללא סכומים','rpm',rpYmLabel(_rpMo))+'<div class="list" id="rp_body">'+(isMgr()?'<div id="rp_agents" style="display:flex;gap:6px;overflow-x:auto;padding:0 2px 2px"><div style="font-size:12.5px;color:var(--mut)">טוען סוכנים…</div></div>':'')+'<div id="rp_res" style="display:flex;flex-direction:column;gap:9px"><div style="color:var(--mut);font-size:13px">טוען…</div></div></div>');
+ $('rpm_prev').onclick=function(){_rpMo=rpYmPrev(_rpMo);_rpMoAt=Date.now();_rpMoAll=false;rpMoLoad();};
+ $('rpm_next').onclick=function(){if(_rpMo>=todayStr().slice(0,7))return;_rpMo=rpYmNext(_rpMo);_rpMoAt=Date.now();_rpMoAll=false;rpMoLoad();};
+ rpMarkDone('monthly_report');
+ rpAgentsInit(rpMoLoad);
+}
+function rpMoLoad(){
+ var ym=_rpMo,to=rpYmEnd(ym),pfrom=rpYmPrev(ym)+'-01',h6=ym,seq=++_rpSeq,ag=rpAgentId(),mine=!isMgr();
+ for(var i=0;i<6;i++)h6=rpYmPrev(h6);
+ if($('rp_lbl'))$('rp_lbl').textContent=rpYmLabel(ym);
+ var cm=todayStr().slice(0,7),nx=$('rpm_next');if(nx){nx.disabled=ym>=cm;nx.style.opacity=ym>=cm?'.35':'1';}
+ var res=$('rp_res');if(!res)return;
+ if(!ag){res.innerHTML='<div class="card" style="color:var(--mut);font-size:13px;text-align:center">בחרו סוכן</div>';return;}
+ res.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
+ var cP=mine?Promise.resolve({data:LOC.customers||[]}):rpQ(sb.from('liberty_customers').select('id,name,city,area_code,area_name,lifecycle,agent_id').eq('agent_id',ag),'rp:c:'+ag);
+ var ltP=mine?rpQ(sb.from('liberty_my_last_touch').select('customer_id,last_visit_at'),'rp:lt'):Promise.resolve(null);
+ Promise.all([rpFetch(ag,pfrom,to,h6+'-01',rpAdd(to,3),false),cP,ltP]).then(function(r){
+  if(seq!==_rpSeq||route!=='moreport'||!$('rp_res'))return;
+  var lt=r[2]?(r[2].off&&!(r[2].data||[]).length?null:r[2].data):null;
+  _rpMoM=rpMoModel(ym,r[0],r[1].data||[],lt);rpMoRender(_rpMoM,r[0].off);
+ },function(){if(seq===_rpSeq&&$('rp_res'))$('rp_res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינת הדוח</div>';});
+}
+function rpNvBadge(x){return x.st==='never'?'<span class="badge b-bad" style="flex:none">לא בוקר מעולם</span>':(x.st==='old'?'<span class="badge b-warn" style="flex:none">60+ ימים</span>':'<span class="badge '+(x.days>=30?'b-warn':'b-mut')+'" style="flex:none">'+x.days+' ימים</span>');}
+function rpMoRender(M,off){
+ var c=M.cur,p=M.prev,h=rpOffNote(off);
+ h+='<div id="rp_tiles" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
+  rpTile('visits','ביקורים',c.visits,rpDelta(c.visits,p.visits),null,c.visits-p.visits)+
+  rpTile('custs','לקוחות שבוקרו',c.custs,rpDelta(c.custs,p.custs),null,c.custs-p.custs)+
+  rpTile('cov','כיסוי',c.cov==null?'—':c.cov+'%',c.cov==null?'<div style="font-size:10px;color:var(--mut)">אין רשימת לקוחות</div>':rpDelta(c.cov,p.cov,'%'),null,c.cov==null?null:c.cov-p.cov)+
+  rpTile('orders','הזמנות',c.orders,rpDelta(c.orders,p.orders),'var(--goodd)',c.orders-p.orders)+
+  rpTile('conv','המרה',c.conv+'%',rpDelta(c.conv,p.conv,'%'),'var(--goodd)',c.conv-p.conv)+
+  '<div class="rptile" style="background:var(--accs);border:1px solid var(--accs2);border-radius:12px;padding:9px 10px;min-width:0;display:flex;flex-direction:column;justify-content:center"><div style="font-size:10.5px;color:var(--accd);font-weight:700;line-height:1.4">▲▼ לעומת '+HEMONTHS[+rpYmPrev(M.ym).slice(5,7)-1]+'</div>'+(M.ym===todayStr().slice(0,7)?'<div style="font-size:10px;color:var(--mut);margin-top:3px;line-height:1.35">החודש עדיין בעיצומו</div>':'')+'</div></div>';
+ // area coverage
+ h+='<div class="card" id="rp_areas">'+rpSecHd('🗺 כיסוי לפי אזור',c.cov==null?null:c.covN+'/'+c.act.length);
+ if(!M.hasC)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:6px">'+(isMgr()?'אין רשימת לקוחות זמינה לסוכן הזה — לא ניתן לחשב כיסוי.':'רשימת הלקוחות עדיין לא נטענה.')+'</div>';
+ M.areas.forEach(function(a){var pc=rpPct(a.vis,a.tot);h+='<div class="rparea" data-code="'+esc(String(a.code))+'" style="display:flex;align-items:center;gap:8px;margin-top:8px"><div style="width:74px;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none">'+esc(a.name)+'</div><div style="flex:1;height:10px;background:var(--surq);border-radius:6px;overflow:hidden"><div style="width:'+pc+'%;height:100%;background:'+(pc>=60?'var(--good)':(pc>=30?'var(--acc2)':'var(--warn)'))+';border-radius:6px"></div></div><div class="rpareav" style="font-size:12px;font-weight:800;min-width:40px;text-align:left;flex:none;direction:ltr">'+a.vis+'/'+a.tot+'</div></div>';});
+ h+='</div>';
+ // weekly pace
+ var mx=1;M.wk.forEach(function(w){if(w.n>mx)mx=w.n;});
+ h+='<div class="card" id="rp_pace">'+rpSecHd('📅 קצב שבועי');
+ M.wk.forEach(function(w){h+='<div class="rpwk" style="display:flex;align-items:center;gap:8px;margin-top:8px'+(w.future?';opacity:.45':'')+'"><div style="width:74px;font-size:12px;color:var(--mut);font-weight:700;flex:none">'+(+w.from.slice(8,10))+'–'+rpDM(w.to)+'</div><div style="flex:1;height:14px;background:var(--surq);border-radius:6px;overflow:hidden"><div style="width:'+Math.round(w.n*100/mx)+'%;height:100%;background:var(--acc);border-radius:6px"></div></div><div style="font-size:12.5px;font-weight:800;min-width:26px;text-align:left;flex:none">'+w.n+'</div></div>';});
+ h+='</div>';
+ // not visited
+ var nv=_rpMoAll?M.notV:M.notV.slice(0,15);
+ h+='<div class="card" id="rp_notv">'+rpSecHd('🚶 לא בוקרו החודש',M.notV.length);
+ if(!M.notV.length)h+='<div style="font-size:12.5px;color:var(--good);font-weight:700;margin-top:6px">'+(M.hasC?'כל הלקוחות הפעילים בוקרו ✓':'—')+'</div>';
+ nv.forEach(function(x){h+='<div class="rpnv" data-cid="'+esc(x.cid||'')+'" style="display:flex;align-items:center;gap:8px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(x.city||'')+'</div></div>'+rpNvBadge(x)+'</div>';});
+ if(M.notV.length>15)h+='<button id="rp_nvall" class="chip" style="margin-top:9px;width:100%">'+(_rpMoAll?'הצג פחות':'הצג הכל ('+M.notV.length+')')+'</button>';
+ h+='</div>';
+ // stopped ordering
+ h+='<div class="card" id="rp_stop">'+rpSecHd('⏸ הפסיקו להזמין',M.stopped.length)+'<div style="font-size:11px;color:var(--mut);margin-top:2px">הזמינו בעבר — ואין הזמנה ב-60 הימים האחרונים</div>';
+ if(!M.stopped.length)h+='<div style="font-size:12.5px;color:var(--good);font-weight:700;margin-top:6px">אין ✓</div>';
+ M.stopped.forEach(function(x){h+='<div class="rpst" data-cid="'+esc(x.cid||'')+'" style="display:flex;align-items:center;gap:8px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(x.name)+'</div><div style="font-size:11px;color:var(--mut)">הזמנה אחרונה '+heDate(x.day)+'</div></div><span class="badge b-warn" style="flex:none">'+x.days+' ימים</span></div>';});
+ h+='</div>';
+ // most active
+ h+='<div class="card" id="rp_top">'+rpSecHd('⭐ הכי פעילים');
+ if(!M.top.length)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:6px">אין הזמנות החודש.</div>';
+ M.top.forEach(function(x,i){h+='<div class="rptop" data-cid="'+esc(x.cid||'')+'" style="display:flex;align-items:center;gap:9px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><span style="width:24px;height:24px;border-radius:50%;background:'+(i===0?'var(--acc)':'var(--accs)')+';color:'+(i===0?'#fff':'var(--accd)')+';font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+(i+1)+'</span><div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--head)">'+esc(x.name)+'</div><span class="badge b-good" style="flex:none">'+x.n+' הזמנות</span></div>';});
+ h+='</div>'+rpActions();
+ var res=$('rp_res');res.innerHTML=h;
+ if($('rp_nvall'))$('rp_nvall').onclick=function(){_rpMoAll=!_rpMoAll;rpMoRender(M,off);};
+ rpBindCust(res,'.rpnv,.rpst,.rptop');
+ $('rp_wa').onclick=function(){rpShareWa(rpMoText(M));};
+ $('rp_pdf').onclick=function(){rpPrint(rpMoDoc(M),'liberty-דוח-חודשי-'+M.ym+'.pdf');};
+}
+function rpMoText(M){
+ var c=M.cur,p=M.prev,L=['📈 דוח חודשי — '+rpYmLabel(M.ym)+(rpAgentName()?' — '+rpAgentName():''),
+  'ביקורים: '+c.visits+rpDeltaTxt(c.visits,p.visits)+' · לקוחות שבוקרו: '+c.custs+rpDeltaTxt(c.custs,p.custs),
+  'כיסוי: '+(c.cov==null?'—':c.cov+'%'+rpDeltaTxt(c.cov,p.cov,'%'))+' · הזמנות: '+c.orders+rpDeltaTxt(c.orders,p.orders)+' · המרה: '+c.conv+'%'+rpDeltaTxt(c.conv,p.conv,'%')];
+ if(M.areas.length){L.push('','🗺 כיסוי לפי אזור:');M.areas.forEach(function(a){L.push('• '+a.name+': '+a.vis+'/'+a.tot);});}
+ L.push('','📅 קצב שבועי: '+M.wk.map(function(w){return (+w.from.slice(8,10))+'–'+rpDM(w.to)+': '+w.n;}).join(' · '));
+ if(M.notV.length){L.push('','🚶 לא בוקרו החודש ('+M.notV.length+'):');M.notV.slice(0,15).forEach(function(x){L.push('• '+x.name+' — '+(x.st==='never'?'לא בוקר מעולם':(x.st==='old'?'60+ ימים':x.days+' ימים')));});if(M.notV.length>15)L.push('ועוד '+(M.notV.length-15)+'…');}
+ if(M.stopped.length){L.push('','⏸ הפסיקו להזמין:');M.stopped.forEach(function(x){L.push('• '+x.name+' — הזמנה אחרונה '+heDate(x.day));});}
+ if(M.top.length){L.push('','⭐ הכי פעילים:');M.top.forEach(function(x,i){L.push((i+1)+'. '+x.name+' — '+x.n+' הזמנות');});}
+ return L.join('\n');
+}
+function rpMoDoc(M){
+ var c=M.cur,p=M.prev;
+ var body=rpDocTiles([['ביקורים',c.visits,'קודם '+p.visits],['לקוחות שבוקרו',c.custs,'קודם '+p.custs],['כיסוי',c.cov==null?'—':c.cov+'%',c.cov==null?'':'קודם '+p.cov+'%'],['הזמנות',c.orders,'קודם '+p.orders],['המרה',c.conv+'%','קודם '+p.conv+'%']])+
+  rpDocSec('כיסוי לפי אזור',['אזור','בוקרו','לקוחות פעילים','כיסוי'],M.areas.map(function(a){return [a.name,a.vis,a.tot,rpPct(a.vis,a.tot)+'%'];}))+
+  rpDocSec('קצב שבועי',['שבוע','ביקורים'],M.wk.map(function(w){return [(+w.from.slice(8,10))+'–'+rpDM(w.to),w.n];}))+
+  rpDocSec('לא בוקרו החודש ('+M.notV.length+')',['לקוח','עיר','מאז ביקור אחרון'],M.notV.map(function(x){return [x.name,x.city||'',x.st==='never'?'לא בוקר מעולם':(x.st==='old'?'60+ ימים':x.days+' ימים')];}))+
+  rpDocSec('הפסיקו להזמין',['לקוח','הזמנה אחרונה','ימים'],M.stopped.map(function(x){return [x.name,heDate(x.day),x.days];}))+
+  rpDocSec('הכי פעילים',['לקוח','הזמנות'],M.top.map(function(x){return [x.name,x.n];}));
+ return rpDocWrap('דוח חודשי · '+rpYmLabel(M.ym),(rpAgentName()?'סוכן: '+rpAgentName()+' · ':'')+'השוואה ל'+rpYmLabel(rpYmPrev(M.ym)),body);
+}
+/* ================= HOME CARD ================= */
+FEAT_HOME.push(function(){
+ var el=$('hf_rep');if(!el||!me||isMgr())return;
+ var T=todayStr(),from=rpWeekStart(T),dow=rpDow(T),dom=+T.slice(8,10),ready=dow>=4,moReady=dom<=3,pm=HEMONTHS[+rpYmPrev(T.slice(0,7)).slice(5,7)-1];
+ var draw=function(t){var box=$('hf_rep');if(!box)return;
+  var line='📊 השבוע עד כה: '+t.visits+' ביקורים · '+t.orders+' הזמנות · המרה '+t.conv+'%';
+  var b1='flex:1;height:38px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;';
+  var h='<div class="card" id="hf_repcard" style="'+(ready?'background:var(--acc);border-color:var(--acc);color:#fff':'')+'">'+
+   (ready?'<div style="font-size:15px;font-weight:800">📊 הדוח השבועי מוכן</div>':'')+
+   '<div id="hf_repline" style="font-size:'+(ready?'12.5px':'13.5px')+';font-weight:'+(ready?'600':'800')+';color:'+(ready?'#d8ecee':'var(--head)')+';margin-top:'+(ready?'3px':'0')+';line-height:1.5">'+line+'</div>'+
+   (moReady?'<div style="margin-top:8px;font-size:12.5px;font-weight:800;border-radius:9px;padding:6px 9px;'+(ready?'background:rgba(255,255,255,.14);color:#fff':'background:var(--goods);color:var(--goodd)')+'">📈 הדוח החודשי של '+pm+' מוכן</div>':'')+
+   '<div style="display:flex;gap:8px;margin-top:10px"><button id="hf_rep_wk" style="'+b1+(ready?'background:#fff;color:var(--accd);border:none':'background:var(--accs);color:var(--accd);border:1px solid var(--accs2)')+'">דוח שבועי</button><button id="hf_rep_mo" style="'+b1+(ready?'background:rgba(255,255,255,.16);color:#fff;border:none':(moReady?'background:var(--good);color:#fff;border:none':'background:#fff;color:var(--accd);border:1px solid var(--line)'))+'">דוח חודשי</button></div></div>';
+  box.innerHTML=h;
+  $('hf_rep_wk').onclick=function(){rpOpenKind('weekly_report');};
+  $('hf_rep_mo').onclick=function(){rpOpenKind('monthly_report');};};
+ draw({visits:0,orders:0,conv:0});
+ try{rpFetch(me.id,from,rpAdd(from,6),from,rpAdd(from,9),false).then(function(D){if(route!=='home')return;draw(rpWeekModel(from,D).t);},function(){});}catch(e){}
+});
+/*@@FEAT_CAL@@*/
+/* ===== 📅 Calendar (month/year) + geo-conflict check for meetings + tablet order mode + phone→tablet cart handoff ===== */
+var GEO_CONFLICT_KM=35,GEO_NEAR_KM=20;
+var CAL_AREA_COLORS=['#0f6b74','#e8613f','#7a5cc2','#2f8f4e','#c28a12','#c2417a'];
+var CAL_CHEV_R='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',CAL_CHEV_L='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
+function calAreaColor(code){var n=parseInt(code,10);if(isNaN(n)||n<1)return '#9a948a';return CAL_AREA_COLORS[(n-1)%CAL_AREA_COLORS.length];}
+(function(){try{var st=document.createElement('style');st.textContent=
+ '.calhchip{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);color:#fff;border-radius:999px;padding:6px 15px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}'+
+ '.calhchip.on{background:#fff;color:var(--accd);border-color:#fff}'+
+ '.calnav{display:flex;align-items:center;justify-content:space-between;gap:8px}'+
+ '.calnav button{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:#fff;font-size:20px;font-weight:700;color:var(--acc);cursor:pointer;font-family:inherit}'+
+ '.calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}'+
+ '.calwd{text-align:center;font-size:11px;font-weight:700;color:var(--mut);padding:2px 0}'+
+ '.calc{position:relative;min-height:56px;border:1px solid var(--line2);border-radius:10px;background:#fff;padding:4px 2px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-family:inherit;color:var(--ink)}'+
+ '.calc.past{opacity:.5}.calc.wkend{background:#faf8f5}'+
+ '.calc.today{border:2px solid var(--acc)}.calc.today .cald{color:var(--acc)}'+
+ '.calc.sel{background:var(--accs);border-color:var(--acc)}'+
+ '.calc.cfd{background:var(--bads)}'+
+ '.cald{font-size:14px;font-weight:800;line-height:1}'+
+ '.caldots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:100%;min-height:7px}'+
+ '.caldot{width:7px;height:7px;border-radius:50%;display:inline-block}'+
+ '.calmore{font-size:9px;font-weight:800;color:var(--mut);line-height:7px}'+
+ '.calr{font-size:9.5px;color:var(--mut2);font-weight:600;line-height:1}'+
+ '.calwarn{position:absolute;top:3px;inset-inline-end:4px;font-size:10px;line-height:1;color:var(--bad);font-weight:800}'+
+ '.caly{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}'+
+ '@media (min-width:700px){.caly{grid-template-columns:repeat(4,minmax(0,1fr))}}'+
+ '.calym{background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px 5px 6px;cursor:pointer;font-family:inherit;color:var(--ink);text-align:center}'+
+ '.calym.cur{border:2px solid var(--acc)}'+
+ '.calymh{font-size:12.5px;font-weight:800;color:var(--head);margin-bottom:4px;display:flex;justify-content:space-between;padding:0 3px}'+
+ '.calymh span{font-size:10.5px;color:var(--acc);font-weight:800}'+
+ '.calyg{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}'+
+ '.calyd{font-size:8.5px;line-height:13px;height:15px;color:var(--mut);position:relative}'+
+ '.calyd.has{color:var(--ink);font-weight:800}'+
+ '.calyd.has:after{content:"";position:absolute;bottom:0;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:var(--acc)}'+
+ '.calyd.cf{color:var(--bad)}.calyd.cf:after{background:var(--bad)}'+
+ '.calyd.tdy{background:var(--accs);border-radius:4px}'+
+ '.calrow{display:flex;align-items:center;gap:10px;padding:10px 11px;background:#fff;border:1px solid var(--line2);border-radius:12px;cursor:pointer}'+
+ '.caltrv{font-size:11.5px;color:var(--mut);font-weight:700;padding:3px 14px}'+
+ '.calcf{background:var(--bads);border:1px solid #eac4bf;border-radius:12px;padding:10px 12px}'+
+ '.calmv{border:1px solid var(--acc);background:#fff;color:var(--accd);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:right}'+
+ '.cfsug{display:block;width:100%;border:1px solid var(--acc);background:var(--accs);color:var(--accd);border-radius:11px;padding:9px 12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;text-align:right;margin-top:7px}'+
+ '.cfsug small{display:block;font-size:11px;font-weight:600;color:var(--acc);margin-top:2px}'+
+ /* tablet order mode: phone stays a single column (wrappers are display:contents) */
+ '.ordcolA,.ordcolB{display:contents}'+
+ '#cdho:empty{display:none}'+
+ '#cdho{display:flex;flex-direction:column;gap:8px}#cdban:empty{display:none}.cdbtn{align-self:flex-start;border:1px solid var(--line);background:#fff;color:var(--accd);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}'+
+ '.cdban{background:var(--accs);border:1px solid var(--accs2);border-radius:12px;padding:10px 12px}'+
+ '@media (min-width:900px){'+
+ ' #view:has(.ordwrap){max-width:1180px}'+
+ ' .ordwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}'+
+ ' .ordcolA,.ordcolB{display:flex;flex-direction:column;gap:9px;min-width:0;position:sticky;top:64px;max-height:calc(100dvh - 76px);overflow-y:auto;padding-bottom:10px}'+
+ ' .ordwrap #presults{display:flex;flex-direction:column;gap:7px}'+
+ ' .ordwrap .addr{min-height:62px}'+
+ ' .ordwrap .step button{width:46px;height:46px;font-size:22px}'+
+ ' .ordwrap .step input.qtyin{width:58px;height:46px;font-size:17px}'+
+ ' .ordwrap button.cta{min-height:56px}'+
+ ' .ordcolB #saveord{position:sticky;bottom:0;z-index:2;flex:none}'+
+ '}';
+ document.head.appendChild(st);}catch(e){}})();
+
+/* ---------- geometry / conflicts ---------- */
+function apptDate(a){return (a&&(a.il_date||(a.starts_at?ilYmd(a.starts_at):'')))||'';}
+function apptLL(a){if(!a)return null;if(a.lat!=null&&a.lng!=null&&a.lat!==''&&!isNaN(+a.lat))return {lat:+a.lat,lng:+a.lng};var c=a.customer_id?custById(a.customer_id):null;if(c&&c.lat!=null&&c.lng!=null)return {lat:+c.lat,lng:+c.lng};return null;}
+function apptKm(a,b){var p=apptLL(a),q=apptLL(b);if(!p||!q)return null;return hav(p,q);}
+function apptOverlap(a,b){var x=apptMin(a),y=apptMin(b);return (x<=y&&y<x+(+a.duration_min||30))||(y<=x&&x<y+(+b.duration_min||30));}
+function apptCity(a){var c=a&&a.customer_id?custById(a.customer_id):null;return (a&&a.city)||(c&&c.city)||(a&&a.customer_name)||'';}
+function calTravelMin(km){return Math.max(1,Math.round(km*1.15));}   /* ~60 km/h on a road ≈15% longer than the straight line */
+/* all conflicts among a list of meetings (any dates): far apart on the same day (geo) or overlapping hours (time) */
+function apptGeoConflicts(list){
+ var by={},out=[];
+ (list||[]).forEach(function(a){if(!a||a.status==='cancelled')return;var d=apptDate(a);if(!d)return;(by[d]=by[d]||[]).push(a);});
+ Object.keys(by).forEach(function(d){var L=by[d];
+  for(var i=0;i<L.length;i++)for(var j=i+1;j<L.length;j++){var a=L[i],b=L[j];
+   var km=apptKm(a,b);
+   if(km!=null&&km>GEO_CONFLICT_KM)out.push({a:a,b:b,km:Math.round(km),type:'geo'});
+   if(apptOverlap(a,b))out.push({a:a,b:b,km:km==null?null:Math.round(km),type:'time'});
+  }});
+ return out;
+}
+/* focus areas for a date — same data as focusAreasFor(), weekday from the calendar date itself */
+function calFocusAreas(ds){var dow=parseYmd(ds).getDay(),out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.focus_days||[]).map(Number).indexOf(dow)>-1)out.push(+l.area_code)});return out;}
+
+/* ---------- data: appointments cached per month ---------- */
+var _calMon={},_calStale={},_calRoutes={};
+var _calState={mode:'month',ym:null,y:null,sel:null};
+(function(){var f=apptInvalidate;apptInvalidate=function(){_calMon={};_calStale={};return f.apply(this,arguments);};})();
+function calYmAdd(ym,n){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1+n;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+'-'+pad2(m+1);}
+function calYmsBetween(fromDs,toDs){var out=[],ym=fromDs.slice(0,7),end=toDs.slice(0,7),g=0;while(ym<=end&&g++<40){out.push(ym);ym=calYmAdd(ym,1);}return out;}
+function calMonthEnd(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7);return ym+'-'+pad2(new Date(y,m,0).getDate());}
+function calLoad(yms,cb){
+ var need=yms.filter(function(ym){return !_calMon[ym]||(_calStale[ym]&&navigator.onLine!==false);});
+ if(!need.length||!me){cb({});return;}
+ need.sort();
+ var fromCache=function(){var n=0,any=false;need.forEach(function(ym){kvGet('cal:'+me.id+':'+ym,function(v){if(v){_calMon[ym]=v;_calStale[ym]=1;any=true;}if(++n===need.length)cb({offline:true,cached:any});});});};
+ if(navigator.onLine===false){fromCache();return;}
+ var f=need[0]+'-01',t=calMonthEnd(need[need.length-1]);
+ try{
+  sb.from('liberty_appointments').select('*').eq('agent_id',me.id).gte('il_date',f).lte('il_date',t).neq('status','cancelled').order('starts_at').then(function(r){
+   if(!r||r.error){fromCache();return;}
+   var by={};(r.data||[]).forEach(function(a){if(a.status==='cancelled')return;var ym=apptDate(a).slice(0,7);(by[ym]=by[ym]||[]).push(a);});
+   calYmsBetween(f,t).forEach(function(ym){var L=(by[ym]||[]).sort(function(x,y){return x.starts_at<y.starts_at?-1:(x.starts_at>y.starts_at?1:0)});_calMon[ym]=L;delete _calStale[ym];kvPut('cal:'+me.id+':'+ym,L);});
+   cb({});
+  },function(){fromCache();});
+ }catch(e){fromCache();}
+}
+function calRows(fromDs,toDs){var out=[];calYmsBetween(fromDs,toDs).forEach(function(ym){(_calMon[ym]||[]).forEach(function(a){var d=apptDate(a);if(d>=fromDs&&d<=toDs)out.push(a);});});return out;}
+function calByDay(rows){var by={};rows.forEach(function(a){var d=apptDate(a);(by[d]=by[d]||[]).push(a);});Object.keys(by).forEach(function(d){by[d].sort(function(x,y){return apptMin(x)-apptMin(y);});});return by;}
+function calSugWindow(){var t=todayStr();return calYmsBetween(t,dateAdd(t,22));}
+
+/* ---------- better-date suggester ---------- */
+/* cust: customer; fromDs: search starts the day after; n: how many; opt: {exclude:ds, hhmm, dur, skipId} — uses the appointments already loaded (calLoad) */
+function apptSuggestDates(cust,fromDs,n,opt){
+ opt=opt||{};n=n||3;fromDs=fromDs||todayStr();
+ if(!cust)return [];
+ var t0=todayStr();
+ var me0={customer_id:cust.id,lat:cust.lat,lng:cust.lng};var cLL=apptLL(me0);
+ var cand={customer_id:cust.id,lat:cust.lat,lng:cust.lng,il_time:opt.hhmm||null,duration_min:opt.dur||30};
+ var by=calByDay(calRows(dateAdd(fromDs,1),dateAdd(fromDs,21)));
+ var out=[];
+ for(var i=1;i<=21;i++){
+  var ds=dateAdd(fromDs,i);
+  if(ds<t0||ds===opt.exclude)continue;
+  if(parseYmd(ds).getDay()>4)continue;                     /* Sun–Thu only */
+  var day=(by[ds]||[]).filter(function(a){return a.id!==opt.skipId;});
+  var ok=true,allNear=day.length>0,nearA=null;
+  day.forEach(function(a){
+   if(a.customer_id===cust.id){ok=false;return;}
+   var km=cLL?apptKm(me0,a):null;
+   if(km!=null&&km>GEO_CONFLICT_KM)ok=false;
+   if(km==null||km>GEO_NEAR_KM)allNear=false;else if(!nearA)nearA=a;
+   if(opt.hhmm&&apptOverlap(cand,a))ok=false;
+  });
+  if(!ok)continue;
+  var score=100-i*2,why=[];
+  if(allNear&&nearA){score+=30;why.push('כבר יש לך פגישה ב'+apptCity(nearA)+' באותו יום');}
+  if(cust.area_code!=null&&calFocusAreas(ds).indexOf(+cust.area_code)>-1){score+=20;why.push('יום מיקוד לאזור '+cust.area_code);}
+  if(!why.length)why.push(day.length?'אין פגישות רחוקות באותו יום':'אין פגישות באותו יום');
+  out.push({ds:ds,why:why.join(' · '),score:score});
+ }
+ out.sort(function(a,b){return b.score-a.score||(a.ds<b.ds?-1:1);});
+ return out.slice(0,n).map(function(x){return {ds:x.ds,why:x.why};});
+}
+
+/* ---------- scheduling guard (called from openApptSheet's save) ---------- */
+function apptDayHits(cust,dateStr,hhmm,dur,list,skipId){
+ var cand={customer_id:cust.id,lat:cust.lat,lng:cust.lng,il_date:dateStr,il_time:hhmm,duration_min:dur||30};
+ var hits=[];
+ (list||[]).forEach(function(a){if(a.status==='cancelled'||(skipId&&a.id===skipId))return;
+  var km=apptKm(cand,a);
+  var far=km!=null&&km>GEO_CONFLICT_KM,ov=hhmm?apptOverlap(cand,a):false;
+  hits.push({a:a,km:km==null?null:Math.round(km),far:far,time:ov});
+ });
+ return hits;
+}
+function apptConflictCheck(dateStr,hhmm,dur,cust,existing,cb){
+ var once=false,fin=function(v){if(once)return;once=true;cb&&cb(v);};
+ if(navigator.onLine===false||!dateStr||!cust||!me){fin(true);return;}
+ loadAppts(dateStr,function(list){
+  var hits=apptDayHits(cust,dateStr,hhmm,dur,list,existing&&existing.id).filter(function(h){return h.far||h.time;});
+  if(!hits.length){fin(true);return;}
+  calLoad(calSugWindow(),function(){
+   var sug=apptSuggestDates(cust,todayStr(),3,{exclude:dateStr,hhmm:hhmm,dur:dur,skipId:existing&&existing.id});
+   var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';ov.id='apcf';
+   ov.innerHTML='<div class="sheet" style="max-width:380px;margin:auto;border-radius:18px;padding:18px 18px 14px;max-height:88vh;overflow:auto">'+
+    '<div style="font-size:16px;font-weight:800;color:var(--bad);text-align:center">⚠︎ שימי לב לפני שקובעים</div>'+
+    '<div style="margin-top:10px">'+hits.map(function(h){var a=h.a;
+      return '<div class="calcf" style="margin-top:7px;font-size:13px;font-weight:700;color:var(--badd);line-height:1.5">'+
+       (h.far?'⚠︎ באותו יום יש לך פגישה ב'+esc(apptCity(a))+' — '+h.km+' ק״מ מכאן':'⚠︎ חופף לפגישה ב'+esc(apptCity(a)))+
+       '<div style="font-size:11.5px;font-weight:600;color:var(--bad)">'+esc(a.customer_name||'')+' · '+esc(apptTime(a))+'</div></div>';}).join('')+'</div>'+
+    (sug.length?'<div style="font-size:12px;color:var(--mut);font-weight:700;margin-top:12px">תאריכים מתאימים יותר:</div>'+sug.map(function(s){return '<button class="cfsug" data-ds="'+s.ds+'">'+esc(heDateFull(s.ds))+'<small>'+esc(s.why)+'</small></button>';}).join(''):'')+
+    '<div style="display:flex;gap:8px;margin-top:14px"><button id="apcf_no" class="cta" style="height:46px;background:#efece7;color:var(--ink);box-shadow:none">ביטול</button><button id="apcf_yes" class="cta" style="height:46px;background:var(--warn);box-shadow:none">לקבוע בכל זאת</button></div>'+
+   '</div>';
+   document.body.appendChild(ov);
+   ov.onclick=function(e){if(e.target===ov){ov.remove();fin(false);}};
+   $('apcf_no').onclick=function(){ov.remove();fin(false);};
+   $('apcf_yes').onclick=function(){ov.remove();fin(true);};
+   var bs=ov.querySelectorAll('.cfsug');for(var i=0;i<bs.length;i++)bs[i].onclick=function(){var d=$('ap_d');if(d){d.value=this.getAttribute('data-ds');try{d.dispatchEvent(new Event('change'));}catch(e){}}ov.remove();fin(false);toast('התאריך עודכן — אפשר לקבוע');};
+  });
+ });
+}
+/* live hint under the date field of the meeting sheet */
+function apptHintBind(ov,cust,existing){
+ var d=ov.querySelector('#ap_d');if(!d||!cust)return;
+ var row=d.parentNode&&d.parentNode.parentNode;if(!row||!row.parentNode)return;
+ var h=document.createElement('div');h.id='ap_hint';h.style.cssText='font-size:12px;font-weight:700;margin-top:8px;line-height:1.5';
+ row.parentNode.insertBefore(h,row.nextSibling);
+ var upd=function(){var ds=d.value;if(!ds||navigator.onLine===false){h.innerHTML='';return;}
+  loadAppts(ds,function(list){if(d.value!==ds)return;
+   var hits=apptDayHits(cust,ds,null,null,list,existing&&existing.id);
+   var far=hits.filter(function(x){return x.far;});
+   if(far.length)h.innerHTML='<span style="color:var(--bad)">⚠︎ באותו יום: '+far.map(function(x){return 'פגישה ב'+esc(apptCity(x.a))+' '+esc(apptTime(x.a))+' ('+x.km+' ק״מ)';}).join(' · ')+'</span>';
+   else h.innerHTML='<span style="color:var(--good)">✓ אין פגישות רחוקות באותו יום'+(hits.length?' · '+hits.length+' '+(hits.length===1?'פגישה קרובה':'פגישות קרובות'):'')+'</span>';
+  });};
+ d.addEventListener('change',upd);d.addEventListener('input',upd);upd();
+}
+
+/* ---------- calendar screen ---------- */
+function calHdr(){var S=_calState;
+ return '<div style="background:var(--acc);padding:14px 16px 12px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">📅 לוח שנה</div></div>'+
+  '<div style="display:flex;gap:6px"><button class="calhchip calmode'+(S.mode==='month'?' on':'')+'" data-m="month">חודש</button><button class="calhchip calmode'+(S.mode==='year'?' on':'')+'" data-m="year">שנה</button></div></div></div>';}
+function calendarView(){
+ var S=_calState;if(!S.ym){S.ym=todayStr().slice(0,7);S.sel=todayStr();}if(!S.y)S.y=+S.ym.slice(0,4);
+ shell(calHdr()+'<div class="list" id="calbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
+ var ms=document.querySelectorAll('.calmode');for(var i=0;i<ms.length;i++)ms[i].onclick=function(){S.mode=this.getAttribute('data-m');if(S.mode==='year')S.y=+S.ym.slice(0,4);calendarView();};
+ if(!me)return;
+ if(S.mode==='year')calDrawYear();else calDrawMonth();
+}
+function calOffNote(info){if(!info||!info.offline)return '';return '<div class="card" style="background:var(--warns);border-color:#e7c9a0;font-size:12.5px;color:var(--warnd);font-weight:700">📴 אין קליטה — '+(info.cached?'מוצגות פגישות שנשמרו במכשיר':'אין נתונים שמורים לתקופה הזו')+'</div>';}
+function calDrawMonth(){
+ var S=_calState,ym=S.ym,T=todayStr();
+ var yms=[ym];if(S.sel)calSugWindow().forEach(function(x){if(yms.indexOf(x)<0)yms.push(x);});
+ calLoad(yms,function(info){
+  var body=$('calbody');if(!body||route!=='calendar'||_calState.mode!=='month'||_calState.ym!==ym)return;
+  var rows=_calMon[ym]||[],by=calByDay(rows);
+  var cfDays={};apptGeoConflicts(rows).forEach(function(c){cfDays[apptDate(c.a)]=(cfDays[apptDate(c.a)]||0)+1;});
+  var first=parseYmd(ym+'-01'),lead=first.getDay(),last=+calMonthEnd(ym).slice(8,10);
+  var g='';HEDAYS_S.forEach(function(d){g+='<div class="calwd">'+d+'</div>';});
+  for(var b=0;b<lead;b++)g+='<div></div>';
+  var areasSeen={};
+  for(var d=1;d<=last;d++){var ds=ym+'-'+pad2(d),L=by[ds]||[];
+   var dots='';L.slice(0,4).forEach(function(a){var c=a.area_code!=null?a.area_code:((custById(a.customer_id)||{}).area_code);areasSeen[c]=1;dots+='<i class="caldot" style="background:'+calAreaColor(c)+'"></i>';});
+   if(L.length>4)dots+='<span class="calmore">+'+(L.length-4)+'</span>';
+   var dow=parseYmd(ds).getDay();
+   g+='<button class="calc'+(ds<T?' past':'')+(ds===T?' today':'')+(ds===S.sel?' sel':'')+(cfDays[ds]?' cfd':'')+(dow>4?' wkend':'')+'" data-ds="'+ds+'" data-n="'+L.length+'">'+
+    (cfDays[ds]?'<span class="calwarn">⚠︎</span>':'')+'<span class="cald">'+d+'</span><span class="caldots">'+dots+'</span><span class="calr" data-rds="'+ds+'"></span></button>';
+  }
+  var nm=rows.length,ncf=Object.keys(cfDays).length;
+  var leg=Object.keys(areasSeen).filter(function(k){return k!=='undefined'&&k!=='null';}).sort().map(function(k){return '<span style="display:inline-flex;align-items:center;gap:4px;margin-inline-end:10px"><i class="caldot" style="background:'+calAreaColor(k)+'"></i>אזור '+esc(String(k))+'</span>';}).join('');
+  body.innerHTML=calOffNote(info)+
+   '<div class="card"><div class="calnav"><button class="calmn" data-d="-1" aria-label="חודש קודם">'+CAL_CHEV_R+'</button><div style="text-align:center"><div style="font-size:17px;font-weight:800;color:var(--head)">'+HEMONTHS[+ym.slice(5,7)-1]+' '+ym.slice(0,4)+'</div>'+
+    '<div style="font-size:11.5px;color:var(--mut);font-weight:600">'+nm+' פגישות'+(ncf?' · <span style="color:var(--bad);font-weight:800">'+(ncf===1?'יום אחד עם התנגשות':ncf+' ימים עם התנגשות')+'</span>':'')+(ym!==T.slice(0,7)?' · <a href="#" id="caltoday">להיום</a>':'')+'</div></div><button class="calmn" data-d="1" aria-label="חודש הבא">'+CAL_CHEV_L+'</button></div>'+
+    '<div class="calg" style="margin-top:10px">'+g+'</div>'+
+    (leg?'<div style="font-size:11px;color:var(--mut);font-weight:600;margin-top:9px;line-height:1.8">'+leg+'<span style="color:var(--bad);font-weight:800">⚠︎ פגישות רחוקות / חופפות</span></div>':'')+
+   '</div><div id="calag"></div>';
+  var nb=body.querySelectorAll('.calmn');for(var i=0;i<nb.length;i++)nb[i].onclick=function(){S.ym=calYmAdd(S.ym,+this.getAttribute('data-d'));S.sel=null;calendarView();};
+  if($('caltoday'))$('caltoday').onclick=function(e){e.preventDefault();S.ym=T.slice(0,7);S.sel=T;calendarView();};
+  var cs=body.querySelectorAll('.calc');for(var j=0;j<cs.length;j++)cs[j].onclick=function(){S.sel=this.getAttribute('data-ds');var p=body.querySelectorAll('.calc.sel');for(var k=0;k<p.length;k++)p[k].classList.remove('sel');this.classList.add('sel');calDrawAgenda(S.sel,true);};
+  if(S.sel&&S.sel.slice(0,7)===ym)calDrawAgenda(S.sel,false);
+  fetchPlannedRoutes(ym+'-01',calMonthEnd(ym),function(map){_calRoutes[ym]=map;var els=document.querySelectorAll('.calr[data-rds]');for(var k=0;k<els.length;k++){var r=map[els[k].getAttribute('data-rds')];if(r&&r.n)els[k].textContent=r.n+' תחנות';}});
+ });
+}
+function calDrawYear(){
+ var S=_calState,y=S.y,T=todayStr(),yms=[];for(var m=1;m<=12;m++)yms.push(y+'-'+pad2(m));
+ calLoad(yms,function(info){
+  var body=$('calbody');if(!body||route!=='calendar'||_calState.mode!=='year'||_calState.y!==y)return;
+  var h='';var tot=0;
+  yms.forEach(function(ym,mi){var rows=_calMon[ym]||[];tot+=rows.length;var by=calByDay(rows);var cf={};apptGeoConflicts(rows).forEach(function(c){cf[apptDate(c.a)]=1;});
+   var g='',lead=parseYmd(ym+'-01').getDay(),last=+calMonthEnd(ym).slice(8,10);
+   HEDAYS_S.forEach(function(d){g+='<div class="calyd" style="font-weight:700">'+d+'</div>';});
+   for(var b=0;b<lead;b++)g+='<div class="calyd"></div>';
+   for(var d=1;d<=last;d++){var ds=ym+'-'+pad2(d);g+='<div class="calyd'+(by[ds]?' has':'')+(cf[ds]?' cf':'')+(ds===T?' tdy':'')+'" data-ds="'+ds+'">'+d+'</div>';}
+   h+='<button class="calym'+(ym===T.slice(0,7)?' cur':'')+'" data-ym="'+ym+'"><div class="calymh">'+HEMONTHS[mi]+(rows.length?'<span>'+rows.length+'</span>':'')+'</div><div class="calyg">'+g+'</div></button>';
+  });
+  body.innerHTML=calOffNote(info)+'<div class="card" style="padding:10px 12px"><div class="calnav"><button class="calyn" data-d="-1" aria-label="שנה קודמת">'+CAL_CHEV_R+'</button><div style="text-align:center"><div style="font-size:17px;font-weight:800;color:var(--head)">'+y+'</div><div style="font-size:11.5px;color:var(--mut);font-weight:600">'+tot+' פגישות בשנה · נקודה אדומה = התנגשות</div></div><button class="calyn" data-d="1" aria-label="שנה הבאה">'+CAL_CHEV_L+'</button></div></div><div class="caly">'+h+'</div>';
+  var yn=body.querySelectorAll('.calyn');for(var i=0;i<yn.length;i++)yn[i].onclick=function(){S.y+=+this.getAttribute('data-d');calendarView();};
+  var mb=body.querySelectorAll('.calym');for(var j=0;j<mb.length;j++)mb[j].onclick=function(){S.ym=this.getAttribute('data-ym');S.mode='month';S.sel=(S.ym===T.slice(0,7))?T:null;calendarView();};
+ });
+}
+function calCustOf(a){var c=custById(a.customer_id);return c||{id:a.customer_id,name:a.customer_name,city:a.city,lat:a.lat,lng:a.lng,area_code:a.area_code};}
+/* which meeting of a far-apart pair should move: the one with more conflicts, then the one farther from the start point */
+function calPickMover(pairs){
+ var cnt={},ref={};pairs.forEach(function(p){[p.a,p.b].forEach(function(x){cnt[x.id]=(cnt[x.id]||0)+1;ref[x.id]=x;});});
+ var o=null;try{o=getOrigin();}catch(e){}
+ var ids=Object.keys(cnt).sort(function(x,y){var d=cnt[y]-cnt[x];if(d)return d;var kx=o&&o.lat!=null?(apptKm(o,ref[x])||0):0,ky=o&&o.lat!=null?(apptKm(o,ref[y])||0):0;return ky-kx;});
+ return ids.length?ref[ids[0]]:null;
+}
+function calDrawAgenda(ds,scroll){
+ var el=$('calag');if(!el)return;
+ var S=_calState,T=todayStr();
+ var L=(calByDay(calRows(ds,ds))[ds])||[];
+ var cfs=apptGeoConflicts(L),geo=cfs.filter(function(c){return c.type==='geo';}),tm=cfs.filter(function(c){return c.type==='time';});
+ var h='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15.5px;font-weight:800;color:var(--head)">'+esc(heDateFull(ds))+'</div><div style="font-size:11.5px;color:var(--mut);font-weight:600">'+(L.length?L.length+' פגישות':'אין פגישות')+(ds<T?' · עבר':'')+'</div></div>'+
+  ((_calRoutes[ds.slice(0,7)]||{})[ds]&&(_calRoutes[ds.slice(0,7)][ds].n)?'<span class="badge b-mut">🚗 '+_calRoutes[ds.slice(0,7)][ds].n+' תחנות במסלול</span>':'')+'</div>';
+ geo.forEach(function(c){h+='<div class="calcf"><div style="font-size:13px;font-weight:800;color:var(--badd);line-height:1.5">⚠︎ פגישות רחוקות באותו יום: '+esc(apptCity(c.a))+' ↔ '+esc(apptCity(c.b))+' ('+c.km+' ק״מ)</div></div>';});
+ tm.forEach(function(c){h+='<div class="calcf"><div style="font-size:13px;font-weight:800;color:var(--badd)">⚠︎ חפיפה בשעות: '+esc(c.a.customer_name||'')+' '+esc(apptTime(c.a))+' ↔ '+esc(c.b.customer_name||'')+' '+esc(apptTime(c.b))+'</div></div>';});
+ if(geo.length&&ds>=T){var mv=calPickMover(geo);if(mv){var sug=apptSuggestDates(calCustOf(mv),T,3,{exclude:ds,hhmm:apptTime(mv),dur:mv.duration_min,skipId:mv.id});
+  h+='<div class="calcf" style="background:#fff;border-color:var(--accs2)"><div style="font-size:12.5px;font-weight:700;color:var(--accd)">כדאי להעביר את '+esc(mv.customer_name||'')+' ל־</div>'+
+   (sug.length?'<div style="display:flex;flex-direction:column;gap:6px;margin-top:7px">'+sug.map(function(s){return '<button class="calmv" data-id="'+esc(mv.id)+'" data-ds="'+s.ds+'">'+esc(heDateFull(s.ds))+' · '+esc(apptTime(mv))+'<span style="display:block;font-size:11px;font-weight:600;color:var(--acc)">'+esc(s.why)+'</span></button>';}).join('')+'</div>':'<div style="font-size:12px;color:var(--mut);margin-top:4px">לא נמצא יום מתאים ב־21 הימים הקרובים</div>')+'</div>';}}
+ L.forEach(function(a,i){
+  if(i>0){var p=L[i-1],km=apptKm(p,a);if(km!=null){var tmin=calTravelMin(km),gap=apptMin(a)-(apptMin(p)+(+p.duration_min||30));
+   h+='<div class="caltrv"'+(gap<tmin?' style="color:var(--bad)"':'')+'>↓ '+Math.round(km)+' ק״מ · ~'+tmin+' דק׳ נסיעה'+(gap<tmin?' · לא מספיק זמן':'')+'</div>';}}
+  var c=custById(a.customer_id)||{};var ac=a.area_code!=null?a.area_code:c.area_code;
+  h+='<div class="calrow" data-id="'+esc(a.id)+'"><div style="font-size:15px;font-weight:800;color:var(--acc);min-width:46px">'+esc(apptTime(a))+'</div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(a.customer_name||c.name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(apptCity(a))+' · <i class="caldot" style="background:'+calAreaColor(ac)+';vertical-align:middle"></i> אזור '+esc(String(ac==null?'?':ac))+' · '+(+a.duration_min||30)+' דק׳'+(a.note?' · '+esc(a.note):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>';
+ });
+ if(ds>=T)h+='<div style="display:flex;gap:8px;margin-top:2px"><button id="caladd" class="cta" style="height:44px;font-size:14px;box-shadow:none">+ פגישה ביום הזה</button><button id="calplan" class="cta" style="height:44px;font-size:14px;background:var(--accs);color:var(--accd);box-shadow:none">🗺 תכנון מסלול ליום</button></div>';
+ h+='</div>';
+ el.innerHTML=h;
+ var redraw=function(){apptInvalidate();if(route==='calendar')calendarView();};
+ var rs=el.querySelectorAll('.calrow');for(var i=0;i<rs.length;i++)rs[i].onclick=function(){var id=this.getAttribute('data-id'),a=null;L.forEach(function(x){if(x.id===id)a=x;});if(a)openApptSheet(calCustOf(a),a,redraw);};
+ var mv2=el.querySelectorAll('.calmv');for(var j=0;j<mv2.length;j++)mv2[j].onclick=function(){var id=this.getAttribute('data-id'),nd=this.getAttribute('data-ds'),a=null;L.forEach(function(x){if(x.id===id)a=x;});if(!a)return;calMoveAppt(a,nd);};
+ if($('caladd'))$('caladd').onclick=function(){calPickCust(function(c){openApptSheet(c,null,redraw,ds);});};
+ if($('calplan'))$('calplan').onclick=function(){planFor(ds);};
+ if(scroll)try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+}
+function calMoveAppt(a,nd){
+ if(navigator.onLine===false){toast('זמין רק עם קליטה');return;}
+ var t=apptTime(a);
+ confirmModal('להעביר את הפגישה עם '+(a.customer_name||'')+' ל'+heDateFull(nd)+' בשעה '+t+'?',function(){
+  sb.from('appointments').update({starts_at:apptISO(nd,t),updated_at:new Date().toISOString()}).eq('id',a.id).then(function(r){
+   if(r&&r.error){toast('שגיאה: '+r.error.message);return;}
+   apptInvalidate();toast('הפגישה הועברה ל־'+heDate(nd)+' ✓');if(route==='calendar')calendarView();
+  },function(){toast('שגיאה בשמירה');});
+ },'העברה');
+}
+function calPickCust(cb){
+ var o=document.createElement('div');o.className='ovl';o.style.cssText='justify-content:flex-start';
+ o.innerHTML='<div class="sheet" style="border-radius:0 0 18px 18px;max-height:90vh"><div style="padding:14px 16px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">בחירת לקוח לפגישה</b><span id="clpx" style="font-size:22px;cursor:pointer;color:var(--mut)">×</span></div><div class="search" style="margin-top:10px"><input id="clpq" placeholder="שם או עיר…"></div></div><div id="clpl" class="list" style="overflow:auto"></div></div>';
+ document.body.appendChild(o);o.onclick=function(e){if(e.target===o)o.remove();};$('clpx').onclick=function(){o.remove();};
+ var tm=null;
+ var run=function(){var q=$('clpq')?$('clpq').value.trim():'';var L=custFilter(q,true).slice(0,60);
+  $('clpl').innerHTML=L.map(function(c){return '<div class="card clpi" data-id="'+esc(c.id)+'" style="cursor:pointer;display:flex;align-items:center;gap:9px"><i class="caldot" style="background:'+calAreaColor(c.area_code)+'"></i><div style="flex:1"><div style="font-size:14px;font-weight:700">'+esc(c.name)+'</div><div style="font-size:12px;color:var(--mut)">'+esc(c.city||'')+(c.area_code!=null?' · אזור '+c.area_code:'')+'</div></div></div>';}).join('')||'<div style="color:var(--mut);font-size:13px;text-align:center;padding:14px">לא נמצאו לקוחות</div>';
+  var it=o.querySelectorAll('.clpi');for(var i=0;i<it.length;i++)it[i].onclick=function(){var c=custById(this.getAttribute('data-id'));o.remove();if(c)cb(c);};};
+ $('clpq').addEventListener('input',function(){clearTimeout(tm);tm=setTimeout(run,150);});run();
+}
+
+/* ---------- tablet order mode + phone→tablet cart handoff ---------- */
+function libDevId(){var d=null;try{d=localStorage.getItem('lib_dev');}catch(e){}if(!d){d='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{localStorage.setItem('lib_dev',d);}catch(e){}}return d;}
+/* last time the cart content actually changed (saveCart runs on every render, so its ts is not a modification time) */
+function cartTrackMt(){if(!_cartReady)return;var sig=JSON.stringify([cart.cust&&cart.cust.id,(cart.items||[]).map(function(i){return i.id+':'+i.qty;})]);var old=null;try{old=localStorage.getItem('lib_cart_sig');}catch(e){}if(old!==sig){try{localStorage.setItem('lib_cart_sig',sig);if(old!==null)localStorage.setItem('lib_cart_mt',String(Date.now()));}catch(e){}}}
+(function(){var f=saveCart;saveCart=function(){try{cartTrackMt();}catch(e){}return f.apply(this,arguments);};})();
+var _cdDraft=null,_cdTs=0,_ordQ='',_ordScroll=0;
+function cartDraftPush(){
+ if(navigator.onLine===false||!me){toast('זמין רק עם קליטה');return;}
+ if(!cart.items.length){toast('העגלה ריקה');return;}
+ var iso=new Date().toISOString();
+ sb.from('cart_drafts').upsert({agent_id:me.id,payload:{items:cart.items,customer:cart.cust||null,discount:cart.discount||null,saved_at:iso},device_id:libDevId(),updated_at:iso},{onConflict:'agent_id'}).then(function(r){
+  if(r&&r.error){toast('שגיאה: '+r.error.message);return;}
+  _cdDraft=null;toast('העגלה נשמרה — פתחי את ההזמנה במכשיר השני');
+ },function(){toast('שגיאה בשמירה');});
+}
+function cartDraftClear(){if(navigator.onLine===false||!me)return;_cdDraft=null;try{sb.from('cart_drafts').delete().eq('agent_id',me.id).then(function(){},function(){});}catch(e){}}
+function cartDraftShowable(d){
+ if(!d||!d.payload||!(d.payload.items||[]).length)return false;
+ if(d.device_id===libDevId())return false;
+ var dis=null;try{dis=localStorage.getItem('lib_cdraft_dis');}catch(e){}if(dis&&dis===String(d.updated_at))return false;
+ if(cart.items.length){var mt=0;try{mt=+localStorage.getItem('lib_cart_mt')||0;}catch(e){}if(new Date(d.updated_at).getTime()<=mt)return false;}
+ return true;
+}
+function cartDraftBanner(){
+ var el=$('cdban');if(!el)return;var d=_cdDraft;
+ if(!cartDraftShowable(d)){el.innerHTML='';return;}
+ var p=d.payload,n=p.items.length,mins=Math.max(0,Math.round((Date.now()-new Date(d.updated_at).getTime())/60000));
+ var ago=mins<1?'עכשיו':(mins<60?'לפני '+mins+' דק׳':(mins<1440?'לפני '+Math.round(mins/60)+' שע׳':'לפני '+Math.round(mins/1440)+' ימים'));
+ el.innerHTML='<div class="cdban"><div style="font-size:13px;font-weight:800;color:var(--accd);line-height:1.5">🛒 עגלה מהמכשיר השני · '+n+' פריטים'+(p.customer&&p.customer.name?' · '+esc(p.customer.name):'')+' · '+ago+'</div><div style="display:flex;gap:8px;margin-top:8px"><button id="cdload" class="chip on" style="flex:1">טעינה</button><button id="cdign" class="chip" style="flex:1">התעלמות</button></div></div>';
+ $('cdign').onclick=function(){try{localStorage.setItem('lib_cdraft_dis',String(d.updated_at));}catch(e){}el.innerHTML='';};
+ $('cdload').onclick=function(){
+  var go=function(){cart={cust:p.customer||null,items:p.items.slice()};if(p.discount)cart.discount=p.discount;_cdDraft=null;saveCart();cartDraftClear();toast('העגלה נטענה ✓');route='orders';render();};
+  if(cart.items.length)confirmModal('להחליף את העגלה הנוכחית?',go,'החלפה');else go();
+ };
+}
+/* called at the end of ordersView() */
+function ordersFeat(){
+ var w=document.querySelector('.ordwrap');if(!w)return;
+ var box=$('cdho');
+ if(box)box.innerHTML='<div id="cdban"></div>'+(cart.items.length?'<button id="cdpush" class="cdbtn">📲 להמשיך בטאבלט/טלפון</button>':'');
+ if($('cdpush'))$('cdpush').onclick=cartDraftPush;
+ cartDraftBanner();
+ if(navigator.onLine!==false&&me&&Date.now()-_cdTs>15000){_cdTs=Date.now();
+  try{sb.from('cart_drafts').select('*').eq('agent_id',me.id).limit(1).then(function(r){_cdDraft=(r&&r.data&&r.data[0])||null;if(route==='orders')cartDraftBanner();},function(){});}catch(e){}}
+ /* wide screens: keep the product list open next to the cart */
+ var wide=false;try{wide=window.matchMedia('(min-width:900px)').matches;}catch(e){}
+ var pq=$('pq'),pr=$('presults'),colA=w.querySelector('.ordcolA');
+ if(!wide||!pq||!pr)return;
+ pq.addEventListener('input',function(){_ordQ=pq.value;if(!pq.value.trim())setTimeout(fill,200);});
+ if(colA)colA.addEventListener('scroll',function(){_ordScroll=colA.scrollTop;});
+ function fill(){if(pq.value.trim()||!$('presults'))return;var L=prodSearch('',40),h='';
+  L.forEach(function(p){h+='<div class="card addr" data-sku="'+esc(p.sku)+'" style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px">'+thumb(p.sku)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+esc(p.name)+'</div><div style="font-size:11px;color:var(--mut)">'+esc(p.sku)+' · '+ils(p.price_agorot)+'</div></div><div style="font-size:22px;color:var(--acc);font-weight:800">+</div></div>';});
+  pr.innerHTML=h;var ar=pr.querySelectorAll('.addr');for(var a=0;a<ar.length;a++)ar[a].onclick=function(){addToCartBySku(this.getAttribute('data-sku'));};}
+ if(_ordQ){pq.value=_ordQ;try{pq.dispatchEvent(new Event('input'));}catch(e){}}else fill();
+ if(colA&&_ordScroll)setTimeout(function(){colA.scrollTop=_ordScroll;},260);
+}
 </script>
 </body>
 </html>
