@@ -50,54 +50,27 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function token(){var m=location.search.match(/[?&]t=([^&]+)/);return m?decodeURIComponent(m[1]):'';}
 function card(t,p){return '<div class="card"><h2>'+esc(t)+'</h2><p>'+esc(p)+'</p></div>';}
 function render(d){
-  var stops=(d.stops||[]),done=0;
-  stops.forEach(function(s){if(s.visited)done++;});
-  var pct=stops.length?Math.round(done/stops.length*100):0;
+  // manager view: customer name, city and the agent's own notes only (no collection / visit / status tags)
+  var stops=(d.stops||[]);
   var dt=new Date(String(d.route_date)+'T00:00:00Z');
   var dateTxt='יום '+HEDAYS[dt.getUTCDay()]+' · '+String(dt.getUTCDate()).padStart(2,'0')+'.'+String(dt.getUTCMonth()+1).padStart(2,'0')+'.'+dt.getUTCFullYear();
   var h='<div class="hd"><h1>מסלול יומי · '+esc(d.agent_name||'')+'</h1>'
-   +'<div class="sub">'+esc(dateTxt)+(d.area_code?' · אזור '+esc(d.area_code):'')+' · '+stops.length+' עצירות</div>'
-   +'<div class="bar"><i style="width:'+pct+'%"></i></div>'
-   +'<div class="prog">'+done+' מתוך '+stops.length+' בוצעו · '+pct+'%</div></div>';
+   +'<div class="sub">'+esc(dateTxt)+' · '+stops.length+' עצירות</div></div>';
   if(!stops.length){h+='<div class="card"><p>עדיין לא נבחרו עצירות ליום הזה.</p></div>';document.getElementById('app').innerHTML=h;return;}
-  var geo=stops.filter(function(s){return s.lat!=null&&s.lng!=null;});
-  if(geo.length>1){
-    h+='<a class="allbtn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/'
-      +geo.map(function(s){return s.lat+','+s.lng;}).join('/')+'">🗺️ פתיחת כל המסלול בגוגל מפות</a>';
-  }
   h+='<div class="list">';
   stops.forEach(function(s,i){
-    var where=[s.address,s.city].filter(Boolean).join(' · ');
-    var tags='';
-    if(s.appt_time)tags+='<span class="tag t-appt">🕐 פגישה '+esc(s.appt_time)+'</span>';
-    if(s.out_of_area)tags+='<span class="tag t-out">מחוץ לאזור</span>';
-    if(s.visited)tags+='<span class="tag t-done">✓ בוצע</span>';
-    if(s.has_debt)tags+='<span class="tag t-debt">לגבייה</span>';
-    var PL={high:['פוטנציאל גבוה','t-ph'],medium:['פוטנציאל בינוני','t-pm'],low:['פוטנציאל נמוך','t-pl']};
-    if(s.potential_level&&PL[s.potential_level])tags+='<span class="tag '+PL[s.potential_level][1]+'">⭐ '+PL[s.potential_level][0]+'</span>';
-    else if(s.lifecycle==='potential')tags+='<span class="tag t-pl">לקוח פוטנציאלי</span>';
     var notes='';
-    if(s.notes)notes+='<div class="note"><b>הערה:</b> '+esc(s.notes)+'</div>';
-    (s.last_notes||[]).forEach(function(n){
-      if(!n||!n.s)return;
-      notes+='<div class="note"><b>'+esc(n.d||'')+(n.o?' · '+esc(n.o):'')+'</b><br>'+esc(n.s)+'</div>';
-    });
-    var nav='';
-    if(s.lat!=null&&s.lng!=null){
-      nav='<div class="nav">'
-        +'<a target="_blank" rel="noopener" href="https://waze.com/ul?ll='+s.lat+','+s.lng+'&navigate=yes">Waze</a>'
-        +'<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng+'">גוגל מפות</a>'
-        +'</div>';
-    }
-    h+='<div class="stop'+(s.visited?' done':'')+'"><div class="num">'+(s.visited?'✓':(i+1))+'</div>'
+    if(s.notes)notes+='<div class="note">'+esc(s.notes)+'</div>';
+    (s.last_notes||[]).forEach(function(n){if(!n||!n.s)return;notes+='<div class="note">'+(n.d?'<b>'+esc(n.d)+'</b><br>':'')+esc(n.s)+'</div>';});
+    h+='<div class="stop"><div class="num">'+(i+1)+'</div>'
      +'<div style="flex:1;min-width:0"><div class="nm">'+esc(s.name)+'</div>'
-     +(where?'<div class="ct">'+esc(where)+'</div>':'')
-     +(tags?'<div class="tags">'+tags+'</div>':'')+notes+nav+'</div></div>';
+     +(s.city?'<div class="ct">'+esc(s.city)+'</div>':'')
+     +notes+'</div></div>';
   });
   h+='</div>';
   var up=d.updated_at?new Date(d.updated_at):null;
   var upTxt=up?up.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  h+='<div class="ft">מתעדכן אוטומטית כל שתי דקות'+(upTxt?' · עודכן '+esc(upTxt):'')+'<br>ליברטי · תצוגה בלבד</div>';
+  h+='<div class="ft">מתעדכן אוטומטית'+(upTxt?' · עודכן '+esc(upTxt):'')+'<br>ליברטי · תצוגה בלבד</div>';
   document.getElementById('app').innerHTML=h;
 }
 function load(){

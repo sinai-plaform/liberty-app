@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-73';
+var APP_VERSION='2026-08-26-74';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -1063,8 +1063,8 @@ function loadAgents(){
   if(route!=='agents')return;var d=(r&&r.data)||[];window.__agents=d;
   var byId={};d.forEach(function(a){byId[a.id]=a;});window.__agentsById=byId;
   var roleHe={agent:'סוכן',manager:'מנהל',office:'משרד',admin:'אדמין'};
-  var h='';
-  d.forEach(function(a){var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
+  var h='',_off=d.filter(function(a){return a.active===false;});d=d.filter(function(a){return a.active!==false;}).concat(_off);var _offHdr=false;
+  d.forEach(function(a){if(a.active===false&&!_offHdr){_offHdr=true;h+='<div style="font-size:12px;color:var(--mut);font-weight:800;margin:14px 2px 4px">הוסרו / לא פעילים ('+_off.length+')</div>';}var mgr=a.manager_id&&byId[a.manager_id]?byId[a.manager_id].name:null;
    h+='<div class="card agedit" data-id="'+a.id+'" style="cursor:pointer;'+(a.active?'':'opacity:.6')+'"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:var(--accs);color:var(--accd);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none">'+esc((a.name||"·").charAt(0))+'</div><div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(a.name)+' <span class="badge '+(a.role==="agent"?"b-good":"b-acc")+'">'+(roleHe[a.role]||a.role)+'</span>'+(a.active?'':' <span class="badge b-mut">מושבת</span>')+'</div><div style="font-size:11.5px;color:var(--mut)">קוד '+esc(a.employee_code||"")+(a.phone?' · '+esc(a.phone):'')+(mgr?' · תחת '+esc(mgr):'')+(a.role==='agent'?(a.max_discount_pct!=null?' · תקרה '+(+a.max_discount_pct)+'%':' · ללא תקרה'):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div></div>';});
   $('res').innerHTML='<div style="font-size:12px;color:var(--mut);font-weight:600;margin-bottom:2px">'+d.length+' עובדים · הקישי לעריכה. שיוך אזורים נעשה מתוך כרטיס העובד (לתפקיד סוכן).</div>'+h;
   var it=document.querySelectorAll('.agedit');for(var i=0;i<it.length;i++){it[i].onclick=function(){openAgentEditor(window.__agentsById[this.getAttribute('data-id')]);};}
@@ -1173,11 +1173,13 @@ function openAgentEditor(a){
   (isNew?'':'<div class="card"><div style="font-size:12.5px;color:var(--head);font-weight:800;margin-bottom:6px">🕐 נוכחות · 30 יום אחרונים</div><div id="ag_att"><div style="color:var(--mut);font-size:12.5px">טוען…</div></div></div>')+
   '<div class="card"><label style="display:block"><span class="lbl">'+(isNew?'קוד אישי (PIN) — לפחות 4 ספרות':'איפוס קוד אישי (השאירי ריק לשמירה)')+'</span><input id="ag_pin" class="field" inputmode="numeric" placeholder="'+(isNew?'PIN לכניסה':'PIN חדש (אופציונלי)')+'"></label>'+(isNew?'':'<label style="display:flex;align-items:center;gap:8px;margin-top:11px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ag_active"'+(a.active?' checked':'')+'> סוכן פעיל</label>')+'</div>'+
   '<button class="cta" id="ag_save">'+(isNew?'יצירת סוכן':'שמירת שינויים')+'</button>'+
+  ((!isNew&&me&&a.id!==me.id)?'<button id="ag_del" style="width:100%;height:44px;margin-top:9px;background:#fff;border:1px solid var(--bad);color:var(--bad);border-radius:12px;font-weight:700;cursor:pointer">🗑 '+(a.active===false?'הסרה סופית מהרשימה':'מחיקת עובד')+'</button>':'')+
   '<div id="ag_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>'+
   '</div></div>';
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove();};$('agx').onclick=function(){ov.remove();};
  if($('ag_role'))$('ag_role').onchange=function(){var s=$('ag_area_sec');if(s)s.style.display=this.value==='agent'?'block':'none';var s2=$('ag_cap_sec');if(s2)s2.style.display=this.value==='agent'?'block':'none';};
  if(!isNew){if(a.role==='agent')_agLoadAreas(a.id);_agLoadAttendance(a.id);}
+ if($('ag_del'))$('ag_del').onclick=function(){ov.remove();mgrDeleteAgent(a);};
  $('ag_save').onclick=function(){
   var name=$('ag_name').value.trim(),phone=$('ag_phone').value.trim()||null,role=$('ag_role').value,mgr=$('ag_mgr').value||null,pin=$('ag_pin').value.trim();
   var err=$('ag_err');err.textContent='';
@@ -1206,6 +1208,27 @@ function openAgentEditor(a){
    },function(e){err.textContent='שגיאה: '+((e&&e.message)||'');btn.disabled=false;btn.textContent='שמירת שינויים';});
   }
  };
+}
+function mgrDeleteAgent(a){
+ if(navigator.onLine===false){toast('זמין רק עם קליטה');return;}
+ sb.from('liberty_customers').select('id').eq('agent_id',a.id).limit(5000).then(function(r){
+  var n=((r&&r.data)||[]).length,others=(window.__agents||[]).filter(function(x){return x.id!==a.id&&x.active!==false&&(x.role==='agent'||x.role==='manager');});
+  var mo=actModal('מחיקת '+a.name);var b=mo.querySelector('.amb');
+  b.innerHTML='<div style="font-size:13px;line-height:1.7;color:var(--head)">העובד יוסר מהאפליקציה והכניסה שלו תיחסם. היסטוריית הביקורים וההזמנות שלו נשמרת בדוחות.</div>'+
+   (n?'<div class="card" style="margin-top:10px;background:var(--warns)"><div style="font-size:12.5px;font-weight:800;color:var(--warnd)">ל'+esc(a.name)+' יש '+n+' לקוחות — למי להעביר אותם?</div><select id="agd_to" class="field" style="margin-top:7px"><option value="">בחרו עובד…</option>'+others.map(function(x){return '<option value="'+x.id+'">'+esc(x.name)+'</option>';}).join('')+'</select></div>':'')+
+   '<button id="agd_go" class="cta" style="margin-top:12px;background:var(--bad)">מחיקת העובד</button><div id="agd_err" style="font-size:12.5px;color:var(--bad);text-align:center;margin-top:8px"></div>';
+  $('agd_go').onclick=function(){
+   var to=$('agd_to')?$('agd_to').value:'';if(n&&!to){$('agd_err').textContent='בחרו למי להעביר את הלקוחות';return;}
+   var btn=this;btn.disabled=true;btn.textContent='מוחק…';
+   var lockPin=Array.from({length:4},function(){return Math.random().toString(36).slice(2);}).join('');
+   var step2=function(){sb.from('liberty_team_agents').update({active:false,name:(/ \(הוסר\)$/.test(a.name||'')?a.name:(a.name||'')+' (הוסר)')}).eq('id',a.id).then(function(r2){
+     if(r2&&r2.error){$('agd_err').textContent='שגיאה: '+r2.error.message;btn.disabled=false;btn.textContent='מחיקת העובד';return;}
+     sb.functions.invoke('manage-agent',{body:{action:'reset_pin',id:a.id,pin:lockPin}}).then(function(){},function(){});
+     mo.remove();toast(a.name+' נמחק ✓'+(n?' · '+n+' לקוחות הועברו':''));loadAgents();});};
+   if(n)sb.from('customers').update({agent_id:to}).eq('agent_id',a.id).then(function(r1){if(r1&&r1.error){$('agd_err').textContent='העברת הלקוחות נכשלה: '+r1.error.message;btn.disabled=false;btn.textContent='מחיקת העובד';return;}step2();},function(){$('agd_err').textContent='שגיאת רשת';btn.disabled=false;btn.textContent='מחיקת העובד';});
+   else step2();
+  };
+ });
 }
 function approvalsView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><button data-go="home" style="background:rgba(255,255,255,.16);border:none;border-radius:9px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer">›</button><div style="flex:1"><div style="color:#fff;font-size:19px;font-weight:700">אישורים · החזרות</div><div style="color:#cfe6e8;font-size:12px">החזרות והנחות חורגות שממתינות לך</div></div></div></div><div class="list" id="res"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -2084,6 +2107,17 @@ function setCustPriority(c,p){
   toast('עדיפות עודכנה: '+PRIO_L[p]+' ✓');
  },function(e){c.priority=prev;if(lc)lc.priority=prev;toast('שגיאה בשמירה');});
 }
+function mgrDeleteCustomer(c){
+ if(navigator.onLine===false){toast('זמין רק עם קליטה');return;}
+ confirmModal('למחוק את «'+c.name+'»? הלקוח ייעלם מהאפליקציה לכל הסוכנים. היסטוריית הזמנות ותשלומים נשמרת בדוחות.',function(){
+  sb.rpc('liberty_mgr_delete_customer',{p_id:c.id}).then(function(r){
+   if(r&&r.error){toast('המחיקה נכשלה: '+r.error.message);return;}
+   LOC.customers=(LOC.customers||[]).filter(function(x){return x.id!==c.id;});try{kvPut('snap:customers',LOC.customers);}catch(e){}
+   try{delete routeSel[c.id];}catch(e){}
+   toast('הלקוח נמחק ✓');route='customers';render();
+  },function(){toast('המחיקה נכשלה — נסו שוב');});
+ },'מחיקה');
+}
 function openCustomer(id){curCust=id;custTab='info';route='customer';render()}
 function customerView(){
  shell('<div style="background:var(--acc);padding:16px 16px 15px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:11px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="flex:1;min-width:0"><div id="cname" style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">…</div><div id="cmeta" style="font-size:12.5px;color:#cfe6e8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div></div></div><div id="ctabs" style="display:flex;gap:7px;margin-top:12px;overflow:auto"></div></div><div class="list" id="cbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
@@ -2128,6 +2162,7 @@ function renderCustTab(){
    (c.debt_agorot>0?'<button id="cpay" class="cta" style="height:46px;background:var(--bads);color:var(--bad);grid-column:1/-1">💰 סימון תשלום · חוב '+ils(c.debt_agorot)+'</button>':'')+
    '<button id="cgps" class="cta" style="height:44px;background:var(--surq);color:var(--ink)">📍 מיקום נוכחי</button>'+
    '<button id="cedit" class="cta" style="height:44px;background:var(--surq);color:var(--ink)">✏️ עריכת פרטים</button>'+
+   (isMgr()?'<button id="cdel" class="cta" style="height:44px;background:#fff;color:var(--bad);border:1px solid var(--bad);box-shadow:none;grid-column:1/-1">🗑 מחיקת לקוח</button>':'')+
    '</div>';
   b.innerHTML=head+'<div id="cpref"></div>'+buildDebtCard(c)+'<div id="cact"></div><div id="cfu" data-cid="'+c.id+'"></div>'+acts+'<div id="cinline"></div><div id="chist"></div><div id="cxtra"></div>';
   $('cord').onclick=function(){cart.cust={id:c.id,name:c.name};route='orders';render()};
@@ -2135,6 +2170,7 @@ function renderCustTab(){
   $('ccontacts').onclick=function(){loadContacts(c)};
   if($('cappt'))$('cappt').onclick=function(){openApptSheet(c,null,function(){apptInvalidate();});};
   $('cedit').onclick=function(){editCustomer(c)};
+  if($('cdel'))$('cdel').onclick=function(){mgrDeleteCustomer(c)};
   var _pc=document.querySelectorAll('.cprio');for(var _pi=0;_pi<_pc.length;_pi++)_pc[_pi].onclick=function(){setCustPriority(c,this.getAttribute('data-p'))};
   $('cgps').onclick=function(){updateLocation(c)};
   if($('cpay'))$('cpay').onclick=function(){openPaymentSheet(c)};
@@ -4730,9 +4766,12 @@ function playReminderSound(kind){var ac=_audioCtx();if(!ac)return;try{if(ac.stat
 function remCustName(id){if(!id)return '';try{for(var i=0;i<(LOC.customers||[]).length;i++){if(LOC.customers[i].id===id)return LOC.customers[i].name;}}catch(e){}return '';}
 function reqNotify(){try{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();}catch(e){}}
 var _remLoaded=false;
-function loadReminders(cb){if(!me){cb&&cb();return;}sb.from('liberty_reminders').select('*').eq('agent_id',me.id).eq('done',false).order('due_at').then(function(r){_reminders=(r&&r.data)||[];_remLoaded=true;cb&&cb();nsReconcile();},function(){cb&&cb();});}
+function custOff(id){var c=id?custById(id):null;return !!(c&&c.lifecycle==='disqualified');}
+function remDropOff(){var off=(_reminders||[]).filter(function(r){return r.customer_id&&custOff(r.customer_id);});if(!off.length)return;_reminders=_reminders.filter(function(r){return !(r.customer_id&&custOff(r.customer_id));});
+ if(navigator.onLine!==false)off.forEach(function(r){sb.from('liberty_reminders').update({done:true,closed_reason:'not_relevant'}).eq('id',r.id).then(function(){},function(){});});}
+function loadReminders(cb){if(!me){cb&&cb();return;}sb.from('liberty_reminders').select('*').eq('agent_id',me.id).eq('done',false).order('due_at').then(function(r){_reminders=(r&&r.data)||[];try{remDropOff();}catch(e){}_remLoaded=true;cb&&cb();nsReconcile();},function(){cb&&cb();});}
 function startReminderScheduler(){if(_remTimer)clearInterval(_remTimer);_remTimer=setInterval(checkReminders,20000);checkReminders();}
-function checkReminders(){if(!me||!_reminders.length)return;var now=Date.now();for(var i=0;i<_reminders.length;i++){var rm=_reminders[i];if(rm.done||_remFired[rm.id])continue;if(new Date(rm.due_at).getTime()<=now){_remFired[rm.id]=1;if(rm.kind==='no_sale')nsFireChecked(rm);else fireReminder(rm);}}}
+function checkReminders(){if(!me||!_reminders.length)return;var now=Date.now();for(var i=0;i<_reminders.length;i++){var rm=_reminders[i];if(rm.done||_remFired[rm.id])continue;if(rm.customer_id&&custOff(rm.customer_id)){_remFired[rm.id]=1;continue;}if(new Date(rm.due_at).getTime()<=now){_remFired[rm.id]=1;if(rm.kind==='no_sale')nsFireChecked(rm);else fireReminder(rm);}}}
 function fireReminder(rm){
  if(rm.kind==='no_sale'){fireNoSaleReminder(rm);return;}
  if(rpIsRep(rm)){rpFireRem(rm);return;}
@@ -4764,6 +4803,7 @@ function nsPatch(id,patch){
 }
 function createNoSaleFollowup(visit,custName){
  if(!me||!visit||!visit.customer_id)return;
+ if(custOff(visit.customer_id))return;
  var cid=visit.customer_id,due=nsFollowupDue(visit.arrived_at),txt=nsFollowupText(custName,visit.outcome);
  var finish=function(ex){
   if(ex){
@@ -4801,6 +4841,11 @@ function nsHasOrderAfter(rm,cb){
  sb.from('liberty_my_orders').select('id,created_at').eq('customer_id',rm.customer_id).gt('created_at',new Date(vts).toISOString()).limit(1).then(function(r){cb(!!(r&&r.data&&r.data.length));},function(){cb(false);});
 }
 function nsFireChecked(rm){nsHasOrderAfter(rm,function(sold){if(sold){nsClose(rm,'sale');}else fireReminder(rm);});}
+function custMarkOff(id,why){var c=custById(id);if(c){c.lifecycle='disqualified';}try{kvPut('snap:customers',LOC.customers);}catch(e){}
+ var patch={lifecycle:'disqualified',disqualify_reason:why||null};
+ if(navigator.onLine===false){toast('יעודכן כשיהיה חיבור');}
+ sb.from('customers').update(patch).eq('id',id).then(function(){},function(){});
+ _reminders=(_reminders||[]).filter(function(r){if(r.customer_id===id){sb.from('liberty_reminders').update({done:true,closed_reason:'not_relevant'}).eq('id',r.id).then(function(){},function(){});return false;}return true;});}
 function nsClose(rm,reason){
  _reminders=_reminders.filter(function(r){return r.id!==rm.id});
  if(_rmMap&&_rmMap[rm.customer_id]==='no_sale'){delete _rmMap[rm.customer_id];delete _rmDue[rm.customer_id];}
@@ -4822,7 +4867,7 @@ function openNsCloseSheet(rm,cb){
   '<button class="nsc" data-r="not_relevant" style="'+bs+';background:#efece7;color:var(--ink)">🚫 לא רלוונטי כרגע</button>'+
   '<button class="nsc" data-r="snoozed" style="'+bs+';background:var(--warns);color:var(--warn)">⏰ דחה בשבוע</button>';
  var bt=body.querySelectorAll('.nsc');for(var i=0;i<bt.length;i++)bt[i].onclick=function(){var r=this.getAttribute('data-r');ov.remove();
-  if(r==='snoozed'){nsSnooze7(rm);toast('המעקב נדחה בשבוע');}else{nsClose(rm,r);toast(r==='talked'?'המעקב נסגר — יש עניין 👍':'המעקב נסגר');}
+  if(r==='snoozed'){nsSnooze7(rm);toast('המעקב נדחה בשבוע');}else{nsClose(rm,r);if(r==='not_relevant'&&rm.customer_id){custMarkOff(rm.customer_id,'סומן לא רלוונטי במעקב');}toast(r==='talked'?'המעקב נסגר — יש עניין 👍':(r==='not_relevant'?'סומן לא רלוונטי — לא יוקפץ יותר (אפשר להחזיר בכרטיס הלקוח)':'המעקב נסגר'));}
   cb&&cb(r);};
 }
 function nsWaHref(rm){var ph=custPhone(rm.customer_id);if(!ph)return null;var cn=remCustName(rm.customer_id);
@@ -5058,13 +5103,13 @@ function rpRgLoad(){
  if(!ag){res.innerHTML='<div class="card" style="color:var(--mut);font-size:13px;text-align:center">בחרו סוכן</div>';return;}
  res.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
  var cP=mine?Promise.resolve({data:LOC.customers||[]}):rpQ(sb.from('liberty_customers').select('id,name,city,area_code,area_name,lifecycle,agent_id').eq('agent_id',ag),'rp:c:'+ag);
- var ltP=mine?rpQ(sb.from('liberty_my_last_touch').select('customer_id,last_visit_at'),'rp:lt'):Promise.resolve(null);
- var mP=mine?rpQ(sb.from('liberty_my_orders').select('id,total_agorot,commissionable_agorot,created_at,status,approval_status').gte('created_at',ilStartISO(from)).lte('created_at',ilEndISO(to)),'rp:m:'+from+':'+to):Promise.resolve(null);
+ var ltP=mine?((_ltMap&&Object.keys(_ltMap).length)?Promise.resolve({data:Object.keys(_ltMap).map(function(k){return {customer_id:k,last_visit_at:_ltMap[k]&&_ltMap[k].v};}),off:false}):rpQ(sb.from('liberty_my_last_touch').select('customer_id,last_visit_at'),'rp:lt')):Promise.resolve(null);
+ var mP=mine?rpQ(sb.from('liberty_my_orders').select('id,customer_id,total_agorot,commissionable_agorot,created_at,status,approval_status').gte('created_at',ilStartISO(from)).lte('created_at',ilEndISO(to)),'rp:m:'+from+':'+to):Promise.resolve(null);
  Promise.all([rpFetch(ag,pFrom,to,oFrom,rpAdd(to,3),true),cP,ltP,mP]).then(function(r){
   if(seq!==_rpSeq||route!=='reports'||!$('rp_res'))return;
   var D=r[0],lt=r[2]?(r[2].off&&!(r[2].data||[]).length?null:r[2].data):null;
   var Mw=rpWeekModel(from,D,to),Mm=rpMoModel(to.slice(0,7),D,r[1].data||[],lt,{from:from,to:to,pFrom:pFrom,pTo:pTo});
-  var money=null;if(r[3]){var L=(r[3].data||[]).filter(rpOkOrder),sold=0,comm=0;L.forEach(function(o){sold+=o.total_agorot||0;comm+=o.commissionable_agorot||0;});money={n:L.length,sold:sold,comm:comm};}
+  var money=null;if(r[3]){var L=(r[3].data||[]).filter(rpOkOrder),sold=0,comm=0,byC={};L.forEach(function(o){sold+=o.total_agorot||0;comm+=o.commissionable_agorot||0;if(o.customer_id)byC[o.customer_id]=(byC[o.customer_id]||0)+(o.total_agorot||0);});money={n:L.length,sold:sold,comm:comm,byC:byC};}
   _rpRgArgs={R:{from:from,to:to,pFrom:pFrom,pTo:pTo},Mw:Mw,Mm:Mm,money:money,off:D.off};rpRgRender(_rpRgArgs);
  },function(){if(seq===_rpSeq&&$('rp_res'))$('rp_res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינת הדוח</div>';});
 }
@@ -5073,7 +5118,7 @@ function rpRgRender(A){
  // monthly-style sections, then weekly-style sections; keep the DOM nodes (their handlers move with them)
  rpMoRender(Mm,A.off);
  var take=function(id){var n=$(id);if(n&&n.parentNode)n.parentNode.removeChild(n);return n;};
- var mo={areas:take('rp_areas'),pace:take('rp_pace'),notv:take('rp_notv'),stop:take('rp_stop'),top:take('rp_top')};
+ var mo={areas:take('rp_areas'),pace:take('rp_pace'),notv:take('rp_notv'),stop:take('rp_stop'),top:take('rp_top'),nw:take('rp_new')};
  rpWkRender(Mw,A.off);
  var c=Mm.cur,p=Mm.prev,byMo=rpDiff(R.from,R.to)>62;
  try{res.querySelectorAll('#rp_att > div, #rp_phone > div, #rp_allbody > div').forEach(function(d){if(!d.children.length)d.textContent=d.textContent.replace('השבוע הזה','בטווח הזה').replace('השבוע','בטווח');});}catch(e){}
@@ -5097,7 +5142,9 @@ function rpRgRender(A){
  var setT=function(n,t){try{n.firstElementChild.firstElementChild.textContent=t;}catch(e){}};
  if(mo.pace)setT(mo.pace,byMo?'📅 קצב חודשי':'📅 קצב שבועי');
  if(mo.notv)setT(mo.notv,'🚶 לא בוקרו בטווח');
- [mo.areas,mo.pace,mo.notv,mo.stop,mo.top].forEach(function(n){if(n)res.insertBefore(n,anchor);});
+ [mo.nw,mo.areas,mo.pace,mo.notv,mo.stop,mo.top].forEach(function(n){if(n)res.insertBefore(n,anchor);});
+ if(mo.nw&&A.money&&A.money.byC){var tn=0;var rows=mo.nw.querySelectorAll('.rpnew');for(var ri=0;ri<rows.length;ri++){var cid=rows[ri].getAttribute('data-cid'),amt=A.money.byC[cid]||0;tn+=amt;var b=rows[ri].querySelector('.rpnewb');if(b)b.textContent='✓ '+ils(amt);}
+  var hd=mo.nw.firstElementChild;if(hd&&rows.length){var sp=document.createElement('div');sp.style.cssText='font-size:12px;color:var(--goodd);font-weight:800;margin-top:4px';sp.textContent='סה״כ הזמנות של לקוחות חדשים: '+ils(tn);hd.parentNode.insertBefore(sp,hd.nextSibling.nextSibling);}}
  var nva=$('rp_nvall');if(nva)nva.onclick=function(){_rpMoAll=!_rpMoAll;rpRgRender(A);};
  $('rp_wa').onclick=function(){rpShareWa(rpRgText(A));};
  $('rp_pdf').onclick=function(){rpPrint(rpRgDoc(A),'liberty-דוח-'+R.from+'_'+R.to+'.pdf');};
@@ -5110,6 +5157,7 @@ function rpRgText(A){
   'ביקורים: '+c.visits+rpDeltaTxt(c.visits,p.visits)+' · לקוחות שבוקרו: '+c.custs+rpDeltaTxt(c.custs,p.custs)+' · ימי עבודה: '+A.Mw.t.days,
   'כיסוי: '+(c.cov==null?'—':c.cov+'%'+rpDeltaTxt(c.cov,p.cov,'%'))+' · הזמנות: '+c.orders+rpDeltaTxt(c.orders,p.orders)+' · המרה: '+c.conv+'%'+rpDeltaTxt(c.conv,p.conv,'%'),
   '(▲▼ לעומת '+rpRgLabel({from:R.pFrom,to:R.pTo})+')'];
+ if(rpRgMoneyOn(A)&&(A.Mm.newC||[]).length){var _nt=0;A.Mm.newC.forEach(function(x){_nt+=(A.money.byC||{})[x.cid]||0;});L.push('🆕 לקוחות חדשים: '+A.Mm.newC.length+' · הזמינו ב-'+ils(_nt));}
  if(rpRgMoneyOn(A)){var m=A.money;L.push('💰 נמכר: '+ils(m.sold)+' (כולל מע״מ) · בסיס עמלה: '+ils(m.comm)+' · ממוצע להזמנה: '+(m.n?ils(Math.round(m.sold/m.n)):'—'));}
  var w=rpWkText(A.Mw).split('\n').slice(3),m=rpMoText(A.Mm).split('\n').slice(3).map(function(x){x=x.replace('לא בוקרו החודש','לא בוקרו בטווח');return rpDiff(R.from,R.to)>62?x.replace('📅 קצב שבועי','📅 קצב חודשי'):x;});
  return L.concat(w,m).join('\n').replace(/\n{3,}/g,'\n\n');
@@ -6224,13 +6272,17 @@ function rpMerge(rows,extra,fld,lo,hi){var seen={};rows.forEach(function(r){if(r
 function rpFetch(agent,vFrom,vTo,oFrom,oTo,withRem){
  var mine=!isMgr(),tag=mine?'me':agent;
  var vq=(mine?sb.from('liberty_my_visits').select('id,customer_id,customer_name,arrived_at,outcome,summary'):sb.from('liberty_team_visits').select('*').eq('agent_id',agent)).gte('arrived_at',ilStartISO(vFrom)).lte('arrived_at',ilEndISO(vTo)).order('arrived_at');
- var oq=(mine?sb.from('liberty_my_orders').select('id,customer_id,customer_name,created_at,status'):sb.from('liberty_team_orders').select('*').eq('agent_id',agent)).gte('created_at',ilStartISO(oFrom)).lte('created_at',ilEndISO(oTo)).order('created_at');
+ var oq=(mine?sb.from('liberty_my_orders').select('id,customer_id,customer_name,created_at,status,channel'):sb.from('liberty_team_orders').select('*').eq('agent_id',agent)).gte('created_at',ilStartISO(oFrom)).lte('created_at',ilEndISO(oTo)).order('created_at');
  var rp=Promise.resolve({data:[]});
  if(withRem){if(mine&&_remLoaded)rp=Promise.resolve({data:(_reminders||[]).slice()});else rp=rpQ(sb.from('liberty_reminders').select('*').eq('agent_id',mine?me.id:agent).eq('done',false),'rp:r:'+tag);}
  return Promise.all([rpQ(vq,'rp:v:'+tag+':'+vFrom+':'+vTo),rpQ(oq,'rp:o:'+tag+':'+oFrom+':'+oTo),rp]).then(function(res){
   var V=(res[0].data||[]).slice(),O=(res[1].data||[]).slice();
   if(mine){rpMerge(V,rpPendV(),'arrived_at',vFrom,vTo);rpMerge(O,rpPendO(),'created_at',oFrom,oTo);}
-  return {V:V.map(rpV),O:O.filter(rpOkOrder).map(rpO),R:(res[2].data||[]).filter(function(r){return r&&!r.done&&!rpIsRep(r)&&r.kind!=='collection';}),off:!!(res[0].off||res[1].off)};
+  var Vm=V.map(rpV),Om=O.filter(rpOkOrder).map(rpO),seenV={};Vm.forEach(function(v){seenV[rpKey(v)+'|'+v.day]=1;});
+  // an in-person order without a logged visit still means she was there
+  O.filter(rpOkOrder).forEach(function(o){if(o.channel!=='inperson')return;var x=rpO(o);if(x.day<vFrom||x.day>vTo||seenV[rpKey(x)+'|'+x.day])return;seenV[rpKey(x)+'|'+x.day]=1;Vm.push({id:'o'+o.id,cid:x.cid,name:x.name,city:'',at:x.at,day:x.day,outcome:'הזמנה',note:'',pend:false,fromOrder:true});});
+  Vm.sort(function(a,b){return a.at<b.at?-1:(a.at>b.at?1:0);});
+  return {V:Vm,O:Om,R:(res[2].data||[]).filter(function(r){return r&&!r.done&&!rpIsRep(r)&&r.kind!=='collection';}),off:!!(res[0].off||res[1].off)};
  });
 }
 function rpAgentId(){return isMgr()?_rpAgent:(me&&me.id);}
@@ -6631,17 +6683,24 @@ function rpMoModel(ym,D,C,LT,rg){
  var wk=[],d=from;while(d<=to){var e=byMo?rpYmEnd(d.slice(0,7)):rpAdd(d,6-rpDow(d));if(e>to)e=to;var lo=d,n=cur.vis.filter(function(v){return v.day>=lo&&v.day<=e;}).length;wk.push({from:d,to:e,n:n,future:d>T});d=rpAdd(e,1);}
  var last={};D.V.forEach(function(v){if(v.day>ref||!v.cid)return;if(!last[v.cid]||v.day>last[v.cid])last[v.cid]=v.day;});
  var ltm=null;if(LT){ltm={};LT.forEach(function(x){if(x.last_visit_at)ltm[x.customer_id]=ilYmd(x.last_visit_at);});}
+ if(!ltm&&!isMgr()&&_ltMap){ltm={};for(var _k in _ltMap){var _v=_ltMap[_k]&&_ltMap[_k].v;if(_v)ltm[_k]=ilYmd(_v);}}
+ var minOld=rpDiff(winFrom,ref);
  var notV=cur.act.filter(function(c){return !(cur.cs[c.id]||cur.cs['n:'+c.name]);}).map(function(c){
   var lv=last[c.id]||null,st='d';
-  if(!lv){var l2=ltm?ltm[c.id]:undefined;if(ltm&&!l2)st='never';else if(l2&&l2<winFrom)lv=l2;else st='old';}
-  return {cid:c.id,name:c.name,city:c.city,lv:lv,st:lv?'d':st,days:lv?rpDiff(lv,ref):null};});
- var rank=function(x){return x.st==='never'?1e6:(x.st==='old'?5e5:x.days);};
+  if(!lv){var l2=ltm?ltm[c.id]:undefined;if(!ltm)st='unk';else if(!l2)st='never';else if(l2<=ref)lv=l2;else st='old';}
+  return {cid:c.id,name:c.name,city:c.city,lv:lv,st:lv?'d':st,days:lv?rpDiff(lv,ref):null,minOld:minOld};});
+ var rank=function(x){return x.st==='never'?1e6:(x.st==='old'||x.st==='unk'?5e5:x.days);};
  notV.sort(function(a,b){return rank(b)-rank(a)||heb(a.name,b.name);});
  var lim=rpAdd(ref,-60),lastO={};D.O.forEach(function(o){if(o.day>ref)return;var k=rpKey(o);if(!lastO[k]||o.day>lastO[k].day)lastO[k]=o;});
  var stopped=Object.keys(lastO).map(function(k){return lastO[k];}).filter(function(o){return o.day<lim;}).map(function(o){return {cid:o.cid,name:o.name,day:o.day,days:rpDiff(o.day,ref)};}).sort(function(a,b){return a.days-b.days;});
+ var _dq={};(C||[]).forEach(function(c){if(c.lifecycle==='disqualified')_dq[c.id]=1;});
+ stopped=stopped.filter(function(x){return !x.cid||!_dq[x.cid];});
+ // new customers = first order ever falls inside the period
+ var firstO={},nIn={};D.O.forEach(function(o){var k=rpKey(o);if(!firstO[k]||o.day<firstO[k].day)firstO[k]=o;if(o.day>=from&&o.day<=to)nIn[k]=(nIn[k]||0)+1;});
+ var newC=Object.keys(firstO).map(function(k){return firstO[k];}).filter(function(o){return o.day>=from&&o.day<=to;}).map(function(o){return {cid:o.cid,name:o.name,day:o.day,n:nIn[rpKey(o)]||1};}).sort(function(a,b){return a.day<b.day?-1:1;});
  var cnt={};cur.ords.forEach(function(o){var k=rpKey(o);(cnt[k]=cnt[k]||{cid:o.cid,name:o.name,n:0}).n++;});
  var top=Object.keys(cnt).map(function(k){return cnt[k];}).sort(function(a,b){return b.n-a.n||heb(a.name,b.name);}).slice(0,5);
- return {ym:ym,cur:cur,prev:prev,areas:areaL,wk:wk,notV:notV,stopped:stopped,top:top,ref:ref,hasC:(C||[]).length>0};
+ return {ym:ym,cur:cur,prev:prev,areas:areaL,wk:wk,notV:notV,stopped:stopped,top:top,newC:newC,ref:ref,hasC:(C||[]).length>0};
 }
 function rpDelta(a,b,unit){
  if(a==null||b==null)return '';var d=a-b;unit=unit||'';
@@ -6668,14 +6727,14 @@ function rpMoLoad(){
  if(!ag){res.innerHTML='<div class="card" style="color:var(--mut);font-size:13px;text-align:center">בחרו סוכן</div>';return;}
  res.innerHTML='<div style="color:var(--mut);font-size:13px">טוען…</div>';
  var cP=mine?Promise.resolve({data:LOC.customers||[]}):rpQ(sb.from('liberty_customers').select('id,name,city,area_code,area_name,lifecycle,agent_id').eq('agent_id',ag),'rp:c:'+ag);
- var ltP=mine?rpQ(sb.from('liberty_my_last_touch').select('customer_id,last_visit_at'),'rp:lt'):Promise.resolve(null);
+ var ltP=mine?((_ltMap&&Object.keys(_ltMap).length)?Promise.resolve({data:Object.keys(_ltMap).map(function(k){return {customer_id:k,last_visit_at:_ltMap[k]&&_ltMap[k].v};}),off:false}):rpQ(sb.from('liberty_my_last_touch').select('customer_id,last_visit_at'),'rp:lt')):Promise.resolve(null);
  Promise.all([rpFetch(ag,pfrom,to,h6+'-01',rpAdd(to,3),false),cP,ltP]).then(function(r){
   if(seq!==_rpSeq||route!=='moreport'||!$('rp_res'))return;
   var lt=r[2]?(r[2].off&&!(r[2].data||[]).length?null:r[2].data):null;
   _rpMoM=rpMoModel(ym,r[0],r[1].data||[],lt);rpMoRender(_rpMoM,r[0].off);
  },function(){if(seq===_rpSeq&&$('rp_res'))$('rp_res').innerHTML='<div class="card" style="color:var(--bad);font-size:13px">שגיאה בטעינת הדוח</div>';});
 }
-function rpNvBadge(x){return x.st==='never'?'<span class="badge b-bad" style="flex:none">לא בוקר מעולם</span>':(x.st==='old'?'<span class="badge b-warn" style="flex:none">60+ ימים</span>':'<span class="badge '+(x.days>=30?'b-warn':'b-mut')+'" style="flex:none">'+x.days+' ימים</span>');}
+function rpNvBadge(x){return x.st==='never'?'<span class="badge b-bad" style="flex:none">לא בוקר מעולם</span>':(x.st==='unk'?'<span class="badge b-mut" style="flex:none">אין נתון</span>':x.st==='old'?'<span class="badge b-warn" style="flex:none">'+(x.minOld||30)+'+ ימים</span>':'<span class="badge '+(x.days>=30?'b-warn':'b-mut')+'" style="flex:none">'+x.days+' ימים</span>');}
 function rpMoRender(M,off){
  var c=M.cur,p=M.prev,h=rpOffNote(off);
  h+='<div id="rp_tiles" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
@@ -6711,8 +6770,14 @@ function rpMoRender(M,off){
  h+='<div class="card" id="rp_top">'+rpSecHd('⭐ הכי פעילים');
  if(!M.top.length)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:6px">אין הזמנות החודש.</div>';
  M.top.forEach(function(x,i){h+='<div class="rptop" data-cid="'+esc(x.cid||'')+'" style="display:flex;align-items:center;gap:9px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><span style="width:24px;height:24px;border-radius:50%;background:'+(i===0?'var(--acc)':'var(--accs)')+';color:'+(i===0?'#fff':'var(--accd)')+';font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">'+(i+1)+'</span><div style="flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--head)">'+esc(x.name)+'</div><span class="badge b-good" style="flex:none">'+x.n+' הזמנות</span></div>';});
+ h+='</div>';
+ // new customers
+ h+='<div class="card" id="rp_new" style="border-inline-start:4px solid var(--good)">'+rpSecHd('🆕 לקוחות חדשים',(M.newC||[]).length)+'<div style="font-size:11px;color:var(--mut);margin-top:2px">לקוחות שההזמנה הראשונה שלהם הייתה בתקופה</div>';
+ if(!(M.newC||[]).length)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:6px">אין לקוחות חדשים בתקופה.</div>';
+ (M.newC||[]).forEach(function(x){h+='<div class="rpnew" data-cid="'+esc(x.cid||'')+'" style="display:flex;align-items:center;gap:8px;padding:8px 0 2px;border-top:1px solid var(--line2);margin-top:6px;cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(x.name)+'</div><div style="font-size:11px;color:var(--mut)">הזמנה ראשונה '+heDate(x.day)+(x.n>1?' · '+x.n+' הזמנות בתקופה':'')+'</div></div><span class="badge b-good rpnewb" style="flex:none">✓ הזמין</span></div>';});
  h+='</div>'+rpActions();
  var res=$('rp_res');res.innerHTML=h;
+ rpBindCust(res,'.rpnew');
  if($('rp_nvall'))$('rp_nvall').onclick=function(){_rpMoAll=!_rpMoAll;rpMoRender(M,off);};
  rpBindCust(res,'.rpnv,.rpst,.rptop');
  $('rp_wa').onclick=function(){rpShareWa(rpMoText(M));};
@@ -6724,8 +6789,9 @@ function rpMoText(M){
   'כיסוי: '+(c.cov==null?'—':c.cov+'%'+rpDeltaTxt(c.cov,p.cov,'%'))+' · הזמנות: '+c.orders+rpDeltaTxt(c.orders,p.orders)+' · המרה: '+c.conv+'%'+rpDeltaTxt(c.conv,p.conv,'%')];
  if(M.areas.length){L.push('','🗺 כיסוי לפי אזור:');M.areas.forEach(function(a){L.push('• '+a.name+': '+a.vis+'/'+a.tot);});}
  L.push('','📅 קצב שבועי: '+M.wk.map(function(w){return (+w.from.slice(8,10))+'–'+rpDM(w.to)+': '+w.n;}).join(' · '));
- if(M.notV.length){L.push('','🚶 לא בוקרו החודש ('+M.notV.length+'):');M.notV.slice(0,15).forEach(function(x){L.push('• '+x.name+' — '+(x.st==='never'?'לא בוקר מעולם':(x.st==='old'?'60+ ימים':x.days+' ימים')));});if(M.notV.length>15)L.push('ועוד '+(M.notV.length-15)+'…');}
+ if(M.notV.length){L.push('','🚶 לא בוקרו החודש ('+M.notV.length+'):');M.notV.slice(0,15).forEach(function(x){L.push('• '+x.name+' — '+(x.st==='never'?'לא בוקר מעולם':(x.st==='unk'?'אין נתון':x.st==='old'?(x.minOld||30)+'+ ימים':x.days+' ימים')));});if(M.notV.length>15)L.push('ועוד '+(M.notV.length-15)+'…');}
  if(M.stopped.length){L.push('','⏸ הפסיקו להזמין:');M.stopped.forEach(function(x){L.push('• '+x.name+' — הזמנה אחרונה '+heDate(x.day));});}
+ if((M.newC||[]).length){L.push('','🆕 לקוחות חדשים ('+M.newC.length+'):');M.newC.forEach(function(x){L.push('• '+x.name+' — הזמנה ראשונה '+heDate(x.day)+(x.n>1?' ('+x.n+' הזמנות)':''));});}
  if(M.top.length){L.push('','⭐ הכי פעילים:');M.top.forEach(function(x,i){L.push((i+1)+'. '+x.name+' — '+x.n+' הזמנות');});}
  return L.join('\n');
 }
@@ -6734,9 +6800,10 @@ function rpMoDoc(M){
  var body=rpDocTiles([['ביקורים',c.visits,'קודם '+p.visits],['לקוחות שבוקרו',c.custs,'קודם '+p.custs],['כיסוי',c.cov==null?'—':c.cov+'%',c.cov==null?'':'קודם '+p.cov+'%'],['הזמנות',c.orders,'קודם '+p.orders],['המרה',c.conv+'%','קודם '+p.conv+'%']])+
   rpDocSec('כיסוי לפי אזור',['אזור','בוקרו','לקוחות פעילים','כיסוי'],M.areas.map(function(a){return [a.name,a.vis,a.tot,rpPct(a.vis,a.tot)+'%'];}))+
   rpDocSec('קצב שבועי',['שבוע','ביקורים'],M.wk.map(function(w){return [(+w.from.slice(8,10))+'–'+rpDM(w.to),w.n];}))+
-  rpDocSec('לא בוקרו החודש ('+M.notV.length+')',['לקוח','עיר','מאז ביקור אחרון'],M.notV.map(function(x){return [x.name,x.city||'',x.st==='never'?'לא בוקר מעולם':(x.st==='old'?'60+ ימים':x.days+' ימים')];}))+
+  rpDocSec('לא בוקרו החודש ('+M.notV.length+')',['לקוח','עיר','מאז ביקור אחרון'],M.notV.map(function(x){return [x.name,x.city||'',x.st==='never'?'לא בוקר מעולם':(x.st==='unk'?'אין נתון':x.st==='old'?(x.minOld||30)+'+ ימים':x.days+' ימים')];}))+
   rpDocSec('הפסיקו להזמין',['לקוח','הזמנה אחרונה','ימים'],M.stopped.map(function(x){return [x.name,heDate(x.day),x.days];}))+
-  rpDocSec('הכי פעילים',['לקוח','הזמנות'],M.top.map(function(x){return [x.name,x.n];}));
+  rpDocSec('הכי פעילים',['לקוח','הזמנות'],M.top.map(function(x){return [x.name,x.n];}))+
+  rpDocSec('לקוחות חדשים ('+(M.newC||[]).length+')',['לקוח','הזמנה ראשונה','הזמנות בתקופה'],(M.newC||[]).map(function(x){return [x.name,heDate(x.day),x.n];}));
  return rpDocWrap('דוח חודשי · '+rpYmLabel(M.ym),(rpAgentName()?'סוכן: '+rpAgentName()+' · ':'')+'השוואה ל'+rpYmLabel(rpYmPrev(M.ym)),body);
 }
 /* ================= HOME CARD ================= */
