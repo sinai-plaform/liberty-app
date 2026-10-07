@@ -110,7 +110,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-74';
+var APP_VERSION='2026-08-26-75';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -1573,8 +1573,8 @@ function teamView(){
  loadTeamData(function(t){
   var sel=$('tm_agent');if(!sel)return;
   var rows=(t.rows||[]).filter(function(x){return x.role==='agent';});
-  var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+x.id+'">'+esc(x.name)+'</option>';});
-  sel.innerHTML=o;sel.value=_taAgent||'';
+  var o='<option value="">כל הסוכנים</option>';rows.forEach(function(x){o+='<option value="'+(x.agent_id||x.id)+'">'+esc(x.name)+'</option>';});
+  sel.innerHTML=o;if(_taAgent==='undefined')_taAgent='';sel.value=_taAgent||'';
   sel.onchange=function(){_taAgent=this.value;loadTeamTab();};
  });
  loadTeamTab();
@@ -2991,7 +2991,7 @@ function saveOrder(force){
  var _needAppr=overCap(t);
  if(_needAppr){orow.approval_status='pending';orow.approval_reason='הנחה '+discPctOf(t).toFixed(1)+'% חורגת מתקרה '+(+_discCap)+'%';}
  if(!isUpd){orow.agent_id=me.id;orow.status='submitted';orow.submitted_at=new Date().toISOString()}
- var _snapCid=cart.cust.id;
+ var _snapCid=cart.cust.id;if(!isUpd)apptAutoDone(_snapCid);
  obEnqueue(isUpd?'order_update':'order',snapName,{order:orow,items:itemsFor(oid),customer_name:snapName,dir:me.id+'/'+cart.cust.id,created_at:new Date().toISOString()},_payFile?[_payFile]:null,function(){try{cartDraftClear()}catch(e){}
   resetCart();
   if(!OFF.online)toast('ההזמנה נשמרה במכשיר · תישלח כשתהיה קליטה');
@@ -4669,7 +4669,7 @@ function visitsView(){
     setTimeout(function(){apptOfferWa({starts_at:_miso,note:null},_mc);},700);
    },function(){toast('הפגישה לא נשמרה — נסי שוב מכרטיס הלקוח');});
   }
-  $('savevis').disabled=true;$('savevis').textContent='שומר…';var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;var _vcid=visitTarget.id,_vsum=rec.summary;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render();maybeVisitReminder(_vsum,_vcid,vn);if(rec.outcome==='ללא הזמנה'||rec.outcome==='לא נכח')createNoSaleFollowup(rec,vn);})};
+  $('savevis').disabled=true;$('savevis').textContent='שומר…';try{if(outcome!=='לא נכח')apptAutoDone(visitTarget.id);}catch(e){}var rec={id:uuid(),customer_id:visitTarget.id,agent_id:me.id,arrived_at:new Date().toISOString(),outcome:outcome,summary:$('vsum').value.trim()||null};var nx=$('vnext').value;if(nx)rec.next_visit_date=nx;var vn=visitTarget.name;var _vcid=visitTarget.id,_vsum=rec.summary;obEnqueue('visit',vn,{row:rec,customer_name:vn},null,function(){toast(OFF.online?'הביקור נשמר ✓':'הביקור נשמר במכשיר · יישלח כשתהיה קליטה');visitTarget=null;_cheerPending=true;if(_visitFrom){var rt=_visitFrom;_visitFrom=null;route=rt}else{route='home';}render();maybeVisitReminder(_vsum,_vcid,vn);if(rec.outcome==='ללא הזמנה'||rec.outcome==='לא נכח')createNoSaleFollowup(rec,vn);})};
  SQ(sb.from('liberty_my_visits').select('customer_name,outcome,summary,arrived_at,next_visit_date').order('arrived_at',{ascending:false}).limit(30),'myvisits',function(r){var d=pendVisits().concat(r.data||[]),h='';d.forEach(function(v){var dt=v.arrived_at?new Date(v.arrived_at).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}):'';h+='<div class="card" style="padding:11px 13px"><div style="display:flex;justify-content:space-between"><b style="font-size:13.5px">'+esc(v.customer_name)+'</b><span style="font-size:11.5px;color:var(--mut)">'+dt+'</span></div><div style="font-size:12px;margin-top:3px"><span class="badge b-mut">'+esc(v.outcome||'—')+'</span> '+(v.summary?esc(v.summary):'')+'</div>'+(v.next_visit_date?'<div style="font-size:11.5px;color:var(--warn);margin-top:4px">↻ ביקור הבא: '+v.next_visit_date+'</div>':'')+'</div>'});$('vhist').innerHTML=h||'<div style="color:var(--mut);font-size:13px">אין ביקורים עדיין.</div>'});
 }
 function openVisitPicker(){
@@ -4766,6 +4766,8 @@ function playReminderSound(kind){var ac=_audioCtx();if(!ac)return;try{if(ac.stat
 function remCustName(id){if(!id)return '';try{for(var i=0;i<(LOC.customers||[]).length;i++){if(LOC.customers[i].id===id)return LOC.customers[i].name;}}catch(e){}return '';}
 function reqNotify(){try{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();}catch(e){}}
 var _remLoaded=false;
+function apptAutoDone(cid){if(!me||!cid||navigator.onLine===false)return;var eod=new Date(parseYmd(todayStr()).getTime()+86400000).toISOString();
+ try{sb.from('appointments').update({status:'done',updated_at:new Date().toISOString()}).eq('agent_id',me.id).eq('customer_id',cid).eq('status','scheduled').lt('starts_at',eod).then(function(){try{apptInvalidate();}catch(e){}_calX.ts=0;},function(){});}catch(e){}}
 function custOff(id){var c=id?custById(id):null;return !!(c&&c.lifecycle==='disqualified');}
 function remDropOff(){var off=(_reminders||[]).filter(function(r){return r.customer_id&&custOff(r.customer_id);});if(!off.length)return;_reminders=_reminders.filter(function(r){return !(r.customer_id&&custOff(r.customer_id));});
  if(navigator.onLine!==false)off.forEach(function(r){sb.from('liberty_reminders').update({done:true,closed_reason:'not_relevant'}).eq('id',r.id).then(function(){},function(){});});}
@@ -6908,7 +6910,7 @@ function calFocusAreas(ds){var dow=parseYmd(ds).getDay(),out=[];((typeof LOC!=='
 
 /* ---------- data: appointments cached per month ---------- */
 var _calMon={},_calStale={},_calRoutes={};
-var _calState={mode:'month',ym:null,y:null,sel:null};
+var _calState={mode:'week',ym:null,y:null,sel:null,wk:null};
 (function(){var f=apptInvalidate;apptInvalidate=function(){_calMon={};_calStale={};return f.apply(this,arguments);};})();
 function calYmAdd(ym,n){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1+n;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+'-'+pad2(m+1);}
 function calYmsBetween(fromDs,toDs){var out=[],ym=fromDs.slice(0,7),end=toDs.slice(0,7),g=0;while(ym<=end&&g++<40){out.push(ym);ym=calYmAdd(ym,1);}return out;}
@@ -7020,16 +7022,70 @@ function apptHintBind(ov,cust,existing){
  d.addEventListener('change',upd);d.addEventListener('input',upd);upd();
 }
 
+/* ---------- v75: calendar shows everything planned — meetings, route stops, reminders, follow-up visits ---------- */
+var _calX={from:null,to:null,routes:{},rem:{},nv:{},ts:0};
+function calXLoad(from,to,cb){
+ var X=_calX,done=0,need=3,fin=function(){if(++done===need){X.from=from;X.to=to;X.ts=Date.now();cb&&cb();}};
+ if(X.from&&X.from<=from&&X.to>=to&&Date.now()-X.ts<60000){cb&&cb();return;}
+ X.routes={};X.rem={};X.nv={};
+ // planned route stops (daily_routes)
+ if(navigator.onLine===false||!me){fin();}
+ else sb.from('daily_routes').select('route_date,selected_ids,built').eq('agent_id',me.id).eq('status','active').gte('route_date',from).lte('route_date',to).then(function(r){
+  ((r&&r.data)||[]).forEach(function(row){var ids=(row.selected_ids||[]).filter(function(id){return !custOff(id);});if(ids.length)X.routes[row.route_date]=ids;});fin();},fin);
+ // open reminders (not report reminders, not customers marked not relevant)
+ var remGo=function(){(_reminders||[]).forEach(function(r){if(!r||r.done||rpIsRep(r))return;if(r.customer_id&&custOff(r.customer_id))return;var d=ilYmd(r.due_at);if(!d||d<from||d>to)return;(X.rem[d]=X.rem[d]||[]).push(r);});fin();};
+ if(_remLoaded)remGo();else loadReminders(remGo);
+ // planned follow-up visits (next_visit_date)
+ var nvGo=function(){var fu=_fuMap||{};for(var cid in fu){var d=fu[cid];if(!d||d<from||d>to||custOff(cid))continue;(X.nv[d]=X.nv[d]||[]).push(cid);}fin();};
+ if(_fuMap===null)loadFollowups(nvGo);else nvGo();
+}
+function calXCounts(ds){var X=_calX;return {r:(X.routes[ds]||[]).length,m:(X.rem[ds]||[]).length,v:(X.nv[ds]||[]).length};}
+function calXMini(ds){var n=calXCounts(ds),p=[];if(n.r)p.push('🚗'+n.r);if(n.m)p.push('🔔'+n.m);if(n.v)p.push('↻'+n.v);return p.join(' ');}
+function calCustLine(cid,extra){var c=custById(cid)||{};return '<div class="calx" data-cid="'+esc(cid)+'" style="display:flex;align-items:center;gap:8px;padding:7px 2px;border-top:1px solid var(--line2);cursor:pointer"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.name||'לקוח')+'</div><div style="font-size:11px;color:var(--mut)">'+esc([c.city,extra].filter(Boolean).join(' · '))+'</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2" style="flex:none"><path d="M15 18l-6-6 6-6"/></svg></div>';}
+function calXHtml(ds){
+ var X=_calX,h='',R=X.routes[ds]||[],M=X.rem[ds]||[],V=X.nv[ds]||[];
+ if(R.length)h+='<div style="margin-top:4px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;font-weight:800;color:var(--accd)">🚗 מסלול מתוכנן · '+R.length+' תחנות</div><button class="chip calxday" data-ds="'+ds+'" style="height:28px;font-size:12px">פתיחת היום ›</button></div>'+R.map(function(id){return calCustLine(id,'');}).join('')+'</div>';
+ if(M.length)h+='<div style="margin-top:6px"><div style="font-size:13px;font-weight:800;color:var(--warnd)">🔔 תזכורות · '+M.length+'</div>'+M.map(function(r){var t=rpNoMoney?String(r.text||''):String(r.text||'');
+  return r.customer_id?calCustLine(r.customer_id,t.slice(0,70)):'<div style="font-size:12.5px;color:var(--head);padding:7px 2px;border-top:1px solid var(--line2)">'+esc(t)+'</div>';}).join('')+'</div>';
+ if(V.length)h+='<div style="margin-top:6px"><div style="font-size:13px;font-weight:800;color:var(--acc)">↻ ביקור חוזר שנקבע · '+V.length+'</div>'+V.map(function(id){return calCustLine(id,'');}).join('')+'</div>';
+ return h;
+}
+function calXBind(root){
+ var a=(root||document).querySelectorAll('.calx');for(var i=0;i<a.length;i++)a[i].onclick=function(){openCustomer(this.getAttribute('data-cid'));};
+ var b=(root||document).querySelectorAll('.calxday');for(var j=0;j<b.length;j++)b[j].onclick=function(e){e.stopPropagation();planFor(this.getAttribute('data-ds'));};
+}
+/* week view: every day Sun–Sat with all of it in one list */
+function calDrawWeek(){
+ var S=_calState,T=todayStr();if(!S.wk)S.wk=dateAdd(T,-ilDow(T));
+ var ws=S.wk,we=dateAdd(ws,6),yms=calYmsBetween(ws,we);
+ calLoad(yms,function(info){calXLoad(ws,we,function(){
+  var body=$('calbody');if(!body||route!=='calendar'||_calState.mode!=='week'||_calState.wk!==ws)return;
+  var by=calByDay(calRows(ws,we)),tot={a:0,r:0,m:0,v:0};
+  var h=calOffNote(info)+'<div class="card"><div class="calnav"><button class="calwn" data-d="-7" aria-label="שבוע קודם">'+CAL_CHEV_R+'</button><div style="text-align:center"><div style="font-size:16px;font-weight:800;color:var(--head)">שבוע '+heDate(ws)+' – '+heDate(we)+'</div><div id="calwsum" style="font-size:11.5px;color:var(--mut);font-weight:600"></div></div><button class="calwn" data-d="7" aria-label="שבוע הבא">'+CAL_CHEV_L+'</button></div>'+(ws!==dateAdd(T,-ilDow(T))?'<div style="text-align:center;margin-top:4px"><a href="#" id="calwtoday" style="font-size:12px">לשבוע הנוכחי</a></div>':'')+'</div>';
+  for(var i=0;i<7;i++){var ds=dateAdd(ws,i),A=by[ds]||[],n=calXCounts(ds);tot.a+=A.length;tot.r+=n.r;tot.m+=n.m;tot.v+=n.v;
+   var empty=!A.length&&!n.r&&!n.m&&!n.v,dow=ilDow(ds);
+   h+='<div class="card" style="'+(ds===T?'border:2px solid var(--acc);':'')+(ds<T?'opacity:.6;':'')+(dow>4&&empty?'padding:9px 14px;':'')+'"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="font-size:14.5px;font-weight:800;color:var(--head)">'+esc(heDateFull(ds))+(ds===T?' <span class="badge b-good">היום</span>':'')+'</div>'+(empty?'<span style="font-size:11.5px;color:var(--mut)">'+(dow>4?'סוף שבוע':'פנוי')+'</span>':'')+'</div>';
+   if(A.length)h+='<div style="margin-top:4px"><div style="font-size:13px;font-weight:800;color:var(--acc)">📅 פגישות · '+A.length+'</div>'+A.map(function(a){var c=custById(a.customer_id)||{};return '<div class="calwa" data-id="'+esc(a.id)+'" style="display:flex;align-items:center;gap:9px;padding:7px 2px;border-top:1px solid var(--line2);cursor:pointer"><div style="font-size:14px;font-weight:800;color:var(--acc);min-width:44px">'+esc(apptTime(a))+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--head)">'+esc(a.customer_name||c.name||'')+'</div><div style="font-size:11px;color:var(--mut)">'+esc(apptCity(a))+(a.note?' · '+esc(a.note):'')+'</div></div></div>';}).join('')+'</div>';
+   h+=calXHtml(ds)+'</div>';}
+  body.innerHTML=h;
+  if($('calwsum'))$('calwsum').textContent=[tot.a+' פגישות',tot.r+' תחנות במסלול',tot.m+' תזכורות',tot.v+' ביקורים חוזרים'].join(' · ');
+  var wn=body.querySelectorAll('.calwn');for(var k=0;k<wn.length;k++)wn[k].onclick=function(){S.wk=dateAdd(S.wk,+this.getAttribute('data-d'));calendarView();};
+  if($('calwtoday'))$('calwtoday').onclick=function(e){e.preventDefault();S.wk=dateAdd(T,-ilDow(T));calendarView();};
+  var all=calRows(ws,we),wa=body.querySelectorAll('.calwa');for(var q=0;q<wa.length;q++)wa[q].onclick=function(){var id=this.getAttribute('data-id'),a=null;all.forEach(function(x){if(x.id===id)a=x;});if(a)openApptSheet(calCustOf(a),a,function(){apptInvalidate();_calX.ts=0;if(route==='calendar')calendarView();});};
+  calXBind(body);
+ });});
+}
+
 /* ---------- calendar screen ---------- */
 function calHdr(){var S=_calState;
  return '<div style="background:var(--acc);padding:14px 16px 12px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><button onclick="goBack()" style="border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer">‹</button><div style="font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em">📅 לוח שנה</div></div>'+
-  '<div style="display:flex;gap:6px"><button class="calhchip calmode'+(S.mode==='month'?' on':'')+'" data-m="month">חודש</button><button class="calhchip calmode'+(S.mode==='year'?' on':'')+'" data-m="year">שנה</button></div></div></div>';}
+  '<div style="display:flex;gap:6px"><button class="calhchip calmode'+(S.mode==='week'?' on':'')+'" data-m="week">שבוע</button><button class="calhchip calmode'+(S.mode==='month'?' on':'')+'" data-m="month">חודש</button><button class="calhchip calmode'+(S.mode==='year'?' on':'')+'" data-m="year">שנה</button></div></div></div>';}
 function calendarView(){
  var S=_calState;if(!S.ym){S.ym=todayStr().slice(0,7);S.sel=todayStr();}if(!S.y)S.y=+S.ym.slice(0,4);
  shell(calHdr()+'<div class="list" id="calbody"><div style="color:var(--mut);font-size:13px">טוען…</div></div>');
  var ms=document.querySelectorAll('.calmode');for(var i=0;i<ms.length;i++)ms[i].onclick=function(){S.mode=this.getAttribute('data-m');if(S.mode==='year')S.y=+S.ym.slice(0,4);calendarView();};
  if(!me)return;
- if(S.mode==='year')calDrawYear();else calDrawMonth();
+ if(S.mode==='year')calDrawYear();else if(S.mode==='week')calDrawWeek();else calDrawMonth();
 }
 function calOffNote(info){if(!info||!info.offline)return '';return '<div class="card" style="background:var(--warns);border-color:#e7c9a0;font-size:12.5px;color:var(--warnd);font-weight:700">📴 אין קליטה — '+(info.cached?'מוצגות פגישות שנשמרו במכשיר':'אין נתונים שמורים לתקופה הזו')+'</div>';}
 function calDrawMonth(){
@@ -7062,7 +7118,7 @@ function calDrawMonth(){
   if($('caltoday'))$('caltoday').onclick=function(e){e.preventDefault();S.ym=T.slice(0,7);S.sel=T;calendarView();};
   var cs=body.querySelectorAll('.calc');for(var j=0;j<cs.length;j++)cs[j].onclick=function(){S.sel=this.getAttribute('data-ds');var p=body.querySelectorAll('.calc.sel');for(var k=0;k<p.length;k++)p[k].classList.remove('sel');this.classList.add('sel');calDrawAgenda(S.sel,true);};
   if(S.sel&&S.sel.slice(0,7)===ym)calDrawAgenda(S.sel,false);
-  fetchPlannedRoutes(ym+'-01',calMonthEnd(ym),function(map){_calRoutes[ym]=map;var els=document.querySelectorAll('.calr[data-rds]');for(var k=0;k<els.length;k++){var r=map[els[k].getAttribute('data-rds')];if(r&&r.n)els[k].textContent=r.n+' תחנות';}});
+  calXLoad(ym+'-01',calMonthEnd(ym),function(){if(route!=='calendar'||_calState.ym!==ym)return;var els=document.querySelectorAll('.calr[data-rds]');for(var k=0;k<els.length;k++){els[k].textContent=calXMini(els[k].getAttribute('data-rds'));}if(_calState.sel&&_calState.sel.slice(0,7)===ym)calDrawAgenda(_calState.sel,false);});
  });
 }
 function calDrawYear(){
@@ -7095,7 +7151,7 @@ function calDrawAgenda(ds,scroll){
  var S=_calState,T=todayStr();
  var L=(calByDay(calRows(ds,ds))[ds])||[];
  var cfs=apptGeoConflicts(L),geo=cfs.filter(function(c){return c.type==='geo';}),tm=cfs.filter(function(c){return c.type==='time';});
- var h='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15.5px;font-weight:800;color:var(--head)">'+esc(heDateFull(ds))+'</div><div style="font-size:11.5px;color:var(--mut);font-weight:600">'+(L.length?L.length+' פגישות':'אין פגישות')+(ds<T?' · עבר':'')+'</div></div>'+
+ var h='<div class="card" style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15.5px;font-weight:800;color:var(--head)">'+esc(heDateFull(ds))+'</div><div style="font-size:11.5px;color:var(--mut);font-weight:600">'+(L.length?L.length+' פגישות':'אין פגישות')+(function(){var n=calXCounts(ds),p=[];if(n.r)p.push(n.r+' תחנות');if(n.m)p.push(n.m+' תזכורות');if(n.v)p.push(n.v+' ביקורים חוזרים');return p.length?' · '+p.join(' · '):'';})()+(ds<T?' · עבר':'')+'</div></div>'+
   ((_calRoutes[ds.slice(0,7)]||{})[ds]&&(_calRoutes[ds.slice(0,7)][ds].n)?'<span class="badge b-mut">🚗 '+_calRoutes[ds.slice(0,7)][ds].n+' תחנות במסלול</span>':'')+'</div>';
  geo.forEach(function(c){h+='<div class="calcf"><div style="font-size:13px;font-weight:800;color:var(--badd);line-height:1.5">⚠︎ פגישות רחוקות באותו יום: '+esc(apptCity(c.a))+' ↔ '+esc(apptCity(c.b))+' ('+c.km+' ק״מ)</div></div>';});
  tm.forEach(function(c){h+='<div class="calcf"><div style="font-size:13px;font-weight:800;color:var(--badd)">⚠︎ חפיפה בשעות: '+esc(c.a.customer_name||'')+' '+esc(apptTime(c.a))+' ↔ '+esc(c.b.customer_name||'')+' '+esc(apptTime(c.b))+'</div></div>';});
@@ -7108,10 +7164,11 @@ function calDrawAgenda(ds,scroll){
   var c=custById(a.customer_id)||{};var ac=a.area_code!=null?a.area_code:c.area_code;
   h+='<div class="calrow" data-id="'+esc(a.id)+'"><div style="font-size:15px;font-weight:800;color:var(--acc);min-width:46px">'+esc(apptTime(a))+'</div><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--head)">'+esc(a.customer_name||c.name||'')+'</div><div style="font-size:11.5px;color:var(--mut)">'+esc(apptCity(a))+' · <i class="caldot" style="background:'+calAreaColor(ac)+';vertical-align:middle"></i> אזור '+esc(String(ac==null?'?':ac))+' · '+(+a.duration_min||30)+' דק׳'+(a.note?' · '+esc(a.note):'')+'</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c3bcb0" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>';
  });
+  h+=calXHtml(ds);
  if(ds>=T)h+='<div style="display:flex;gap:8px;margin-top:2px"><button id="caladd" class="cta" style="height:44px;font-size:14px;box-shadow:none">+ פגישה ביום הזה</button><button id="calplan" class="cta" style="height:44px;font-size:14px;background:var(--accs);color:var(--accd);box-shadow:none">🗺 תכנון מסלול ליום</button></div>';
  h+='</div>';
- el.innerHTML=h;
- var redraw=function(){apptInvalidate();if(route==='calendar')calendarView();};
+ el.innerHTML=h;calXBind(el);
+ var redraw=function(){apptInvalidate();_calX.ts=0;if(route==='calendar')calendarView();};
  var rs=el.querySelectorAll('.calrow');for(var i=0;i<rs.length;i++)rs[i].onclick=function(){var id=this.getAttribute('data-id'),a=null;L.forEach(function(x){if(x.id===id)a=x;});if(a)openApptSheet(calCustOf(a),a,redraw);};
  var mv2=el.querySelectorAll('.calmv');for(var j=0;j<mv2.length;j++)mv2[j].onclick=function(){var id=this.getAttribute('data-id'),nd=this.getAttribute('data-ds'),a=null;L.forEach(function(x){if(x.id===id)a=x;});if(!a)return;calMoveAppt(a,nd);};
  if($('caladd'))$('caladd').onclick=function(){calPickCust(function(c){openApptSheet(c,null,redraw,ds);});};
