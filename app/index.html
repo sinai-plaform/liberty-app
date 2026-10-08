@@ -114,7 +114,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-77';
+var APP_VERSION='2026-08-26-78';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -6335,7 +6335,7 @@ function rpFireRem(rm){
 }
 /* ---------- shared UI bits ---------- */
 /* ================= WEEKLY PLAN (v73) — automatic Sunday suggestion: ~10 stops/day, collections first, map, send to manager ================= */
-var WP_CAP=10,WP_COL=['#0f6b74','#d9822b','#7b4fb5','#2e8b57','#c0392b','#3b6fd8'],_wp=null,_wpTable=null;
+var WP_CAP=(function(){try{var v=+localStorage.getItem('lib_wp_cap');return [6,8,10,12,15].indexOf(v)>-1?v:10;}catch(e){return 10;}})(),WP_COL=['#0f6b74','#d9822b','#7b4fb5','#2e8b57','#c0392b','#3b6fd8'],_wp=null,_wpTable=null;
 function wpWeekFor(ds){var d=ds||todayStr();var dow=ilDow(d);return dow>=4?dateAdd(d,7-dow):dateAdd(d,-dow);} // Thu–Sat → next week, Sun–Wed → this week
 function wpDays(ws){var out=[],T=todayStr();for(var i=0;i<5;i++){var ds=dateAdd(ws,i);if(ds>=T)out.push(ds);}return out;}
 function wpWeekLabel(ws){return heDate(ws)+' – '+heDate(dateAdd(ws,4));}
@@ -6433,6 +6433,7 @@ function weekPlanView(){
   '<div><div style="font-size:11px;color:var(--accd);font-weight:700">תחנות</div><div style="font-size:19px;font-weight:800;color:var(--accd)">'+tot.n+'</div></div>'+
   '<div><div style="font-size:11px;color:var(--accd);font-weight:700">💰 גבייה פתוחה</div><div style="font-size:19px;font-weight:800;color:var(--bad)">'+ils(tot.debt)+'</div></div>'+
   '<div><div style="font-size:11px;color:var(--accd);font-weight:700">30+ יום בלי ביקור</div><div style="font-size:19px;font-weight:800;color:var(--warn)">'+tot.old+'</div></div></div>'+
+  '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:var(--accd)">תחנות ביום:</span>'+[6,8,10,12,15].map(function(v){return '<button class="chip wpcap'+(v===WP_CAP?' on':'')+'" data-v="'+v+'" style="height:30px;min-width:40px">'+v+'</button>';}).join('')+'</div>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button id="wp_map" class="cta" style="height:42px;font-size:13.5px;background:#fff;color:var(--accd);border:1px solid var(--accs2);box-shadow:none">🗺 מפת השבוע</button><button id="wp_re" class="cta" style="height:42px;font-size:13.5px;background:#fff;color:var(--accd);border:1px solid var(--accs2);box-shadow:none">✨ הצעה מחדש</button></div></div>';
  h+=dh+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px"><button id="wp_save" class="cta" style="height:48px;background:var(--accs);color:var(--accd);box-shadow:none">💾 שמירת השבוע</button><button id="wp_send" class="cta" style="height:48px">📤 שליחה למנהל</button></div>'+
   '<div style="font-size:11px;color:var(--mut);text-align:center;line-height:1.6;padding:2px 6px 10px">השמירה יוצרת מסלול לכל יום (אפשר לשנות בכל יום במסך המסלול). ימים שהמסלול שלהם כבר נבנה — לא משתנים.</div></div>';
@@ -6441,6 +6442,7 @@ function weekPlanView(){
  $('wp_next').onclick=function(){_wp={ws:dateAdd(W.ws,7)};weekPlanView();};
  $('wp_re').onclick=function(){confirmModal('להחליף את ההצעה בהצעה חדשה? (ימים שהמסלול שלהם כבר נבנה לא ישתנו)',function(){var keep={};W.days.forEach(function(d){if(d.built)keep[d.ds]=d;});W.days=wpSuggest(keep);W.status='draft';wpSaveLocal();weekPlanView();},'הצעה חדשה');};
  $('wp_map').onclick=function(){wpMap();};
+ var cps=document.querySelectorAll('.wpcap');for(var ci=0;ci<cps.length;ci++)cps[ci].onclick=function(){var v=+this.getAttribute('data-v');if(v===WP_CAP)return;WP_CAP=v;try{localStorage.setItem('lib_wp_cap',String(v));}catch(e){}var keep={};W.days.forEach(function(d){if(d.built||!d.auto)keep[d.ds]=d;});W.days=wpSuggest(keep);wpSaveLocal();toast('ההצעה עודכנה ל-'+v+' תחנות ביום');weekPlanView();};
  $('wp_save').onclick=function(){wpSave(function(n){toast('נשמרו '+n+' ימים במסלולים ✓');});};
  $('wp_send').onclick=function(){wpSend();};
  var q=function(sel,fn){var b=document.querySelectorAll(sel);for(var i=0;i<b.length;i++)b[i].onclick=fn;};
