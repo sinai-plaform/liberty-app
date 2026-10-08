@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>מסלול יומי · ליברטי</title>
+<title>מסלול יומי · JaSale</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -70,7 +70,7 @@ function render(d){
   h+='</div>';
   var up=d.updated_at?new Date(d.updated_at):null;
   var upTxt=up?up.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  h+='<div class="ft">מתעדכן אוטומטית'+(upTxt?' · עודכן '+esc(upTxt):'')+'<br>ליברטי · תצוגה בלבד</div>';
+  h+='<div class="ft">מתעדכן אוטומטית'+(upTxt?' · עודכן '+esc(upTxt):'')+'<br>JaSale · תצוגה בלבד</div>';
   document.getElementById('app').innerHTML=h;
 }
 function load(){

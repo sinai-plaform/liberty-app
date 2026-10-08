@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>ליברטי — סוכני שטח</title>
+<title>JaSale — סוכני שטח</title>
+<meta name="apple-mobile-web-app-title" content="JaSale">
+<meta name="application-name" content="JaSale">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0f6b74">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f6b74'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif'>ל</text></svg>">
+<link rel="icon" type="image/svg+xml" href="jasale-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&family=Outfit:wght@400;700&display=swap">
 <style>
 :root{--bg:#f7f5f2;--sur:#fff;--surq:#f2efe9;--ink:#1c1a17;--head:#322f2a;--mut:#7d776d;--mut2:#8b857a;--line:#e2ddd4;--line2:#eae6de;--acc:#0f6b74;--accd:#0a4f56;--acc2:#2f9aa2;--accl:#93c6ca;--accs:#eef5f5;--accs2:#d5e7e8;--good:#1c7a4f;--goodd:#155c3c;--goods:#e4f0e8;--warn:#9a6207;--warnd:#7a4d06;--warns:#f8eeda;--bad:#a52f27;--badd:#8a251e;--bads:#f7e6e3;--pop:#e8613f}
 @keyframes rzoomin{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
@@ -110,7 +114,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-75';
+var APP_VERSION='2026-08-26-76';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -501,7 +505,7 @@ function nearestArea(lat,lng){if(!__areaPts||lat==null)return null;var best=null
 function cityToArea(city){if(!__cityArea||!city)return null;var c=(''+city).trim();if(!c)return null;var code=__cityArea[c];if(code==null){for(var k in __cityArea){if(c.indexOf(k)>-1||k.indexOf(c)>-1){code=__cityArea[k];break;}}}if(code==null)return null;return {code:code,id:__areaById[code],name:(__areaNameByCode?__areaNameByCode[code]:'')};}
 
 function loginView(){
- $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><div style="width:72px;height:72px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(10,79,86,.35)"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0f6b74" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg></div><div style="color:#fff;font-size:26px;font-weight:800">ליברטי</div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
+ $('app').innerHTML='<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0f6b74 0%,#0a4f56 42%,#f7f5f2 42.1%)"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:84px"><svg width="76" height="76" style="filter:drop-shadow(0 8px 20px rgba(10,79,86,.35))" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="lgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12808a"/><stop offset="1" stop-color="#0a4f56"/></linearGradient></defs><rect width="512" height="512" rx="116" fill="url(#lgG)"/>   <path d="M300 214 V 318 A 84 84 0 0 1 132 318" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round"/>   <circle cx="300" cy="182" r="9" fill="#fff" opacity=".55"/>   <path d="M300 212.3 C 283.9 184.7 254 161.7 254 118 A 46 46 0 1 1 346 118 C 346 161.7 316.1 184.7 300 212.3 Z" fill="#f4a53a"/><circle cx="300" cy="118" r="19.32" fill="#0a4f56"/>  </svg><div dir="ltr" style="color:#fff;font-size:30px;letter-spacing:-.5px;font-family:Outfit,\'IBM Plex Sans Hebrew\',sans-serif"><b style="font-weight:700">Ja</b><span style="font-weight:400;color:#bfe3e6">Sale</span></div><div style="color:#bfe0e3;font-size:14px">מערכת סוכני שטח · ליברטי</div></div><div style="width:330px;max-width:88vw;background:#fff;border-radius:18px;box-shadow:0 12px 32px rgba(36,33,29,.1);padding:24px;margin-top:36px;display:flex;flex-direction:column;gap:16px"><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד עובד</span><input id="code" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:4px"></label><label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">קוד אישי (PIN)</span><input id="pin" type="password" inputmode="numeric" style="height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 14px;font-size:20px;font-weight:700;letter-spacing:6px"></label><div id="err" style="color:var(--bad);font-size:13px;font-weight:600"></div><button class="cta" id="go">כניסה</button></div><div style="margin-top:auto;margin-bottom:24px;font-size:12px;color:var(--mut)">שכחת קוד? פני למשרד</div></div>';
  var go=function(){var code=$('code').value.trim(),pin=$('pin').value.trim();if(!code||!pin)return;$('go').textContent='רק רגע…';sb.auth.signInWithPassword({email:'u'+code+'@liberty.app',password:pin}).then(function(r){if(r.error){$('err').textContent=(navigator.onLine===false?'אין חיבור לאינטרנט — נסי שוב כשתהיה קליטה':'קוד עובד או קוד אישי שגויים');$('go').textContent='כניסה'}else{try{localStorage.removeItem('lib_me');localStorage.removeItem('lib_route')}catch(e){}boot()}})};
  $('go').onclick=go;$('pin').addEventListener('keydown',function(e){if(e.key==='Enter')go()});
 }
@@ -1470,7 +1474,7 @@ function perfExportPdf(){
   +'<div style="font-size:11.5px;color:#6b655c;margin-top:3px">תקופה: '+esc(perfPeriodLabel())+' · סוכן: '+esc(perfAgentLabel())+'</div></div>'
   +'<div style="text-align:left;font-size:10.5px;color:#6b655c">ליברטי<br>הופק '+new Date().toLocaleDateString('he-IL')+' '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+'</div></div>'
   +'<table style="width:100%;border-collapse:collapse;margin-top:14px"><tr>'+th+'</tr>'+tr+tot+'</table>'
-  +'<div style="margin-top:16px;font-size:9.5px;color:#8a847a;text-align:center;border-top:1px solid #eae6df;padding-top:7px">'+M.rows.length+' שורות · הופק ממערכת סוכני השטח של ליברטי</div>'
+  +'<div style="margin-top:16px;font-size:9.5px;color:#8a847a;text-align:center;border-top:1px solid #eae6df;padding-top:7px">'+M.rows.length+' שורות · הופק באפליקציית JaSale · ליברטי</div>'
   +'</div>';
  docToPdf(html,perfFileName('pdf'),function(blob,fn){sharePdf(blob,fn);});
 }
@@ -3573,7 +3577,7 @@ function parseVisitOutcome(t){
  return null;
 }
 /* ---------- ROUTE SHARE (view-only link for the manager) ---------- */
-var ROUTE_SHARE_BASE='https://sinai-plaform.github.io/liberty-app/share.html?t=';
+var ROUTE_SHARE_BASE=(function(){try{return location.origin+location.pathname.replace(/[^\/]*$/,'')+'share.html?t=';}catch(e){return 'https://jasale.app/share.html?t=';}})();
 function showRouteShare(tok,ds,n){
  var url=ROUTE_SHARE_BASE+tok;
  var msg='מסלול העבודה שלי · '+heDateFull(ds)+' ('+n+' עצירות):\n'+url;
@@ -6571,7 +6575,7 @@ function rpDoPrint(html){
 }
 function rpDocWrap(title,sub,body){return '<div id="docpage" dir="rtl" style="width:760px;padding:26px 28px;background:#fff;font-family:\'IBM Plex Sans Hebrew\',Heebo,Arial,sans-serif;color:#24211d">'+
  '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f6b74;padding-bottom:10px"><div><div style="font-size:19px;font-weight:800;color:#0f6b74">'+esc(title)+'</div><div style="font-size:11.5px;color:#6b655c;margin-top:3px">'+esc(sub)+'</div></div><div style="text-align:left;font-size:10.5px;color:#6b655c">ליברטי<br>הופק '+new Date().toLocaleDateString('he-IL')+'</div></div>'+body+
- '<div style="margin-top:16px;font-size:9.5px;color:#8a847a;text-align:center;border-top:1px solid #eae6df;padding-top:7px">דוח פעילות · ללא סכומים · הופק ממערכת סוכני השטח של ליברטי</div></div>';}
+ '<div style="margin-top:16px;font-size:9.5px;color:#8a847a;text-align:center;border-top:1px solid #eae6df;padding-top:7px">דוח פעילות · ללא סכומים · הופק באפליקציית JaSale · ליברטי</div></div>';}
 function rpDocTiles(pairs){return '<table style="width:100%;border-collapse:separate;border-spacing:6px;margin-top:10px"><tr>'+pairs.map(function(p){return '<td style="background:#eef5f5;border-radius:8px;padding:8px 6px;text-align:center"><div style="font-size:10.5px;color:#0a4f56;font-weight:700">'+esc(p[0])+'</div><div style="font-size:18px;font-weight:800;color:#0a4f56">'+esc(String(p[1]))+'</div>'+(p[2]?'<div style="font-size:9.5px;color:#6b655c">'+esc(p[2])+'</div>':'')+'</td>';}).join('')+'</tr></table>';}
 function rpDocSec(title,head,rows){
  if(!rows.length)return '<div style="margin-top:14px;font-size:13px;font-weight:800;color:#0f6b74">'+esc(title)+'</div><div style="font-size:11px;color:#8a847a;margin-top:4px">אין</div>';

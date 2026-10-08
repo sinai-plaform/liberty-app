@@ -1,8 +1,8 @@
-/* Liberty field-agent PWA service worker */
-var V='liberty-v4';
-var CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png',
+/* JaSale field-agent PWA service worker */
+var V='jasale-v1';
+var CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./favicon-32.png','./jasale-icon.svg',
  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
- 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap'];
+ 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&family=Outfit:wght@400;700&display=swap'];
 self.addEventListener('install',function(e){
  e.waitUntil(caches.open(V).then(function(c){
   return Promise.all(CORE.map(function(u){return c.add(new Request(u,{cache:'reload'})).catch(function(){})}));
