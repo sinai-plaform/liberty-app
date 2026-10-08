@@ -1,5 +1,5 @@
 /* JaSale field-agent PWA service worker */
-var V='jasale-v2';
+var V='jasale-v3';
 var CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./favicon-32.png','./jasale-icon.svg',
  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&family=Outfit:wght@400;700&display=swap'];
