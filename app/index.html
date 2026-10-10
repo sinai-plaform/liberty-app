@@ -118,7 +118,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-80';
+var APP_VERSION='2026-08-26-81';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -6603,7 +6603,11 @@ function wpCent(list){var la=0,ln=0,n=0;list.forEach(function(c){if(c&&c.lat!=nu
 function wpKm(a,b){return (a&&b&&a.lat!=null&&b.lat!=null)?hav(a,b):null;}
 function wpClosed(c,ds){var r=parseHours(c&&c.opening_hours);if(!r)return false;var cover={};r.forEach(function(x){x.days.forEach(function(d){cover[d]=1;});});if(Object.keys(cover).length<3)return false;return !cover[ilDow(ds)];}
 /* weekly score = route score + extra weight for collections (Yasmin: suggestions should lean on customers with money to collect) */
-function wpScore(c){var s=routeScore(c);if(!s||s.excluded||s.recent||s.lowprio||s.gray||s.score<=0)return null;
+var WP_RECENT_DAYS=14;
+/* v81: weekly plan never suggests customers visited/ordered in the last 14 days, unless a follow-up date or reminder falls in the plan week */
+function wpRecentTouch(c){var t=Math.max(lastTouchTs(c.id)||0,(typeof lastVisitTs==='function'?lastVisitTs(c.id):0)||0);if(!t)return null;return Math.floor((Date.now()-t)/86400000);}
+function wpForced(c){var we=(_wp&&_wp.ws)?dateAdd(_wp.ws,6):dateAdd(todayStr(),7);var due=(_fuMap||{})[c.id];if(due&&due<=we)return true;var k=(_rmMap||{})[c.id];if(k){var d=(_rmDue||{})[c.id]||0;if(d&&d<parseYmd(we).getTime()+86400000)return true;}return false;}
+function wpScore(c){var td=wpRecentTouch(c);if(td!=null&&td<WP_RECENT_DAYS&&!wpForced(c))return null;var s=routeScore(c);if(!s||s.excluded||s.recent||s.lowprio||s.gray||s.score<=0)return null;
  var sc=s.score,debt=+c.debt_agorot||0;if(debt>0){sc+=60+Math.min(80,Math.round(debt/100000)*8);}
  return {c:c,score:sc,reasons:s.reasons,debt:debt,dv:s.daysSince};}
 function wpPool(){var P={};(LOC.customers||[]).forEach(function(c){if(!c||c.lifecycle==='disqualified')return;var s=wpScore(c);if(s)P[c.id]=s;});return P;}
@@ -6635,7 +6639,9 @@ function wpSuggest(keep){ // keep: {ds:{ids,areas,locked}} days not to touch
  var P=wpPool(),used={},taken={},days=[];keep=keep||{};
  for(var k in keep)(keep[k].ids||[]).forEach(function(id){used[id]=1;});
  wpDays(_wp.ws).forEach(function(ds){
-  if(keep[ds]){days.push(keep[ds]);(keep[ds].areas||[]).forEach(function(a){taken[a]=1;});return;}
+  if(keep[ds]){var kd=keep[ds];(kd.areas||[]).forEach(function(a){taken[a]=1;});
+   if(kd._topup){delete kd._topup;var need=WP_CAP-kd.ids.length;if(need>0){var ar=(kd.areas&&kd.areas.length)?kd.areas:wpDayAreas(ds,P,used,taken);var add=wpPickDay(ds,ar,P,used,need).map(function(x){return x.c.id;});if(add.length)kd.ids=wpOrder(kd.ids.concat(add));}}
+   days.push(kd);return;}
   var areas=wpDayAreas(ds,P,used,taken);areas.forEach(function(a){taken[a]=1;});
   var pick=wpPickDay(ds,areas,P,used,WP_CAP);
   days.push({ds:ds,areas:areas,ids:wpOrder(pick.map(function(x){return x.c.id;})),auto:true});
@@ -6661,7 +6667,16 @@ function wpLoad(ws,cb){
   var keep={};for(var k in saved)keep[k]=saved[k];
   if(local&&local.days)local.days.forEach(function(d){if(!keep[d.ds]&&d.ds>=todayStr())keep[d.ds]=d;});
   if(local&&local.status&&!plan)_wp.status=local.status;
-  var go=function(){_wp.days=wpSuggest(keep);cb&&cb();};
+  var go=function(){
+   // v81: auto-suggested local days are regenerated; kept days drop customers touched in the last 14 days
+   var pruned=0,T=todayStr();
+   for(var k2 in keep){var d=keep[k2];if(d.ds<T||d.built)continue;
+    if(d.auto&&!saved[d.ds]){delete keep[k2];continue;}
+    var before=(d.ids||[]).length;d.ids=(d.ids||[]).filter(function(id){var c=custById(id);if(!c)return true;var td=wpRecentTouch(c);return !(td!=null&&td<WP_RECENT_DAYS&&!wpForced(c));});
+    if(d.ids.length<before){pruned+=before-d.ids.length;d._topup=true;}}
+   _wp.days=wpSuggest(keep);
+   if(pruned){wpSave(function(){},true);setTimeout(function(){toast('הוסרו '+pruned+' לקוחות שביקרת אצלם ב-14 הימים האחרונים');},600);}
+   cb&&cb();};
   if(_ltMap===null||_fuMap===null)loadFollowups(go);else go();
  };
  if(navigator.onLine===false||!me){finish([],null);return;}
