@@ -118,7 +118,7 @@ a{color:var(--acc)}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-var APP_VERSION='2026-08-26-81';
+var APP_VERSION='2026-08-26-82';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -146,6 +146,49 @@ function confirmModal(msg,onYes,yesLabel){
  document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};
  document.getElementById('cm_no').onclick=function(){ov.remove()};
  document.getElementById('cm_yes').onclick=function(){ov.remove();onYes()};
+}
+// ---------- account sheet + clean logout (v82) ----------
+var ROLE_HE={agent:'סוכן/ת שטח',manager:'מנהל',office:'משרד',admin:'מנהל מערכת',driver:'נהג',warehouse:'אפסנאי'};
+function acctBtn(){var i=me&&me.name?me.name.trim().charAt(0):'·';return '<button type="button" class="acctbtn" aria-label="חשבון והתנתקות" style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;cursor:pointer;flex:none;font-family:inherit;padding:0">'+esc(i)+'</button>';}
+document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('.acctbtn');if(b){e.preventDefault();openAcct();}});
+function openAcct(){
+ var old=document.getElementById('acctov');if(old)old.remove();
+ var ov=document.createElement('div');ov.className='ovl';ov.id='acctov';ov.style.alignItems='center';
+ var nm=(me&&me.name)||'',rl=(me&&ROLE_HE[me.role])||'',code=(me&&(me.code||me.employee_code))||'';
+ ov.innerHTML='<div class="sheet" style="max-width:340px;margin:auto;border-radius:18px;padding:20px 20px 16px">'+
+  '<div style="display:flex;align-items:center;gap:12px"><div style="width:46px;height:46px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;flex:none">'+esc(nm?nm.trim().charAt(0):'·')+'</div>'+
+  '<div style="min-width:0"><div style="font-size:16px;font-weight:800;color:var(--head)">'+esc(nm||'משתמש')+'</div><div style="font-size:12.5px;color:var(--mut)">'+esc(rl)+(code?' · קוד '+esc(code):'')+'</div></div></div>'+
+  '<div id="ac_pend" style="font-size:12.5px;color:var(--mut);margin-top:12px"></div>'+
+  '<button id="ac_out" class="cta" style="height:48px;margin-top:14px;background:var(--bad)">התנתקות מהמשתמש</button>'+
+  '<button id="ac_no" class="cta" style="height:44px;margin-top:8px;background:#E6E4DF;color:var(--ink)">סגירה</button>'+
+  '<div style="font-size:11px;color:var(--mut);text-align:center;margin-top:10px">גרסה '+APP_VERSION+'</div></div>';
+ document.body.appendChild(ov);ov.onclick=function(e){if(e.target===ov)ov.remove()};
+ document.getElementById('ac_no').onclick=function(){ov.remove()};
+ obAll(function(l){var el=document.getElementById('ac_pend');if(el)el.innerHTML=l.length?'<span style="color:var(--bad);font-weight:700">⚠︎ '+l.length+' פעולות עוד לא נשלחו</span> — הן יישלחו לפני ההתנתקות':'✔ כל הנתונים נשלחו';});
+ document.getElementById('ac_out').onclick=function(){var b=this;b.disabled=true;b.textContent='מתנתק…';doLogout(function(msg){b.disabled=false;b.textContent='התנתקות מהמשתמש';toast(msg);});};
+}
+/* never wipe unsent orders/visits/payments: flush first, block if anything is still pending */
+function doLogout(blocked){
+ obAll(function(l){
+  if(!l.length){wipeAndLeave();return;}
+  if(navigator.onLine===false){blocked('אין חיבור — יש '+l.length+' פעולות שלא נשלחו. התנתקו אחרי שיחזור החיבור');return;}
+  var tries=0,chk=function(){obAll(function(l2){if(!l2.length){wipeAndLeave();return;}if(++tries<4&&OFF.syncing){setTimeout(chk,1500);return;}blocked('יש '+l2.length+' פעולות שלא נשלחו — בדקו במסך "ממתין לשליחה" ונסו שוב');});};
+  obFlush(function(){setTimeout(chk,300);});
+ });
+}
+var _leaving=false;
+function wipeAndLeave(){
+ if(_leaving)return;_leaving=true;
+ var left=false,go=function(){if(left)return;left=true;location.replace('../');};
+ var clean=function(){
+  try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k!=='lib_dev'&&(k.indexOf('lib_')===0||k.indexOf('sb-')===0||k==='mpl_f'||k==='mp_filter'||k==='carry_dismiss'))ks.push(k);}ks.forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{sessionStorage.clear();}catch(e){}
+  me=null;try{if(_db)_db.close();}catch(e){}_db=false;
+  try{var rq=indexedDB.deleteDatabase('liberty');var t=setTimeout(go,1500);rq.onsuccess=rq.onerror=rq.onblocked=function(){clearTimeout(t);go();};}catch(e){go();}
+ };
+ var done=false,fin=function(){if(done)return;done=true;clean();};
+ setTimeout(fin,2500);
+ try{sb.auth.signOut({scope:'local'}).then(fin,fin);}catch(e){fin();}
 }
 // ---------- order notifications (one-tap from agent's own email/WhatsApp) ----------
 var ORDER_EMAILS='sales3@libertyisrael.co.il';
@@ -1012,7 +1055,7 @@ function mgrHomeView(){
  var qa=mgrQa('team','ביצועים','stats')+mgrQa('rephub','דוחות','reports')+mgrQa('wkplans','תוכניות שבועיות','plan')+mgrQa('ann','הודעות ותחרויות','mega')+mgrQa('pick','ליקוט מחסן','box')+mgrQa('stock','מלאי','box')+mgrQa('approvals','אישורים','reports')+mgrQa('agents','ניהול עובדים','newcust')+mgrQa('prodadmin','מוצרים','admin')+mgrQa('areas','אזורים','route')+mgrQa('broadcast','תפוצה','broadcast')+mgrQa('import','ייבוא נתונים','admin')+mgrQa('alerts','התראות','clock')+mgrQa('logistics','לוגיסטיקה','route')+mgrQa('dispatch','לוח שיגור','reports')+mgrQa('prospects','פוטנציאלים','newcust')+mgrQa('wkreport','דוח שבועי','reports')+mgrQa('moreport','דוח חודשי','stats');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
-   '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
+   '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+' · מנהל</div></div>'+acctBtn()+'</div>'+
    '<div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px">לוח ניהול'+(me?' · '+esc(me.name):'')+'</div>'+
    '<div style="color:#CEDAE5;font-size:12.5px;margin-top:2px">מבט-על על הצוות והפעילות</div>'+
   '</div>'+
@@ -1020,11 +1063,10 @@ function mgrHomeView(){
    '<div id="mgrkpi" class="card" style="box-shadow:0 6px 18px rgba(36,33,29,.06)"><div style="color:var(--mut);font-size:13px">טוען נתוני צוות…</div></div>'+
    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">'+qa+'</div>'+
    '<div><div style="font-size:13.5px;font-weight:800;color:var(--head);padding:4px 2px 2px">🏆 סוכנים החודש</div><div id="mgrlead"><div style="color:var(--mut);font-size:12.5px;padding:6px 2px">טוען…</div></div></div>'+
-   '<div style="text-align:center;margin-top:4px"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div>'+
   '</div>'
  );
  bindGo();
- $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
+ if($('out'))$('out').onclick=function(e){e.preventDefault();openAcct();};
  loadTeamData(function(t){
   if(route!=='home')return;
   var rows=t.rows||[];var agents=rows.filter(function(x){return x.role==='agent';});
@@ -1744,7 +1786,7 @@ function homeView(){
  var qa=qaBtn('route','מסלול','route')+qaBtn('visits','ביקורים','visits')+qaBtn('reminders','תזכורות','clock')+qaBtn('mystats','הנתונים שלי','stats')+qaBtn('calendar','לוח שנה','cal')+qaBtn('ann','הודעות ותחרויות','mega')+qaBtn('wkplan','תוכנית שבועית','plan')+qaBtn('monthplan','תוכנית חודשית','plan')+qaBtn('rephub','דוחות','reports')+qaBtn('newcust','לקוח חדש','newcust')+qaBtn('broadcast','תפוצה','broadcast')+(isMgr()?qaBtn('prodadmin','ניהול','admin'):'');
  shell(
   '<div style="background:var(--acc);padding:15px 16px 42px">'+
-   '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div>'+
+   '<div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div>'+acctBtn()+'</div>'+
    '<div id="hi" style="color:#fff;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px">שלום'+(me?', '+esc(me.name):'…')+'</div>'+
    '<div id="hsub" style="color:#CEDAE5;font-size:12.5px;margin-top:2px">טוען את היום שלך…</div>'+
    '<button data-go="catalog" style="margin-top:13px;height:48px;width:100%;background:#fff;border:none;border-radius:13px;display:flex;align-items:center;gap:10px;padding:0 14px;box-shadow:0 4px 14px rgba(34,56,79,.25);cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#737E8A" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span style="color:#a39b90;font-size:15px">חיפוש מוצר — שם או מק״ט…</span></button>'+
@@ -1762,11 +1804,10 @@ function homeView(){
    '<div id="proscard"></div>'+
    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">'+qa+'</div>'+
    '<div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">גרסה חיה — מחוברת חי לבסיס הנתונים.</div>'+
-   '<div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div>'+
   '</div>'
  );
  bindGo();
- $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
+ if($('out'))$('out').onclick=function(e){e.preventDefault();openAcct();};
  locTouch();
  renderApptNext();renderHomeRoute();renderHomeCoverage();renderHomeFollowups();renderHomeProspects();featHome();try{annHomeCard();meMonthCard();}catch(e){}
 }
@@ -5561,7 +5602,7 @@ function drvOrdered(stops){
 }
 function drvCurrent(ordered){var open=ordered.filter(function(s){return !drvDone(s)});if(_drv.cur){for(var i=0;i<open.length;i++)if(open[i].delivery_id===_drv.cur)return open[i]}return open[0]||null;}
 function drvEtaMin(cur,ordered){var prev=getOrigin();for(var i=0;i<ordered.length;i++){if(ordered[i].delivery_id===cur.delivery_id)break;if(!drvDone(ordered[i])&&ordered[i].lat!=null)prev=ordered[i]}if(cur.lat==null||prev.lat==null)return 20;return Math.round(hav(prev,cur)/35*60)+10;}
-function drvHdr(title,sub,extra){return '<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div style="color:#fff;font-size:19px;font-weight:700">'+title+'</div>'+(sub?'<div style="color:#DFE7EE;font-size:12px">'+sub+'</div>':'')+'</div>'+(extra||'')+'</div></div>';}
+function drvHdr(title,sub,extra){return '<div style="background:var(--acc);padding:16px 16px 14px;position:sticky;top:0;z-index:5"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div style="color:#fff;font-size:19px;font-weight:700">'+title+'</div>'+(sub?'<div style="color:#DFE7EE;font-size:12px">'+sub+'</div>':'')+'</div>'+(extra||'')+((isDriver()||isWh())?acctBtn():'')+'</div></div>';}
 function drvGroupByArea(list){var g={};list.forEach(function(s){var k=s.area_code!=null?s.area_code:'?';(g[k]=g[k]||[]).push(s)});return Object.keys(g).sort(function(a,b){return (+a||99)-(+b||99)}).map(function(k){return {area:k,stops:g[k]}});}
 // ---- write: update deliveries by id through the outbox (works offline; photos as Files like returns) ----
 function drvUpdate(stop,patch,files,cb){
@@ -5636,10 +5677,10 @@ function drvBindLines(){var bs=document.querySelectorAll('.drvlx');for(var i=0;i
 // ===== B. driver home =====
 function driverHomeView(){
  var initials=me&&me.name?me.name.trim().charAt(0):'·';
- shell('<div style="background:var(--acc);padding:15px 16px 42px"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div><div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">'+esc(initials)+'</div></div><div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px">שלום'+(me?', '+esc(me.name):'…')+' 🚚</div><div id="hsub" style="color:#CEDAE5;font-size:12.5px;margin-top:2px">טוען את המשלוחים של היום…</div></div>'+
-  '<div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div id="drvday"></div><div id="drvtiles" style="display:grid;grid-template-columns:1fr 1fr;gap:9px"></div><div id="drvnext"></div><button data-go="dispatch" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right;font-size:13px;font-weight:700">📋 לוח שיגור (כל ההזמנות הפתוחות) ›</button><div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
+ shell('<div style="background:var(--acc);padding:15px 16px 42px"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="color:#CEDAE5;font-size:12.5px;font-weight:600">'+new Date().toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'numeric'})+'</div></div>'+acctBtn()+'</div><div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:3px">שלום'+(me?', '+esc(me.name):'…')+' 🚚</div><div id="hsub" style="color:#CEDAE5;font-size:12.5px;margin-top:2px">טוען את המשלוחים של היום…</div></div>'+
+  '<div style="padding:0 16px;margin-top:-24px;display:flex;flex-direction:column;gap:12px"><div id="drvday"></div><div id="drvtiles" style="display:grid;grid-template-columns:1fr 1fr;gap:9px"></div><div id="drvnext"></div><button data-go="dispatch" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right;font-size:13px;font-weight:700">📋 לוח שיגור (כל ההזמנות הפתוחות) ›</button></div>');
  bindGo();
- $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
+ if($('out'))$('out').onclick=function(e){e.preventDefault();openAcct();};
  var paint=function(){
   var st=_drv.stops,today=st.filter(drvIsToday);
   var delivered=today.filter(function(s){return s.status==='delivered'}).length;
@@ -5755,9 +5796,9 @@ function driverMoreView(){
   '<button data-go="outbox" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right;width:100%"><div style="font-size:12px;color:var(--mut);font-weight:700">⏳ ממתין לשליחה</div><div style="font-size:15px;font-weight:800;margin-top:2px">'+(OFF.pending||0)+' פעולות</div></button>'+
   '<button data-go="dispatch" class="card" style="border:none;cursor:pointer;color:inherit;text-align:right;width:100%"><div style="font-size:15px;font-weight:800">📋 לוח שיגור ›</div></button>'+
   '<div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">'+esc(me&&me.name||'')+' · נהג · גרסה '+APP_VERSION+'</div>'+
-  '<div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
+  '<button id="out" class="cta" style="height:48px;background:#fff;color:var(--bad);border:1.5px solid var(--bad)">התנתקות מהמשתמש</button></div>');
  bindGo();$('drvorigin2').onclick=openOriginPicker;
- $('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
+ if($('out'))$('out').onclick=function(e){e.preventDefault();openAcct();};
 }
 /* ================= v79: warehouse picking · live stock · announcements & sales competitions ================= */
 function isWh(){return !!(me&&me.role==='warehouse');}
@@ -5914,8 +5955,8 @@ function whMoreView(){
  shell(drvHdr('⚙︎ הגדרות','מחסן')+'<div class="list">'+
   '<button data-go="stock" class="card" style="'+_v79Btn()+'"><div style="font-size:15px;font-weight:800">📦 ניהול מלאי ›</div></button>'+
   '<div style="background:var(--accs);border-radius:13px;padding:11px 14px;font-size:12.5px;color:var(--accd);line-height:1.5">'+esc(me&&me.name||'')+' · אפסנאי · גרסה '+APP_VERSION+'</div>'+
-  '<div style="text-align:center"><a href="#" id="out" style="font-size:12px;color:var(--mut)">התנתקות</a></div></div>');
- bindGo();$('out').onclick=function(e){e.preventDefault();sb.auth.signOut().then(function(){me=null;route='home';render();});};
+  '<button id="out" class="cta" style="height:48px;background:#fff;color:var(--bad);border:1.5px solid var(--bad)">התנתקות מהמשתמש</button></div>');
+ bindGo();if($('out'))$('out').onclick=function(e){e.preventDefault();openAcct();};
 }
 
 /* ---------- announcements, bonuses & sales competitions ---------- */
