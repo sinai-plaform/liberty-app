@@ -7,7 +7,7 @@
 /* returning users go straight into the app; otherwise pick the page language */
 var __go=0;
 (function(){try{var s=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;var me=localStorage.getItem('lib_me');if((s||me)&&location.hash!=='#site'){__go=1;location.replace('../app/');}}catch(e){}})();
-if(!__go)(function(){try{var s=localStorage.getItem('sg-lang');if(s==='en')return;var il=(Intl.DateTimeFormat().resolvedOptions().timeZone||'')==='Asia/Jerusalem'||(navigator.languages||[navigator.language]).some(function(l){return /^he|^iw/i.test(l)});if(s==='he'||il){location.replace('../'+location.search+location.hash)}}catch(e){}})();
+if(!__go)(function(H,P){var s=null;try{s=localStorage.getItem('sg-lang')}catch(e){}function il(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone==='Asia/Jerusalem'}catch(e){return false}}function pick(){var ls=navigator.languages||[navigator.language||''];for(var i=0;i<ls.length;i++){var c=(ls[i]||'').slice(0,2).toLowerCase();if(c==='iw')c='he';if(P[c])return(c==='en'&&il())?'he':c}return il()?'he':'en'}var w=(s&&P[s])?s:pick();if(w!==H)location.replace(P[w]+location.search+location.hash)})('en',{he:'/',en:'/en/',ru:'/ru/',ar:'/ar/',es:'/es/'});
 document.documentElement.className+=' js';
 </script>
 <title>JaSale — Business owner, you deserve calm in the field</title>
@@ -15,6 +15,10 @@ document.documentElement.className+=' js';
 <meta name="theme-color" content="#46647F">
 <link rel="alternate" hreflang="he" href="https://jasale.app/">
 <link rel="alternate" hreflang="en" href="https://jasale.app/en/">
+<link rel="alternate" hreflang="ru" href="https://jasale.app/ru/">
+<link rel="alternate" hreflang="ar" href="https://jasale.app/ar/">
+<link rel="alternate" hreflang="es" href="https://jasale.app/es/">
+<link rel="alternate" hreflang="x-default" href="https://jasale.app/en/">
 <link rel="icon" type="image/svg+xml" href="../assets/jasale-icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
 <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
@@ -24,7 +28,7 @@ document.documentElement.className+=' js';
 <meta property="og:locale" content="en_US">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Rubik:wght@500;700;800;900&family=Outfit:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Rubik:wght@500;700;800;900&family=Outfit:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@600&display=swap">
 <style>
 /* Lagoon & Sunshine: luminous light hero with magic wand → aqua marquee → light bento → tossed industry tiles → deep-aqua security → sunny close */
 :root{
@@ -294,18 +298,31 @@ footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:1
 .sec{background:radial-gradient(500px 300px at 0% 0%,rgba(108,143,176,.45),transparent 70%),linear-gradient(220deg,var(--aqua-d) 0%,var(--aqua) 100%)}
 .shield{left:auto;right:-60px}
 .cta{background:radial-gradient(400px 240px at 90% 0%,rgba(255,255,255,.35),transparent 70%),linear-gradient(225deg,var(--sun),#A68A5B)}
-/* language switch */
-.lang{display:inline-flex;align-items:center;height:42px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:600;color:var(--mut);transition:color .15s,background .15s}
-.lang:hover{color:var(--aqua);background:rgba(255,255,255,.7)}
-.lang:focus-visible{outline:3px solid var(--aqua-b);outline-offset:2px}
-@media (max-width:560px){.lang{padding:0 8px}}
+@media (max-width:560px){}
+/* language menu */
+.lng{position:relative}
+.lng summary{list-style:none;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;user-select:none;transition:color .15s,background .15s;white-space:nowrap}
+.lng summary::-webkit-details-marker{display:none}
+.lng summary:hover,.lng[open] summary{color:var(--aqua);background:rgba(255,255,255,.75)}
+.lng summary:focus-visible{outline:3px solid var(--aqua-b);outline-offset:2px}
+.lng .chev{transition:transform .2s;opacity:.7}
+.lng[open] .chev{transform:rotate(180deg)}
+.lng-m{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:40;min-width:168px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 22px 44px -16px rgba(34,56,79,.35),0 4px 12px rgba(31,46,45,.06);display:grid;gap:2px;animation:lngIn .16s ease-out}
+.lng-m a{display:block;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:var(--head);transition:background .12s,color .12s}
+.lng-m a:hover,.lng-m a:focus-visible{background:var(--aqua-t);color:var(--aqua);outline:none}
+.lng-m a[aria-current]{color:var(--aqua);background:var(--aqua-t)}
+.lng-m a[aria-current]::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--sun);margin-inline-start:8px;vertical-align:middle}
+.lng-m a[lang=ar]{font-family:'IBM Plex Sans Arabic',var(--body)}
+@keyframes lngIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (max-width:560px){.lng summary{padding:0 8px;gap:5px;font-size:13.5px}.lng summary svg:first-child{display:none}}
+@media (max-width:380px){.lng summary{padding:0 6px}}
 </style>
 </head>
 <body>
 <nav><div class="wrap">
  <a href="#" class="brand" aria-label="JaSale"><img src="../assets/jasale-icon.svg" alt=""><span class="word"><b>Ja</b><span>Sale</span></span></a>
  <div class="links"><a href="#features">Features</a><a href="#fit">Any industry</a><a href="#managers">For managers</a><a href="#security">Security</a><a href="#setup">Setup</a></div>
- <div style="display:flex;gap:8px;align-items:center"><a class="lang" href="../" hreflang="he" lang="he" onclick="try{localStorage.setItem('sg-lang','he')}catch(e){}">עברית</a><a class="btn btn-ghost" href="#contact">Book a demo</a><a class="btn btn-sun" href="../app/">Sign in</a></div>
+ <div style="display:flex;gap:8px;align-items:center"><details class="lng"><summary aria-label="Language: English"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span lang="en">English</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="lng-m"><a href="../" hreflang="he" lang="he" onclick="try{localStorage.setItem('sg-lang','he')}catch(e){}">עברית</a><a href="../en/" hreflang="en" lang="en" aria-current="page" onclick="try{localStorage.setItem('sg-lang','en')}catch(e){}">English</a><a href="../ru/" hreflang="ru" lang="ru" onclick="try{localStorage.setItem('sg-lang','ru')}catch(e){}">Русский</a><a href="../ar/" hreflang="ar" lang="ar" onclick="try{localStorage.setItem('sg-lang','ar')}catch(e){}">العربية</a><a href="../es/" hreflang="es" lang="es" onclick="try{localStorage.setItem('sg-lang','es')}catch(e){}">Español</a></div></details><a class="btn btn-ghost" href="#contact">Book a demo</a><a class="btn btn-sun" href="../app/">Sign in</a></div>
 </div></nav>
 
 <header class="hero">
@@ -519,5 +536,6 @@ try{document.getElementById('yr').textContent=new Date().getFullYear();}catch(e)
  }
 })();
 </script>
+<script>document.addEventListener('click',function(e){var d=document.querySelectorAll('details.lng[open]');for(var i=0;i<d.length;i++){if(!d[i].contains(e.target))d[i].removeAttribute('open')}});document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.querySelector('details.lng[open]');if(d){d.removeAttribute('open');d.querySelector('summary').focus()}}});</script>
 </body>
 </html>
