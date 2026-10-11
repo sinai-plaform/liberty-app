@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>
+/* returning users go straight into the app; otherwise pick the page language */
+var __go=0;
+(function(){try{var s=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;var me=localStorage.getItem('lib_me');if((s||me)&&location.hash!=='#site'){__go=1;location.replace('app/');}}catch(e){}})();
+if(!__go)(function(){try{var s=localStorage.getItem('sg-lang');if(s==='he')return;var il=(Intl.DateTimeFormat().resolvedOptions().timeZone||'')==='Asia/Jerusalem'||(navigator.languages||[navigator.language]).some(function(l){return /^he|^iw/i.test(l)});if(s==='en'||!il){location.replace('en/'+location.search+location.hash)}}catch(e){}})();
+document.documentElement.className+=' js';
+</script>
+<link rel="alternate" hreflang="he" href="https://jasale.app/">
+<link rel="alternate" hreflang="en" href="https://jasale.app/en/">
 <title>JaSale — בעל עסק, מגיע לך שקט בשטח</title>
 <meta name="description" content="JaSale מסדרת לסוכני שטח את כל היום: מסלול יומי, שבועי וחודשי, קטלוג והזמנות, גבייה לפי תיק לקוח, לוח שנה ודוחות — גם אופליין. מותאמת לכל תחום.">
 <meta name="theme-color" content="#46647F">
@@ -12,11 +21,6 @@
 <meta property="og:title" content="JaSale — בעל עסק, מגיע לך שקט בשטח">
 <meta property="og:description" content="מסלול, הזמנות, גבייה ותזכורות — מסודרים מראש, באפליקציה אחת שעובדת גם אופליין.">
 <meta property="og:image" content="https://jasale.app/assets/apple-touch-icon.png">
-<script>
-/* returning users go straight into the app */
-(function(){try{var s=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;var me=localStorage.getItem('lib_me');if((s||me)&&location.hash!=='#site')location.replace('app/');}catch(e){}})();
-document.documentElement.className+=' js';
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Rubik:wght@500;700;800;900&family=Outfit:wght@400;700&display=swap">
@@ -279,13 +283,17 @@ footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:1
   100%{opacity:1;transform:translate(calc(var(--jx,0px) * .4),calc(var(--jy,0px) * .5)) rotate(calc(var(--r,0deg) * .55))}
  }
 }
-.hero h1 em{background:linear-gradient(90deg,#22384F,#6C8FB0);-webkit-background-clip:text;background-clip:text;color:transparent}.hero h1 em::after{background:linear-gradient(90deg,#BCCCDB,#EEF2F5);opacity:.45}.hero h1 em::before{background:#A68A5B}</style>
+.hero h1 em{background:linear-gradient(90deg,#22384F,#6C8FB0);-webkit-background-clip:text;background-clip:text;color:transparent}.hero h1 em::after{background:linear-gradient(90deg,#BCCCDB,#EEF2F5);opacity:.45}.hero h1 em::before{background:#A68A5B}
+.lang{display:inline-flex;align-items:center;height:42px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:600;color:var(--mut);font-family:var(--brand);transition:color .15s,background .15s}
+.lang:hover{color:var(--aqua);background:rgba(255,255,255,.7)}
+.lang:focus-visible{outline:3px solid var(--aqua-b);outline-offset:2px}
+@media (max-width:560px){.lang{padding:0 8px}}</style>
 </head>
 <body>
 <nav><div class="wrap">
  <a href="#" class="brand" aria-label="JaSale"><img src="assets/jasale-icon.svg" alt=""><span class="word"><b>Ja</b><span>Sale</span></span></a>
  <div class="links"><a href="#features">יכולות</a><a href="#fit">לכל תחום</a><a href="#managers">למנהלים</a><a href="#security">אבטחה</a><a href="#setup">הקמה</a></div>
- <div style="display:flex;gap:8px"><a class="btn btn-ghost" href="#contact">תיאום הדגמה</a><a class="btn btn-sun" href="app/">כניסה למערכת</a></div>
+ <div style="display:flex;gap:8px;align-items:center"><a class="lang" href="en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('sg-lang','en')}catch(e){}">English</a><a class="btn btn-ghost" href="#contact">תיאום הדגמה</a><a class="btn btn-sun" href="app/">כניסה למערכת</a></div>
 </div></nav>
 
 <header class="hero">
