@@ -7,7 +7,7 @@
 /* returning users go straight into the app; otherwise pick the page language */
 var __go=0;
 (function(){try{var s=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;var me=localStorage.getItem('lib_me');if((s||me)&&location.hash!=='#site'){__go=1;location.replace('../app/');}}catch(e){}})();
-if(!__go)(function(H,P){var s=null;try{s=localStorage.getItem('sg-lang')}catch(e){}function il(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone==='Asia/Jerusalem'}catch(e){return false}}function pick(){var ls=navigator.languages||[navigator.language||''];for(var i=0;i<ls.length;i++){var c=(ls[i]||'').slice(0,2).toLowerCase();if(c==='iw')c='he';if(P[c])return(c==='en'&&il())?'he':c}return il()?'he':'en'}var w=(s&&P[s])?s:pick();if(w!==H)location.replace(P[w]+location.search+location.hash)})('es',{he:'/',en:'/en/',ru:'/ru/',ar:'/ar/',es:'/es/'});
+if(!__go)(function(H,P){var s=null;try{s=localStorage.getItem('sg-lang')}catch(e){}function il(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone==='Asia/Jerusalem'}catch(e){return false}}function pick(){var ls=navigator.languages||[navigator.language||''];for(var i=0;i<ls.length;i++){var c=(ls[i]||'').slice(0,2).toLowerCase();if(c==='iw')c='he';if(P[c])return(c==='en'&&il())?'he':c}return il()?'he':'en'}var w=(s&&P[s])?s:pick();if(w!==H)location.replace(P[w]+location.search+location.hash)})('es',{he:'/',en:'/en/',ru:'/ru/',ar:'/ar/',es:'/es/',de:'/de/',it:'/it/',fr:'/fr/',pt:'/pt/'});
 document.documentElement.className+=' js';
 </script>
 <title>JaSale — Dueño de negocio, mereces tranquilidad en ruta</title>
@@ -18,6 +18,10 @@ document.documentElement.className+=' js';
 <link rel="alternate" hreflang="ru" href="https://jasale.app/ru/">
 <link rel="alternate" hreflang="ar" href="https://jasale.app/ar/">
 <link rel="alternate" hreflang="es" href="https://jasale.app/es/">
+<link rel="alternate" hreflang="de" href="https://jasale.app/de/">
+<link rel="alternate" hreflang="it" href="https://jasale.app/it/">
+<link rel="alternate" hreflang="fr" href="https://jasale.app/fr/">
+<link rel="alternate" hreflang="pt" href="https://jasale.app/pt/">
 <link rel="alternate" hreflang="x-default" href="https://jasale.app/en/">
 <link rel="icon" type="image/svg+xml" href="../assets/jasale-icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
@@ -346,7 +350,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 <nav><div class="wrap">
  <a href="#" class="brand" aria-label="JaSale"><img src="../assets/jasale-icon.svg" alt=""><span class="word"><b>Ja</b><span>Sale</span></span></a>
  <div class="links"><a href="#features">Funciones</a><a href="#fit">Cualquier sector</a><a href="#managers">Para gerentes</a><a href="#security">Seguridad</a><a href="#setup">Puesta en marcha</a></div>
- <div style="display:flex;gap:8px;align-items:center"><details class="lng"><summary aria-label="Language: Español"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span lang="es">Español</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="lng-m"><a href="../" hreflang="he" lang="he" onclick="try{localStorage.setItem('sg-lang','he')}catch(e){}">עברית</a><a href="../en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('sg-lang','en')}catch(e){}">English</a><a href="../ru/" hreflang="ru" lang="ru" onclick="try{localStorage.setItem('sg-lang','ru')}catch(e){}">Русский</a><a href="../ar/" hreflang="ar" lang="ar" onclick="try{localStorage.setItem('sg-lang','ar')}catch(e){}">العربية</a><a href="../es/" hreflang="es" lang="es" aria-current="page" onclick="try{localStorage.setItem('sg-lang','es')}catch(e){}">Español</a></div></details><a class="btn btn-ghost" href="#contact">Solicita una demo</a><a class="btn btn-sun" href="../app/">Iniciar sesión</a></div>
+ <div style="display:flex;gap:8px;align-items:center"><details class="lng"><summary aria-label="Language: Español"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span lang="es">Español</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="lng-m"><a href="../" hreflang="he" lang="he" onclick="try{localStorage.setItem('sg-lang','he')}catch(e){}">עברית</a><a href="../en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('sg-lang','en')}catch(e){}">English</a><a href="../ru/" hreflang="ru" lang="ru" onclick="try{localStorage.setItem('sg-lang','ru')}catch(e){}">Русский</a><a href="../ar/" hreflang="ar" lang="ar" onclick="try{localStorage.setItem('sg-lang','ar')}catch(e){}">العربية</a><a href="../es/" hreflang="es" lang="es" aria-current="page" onclick="try{localStorage.setItem('sg-lang','es')}catch(e){}">Español</a><a href="../de/" hreflang="de" lang="de" onclick="try{localStorage.setItem('sg-lang','de')}catch(e){}">Deutsch</a><a href="../it/" hreflang="it" lang="it" onclick="try{localStorage.setItem('sg-lang','it')}catch(e){}">Italiano</a><a href="../fr/" hreflang="fr" lang="fr" onclick="try{localStorage.setItem('sg-lang','fr')}catch(e){}">Français</a><a href="../pt/" hreflang="pt" lang="pt" onclick="try{localStorage.setItem('sg-lang','pt')}catch(e){}">Português</a></div></details><a class="btn btn-ghost" href="#contact">Solicita una demo</a><a class="btn btn-sun" href="../app/">Iniciar sesión</a></div>
 </div></nav>
 
 <header class="hero">
@@ -525,7 +529,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 
 <footer><div class="wrap">
  <a href="#" class="brand"><img src="../assets/jasale-icon.svg" alt="" style="width:26px;height:26px"><span class="word" style="font-size:18px"><b>Ja</b><span>Sale</span></span></a>
- <div>© <span id="yr">2026</span> JaSale · <span class="mail" style="font-weight:400">hello@jasale.app</span></div>
+ <div>© <span id="yr">2026</span> JaSale · <span class="mail" style="font-weight:400">hello@jasale.app</span> · <a class="sgco" href="https://sinai-global.com/es/" lang="es" style="color:inherit;text-decoration:underline;text-underline-offset:3px;white-space:nowrap">Una empresa de SINAI Global</a></div>
 </div></footer>
 <script>
 try{document.getElementById('yr').textContent=new Date().getFullYear();}catch(e){}

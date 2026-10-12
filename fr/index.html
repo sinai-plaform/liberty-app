@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>
+/* returning users go straight into the app; otherwise pick the page language */
+var __go=0;
+(function(){try{var s=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;var me=localStorage.getItem('lib_me');if((s||me)&&location.hash!=='#site'){__go=1;location.replace('../app/');}}catch(e){}})();
+if(!__go)(function(H,P){var s=null;try{s=localStorage.getItem('sg-lang')}catch(e){}function il(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone==='Asia/Jerusalem'}catch(e){return false}}function pick(){var ls=navigator.languages||[navigator.language||''];for(var i=0;i<ls.length;i++){var c=(ls[i]||'').slice(0,2).toLowerCase();if(c==='iw')c='he';if(P[c])return(c==='en'&&il())?'he':c}return il()?'he':'en'}var w=(s&&P[s])?s:pick();if(w!==H)location.replace(P[w]+location.search+location.hash)})('fr',{he:'/',en:'/en/',ru:'/ru/',ar:'/ar/',es:'/es/',de:'/de/',it:'/it/',fr:'/fr/',pt:'/pt/'});
+document.documentElement.className+=' js';
+</script>
+<title>JaSale – Chef d'entreprise, vous méritez la sérénité sur le terrain</title>
+<meta name="description" content="JaSale organise toute la journée des commerciaux terrain : tournées quotidiennes, hebdomadaires et mensuelles, catalogue et commandes, encaissements par compte client, agenda et rapports – même hors ligne. Adapté à tous les secteurs.">
+<meta name="theme-color" content="#46647F">
+<link rel="alternate" hreflang="he" href="https://jasale.app/">
+<link rel="alternate" hreflang="en" href="https://jasale.app/en/">
+<link rel="alternate" hreflang="ru" href="https://jasale.app/ru/">
+<link rel="alternate" hreflang="ar" href="https://jasale.app/ar/">
+<link rel="alternate" hreflang="es" href="https://jasale.app/es/">
+<link rel="alternate" hreflang="de" href="https://jasale.app/de/">
+<link rel="alternate" hreflang="it" href="https://jasale.app/it/">
+<link rel="alternate" hreflang="fr" href="https://jasale.app/fr/">
+<link rel="alternate" hreflang="pt" href="https://jasale.app/pt/">
+<link rel="alternate" hreflang="x-default" href="https://jasale.app/en/">
+<link rel="icon" type="image/svg+xml" href="../assets/jasale-icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta property="og:title" content="JaSale – Chef d'entreprise, vous méritez la sérénité sur le terrain">
+<meta property="og:description" content="Tournées, commandes, encaissements et rappels – organisés à l'avance, dans une seule appli qui fonctionne même hors ligne.">
+<meta property="og:image" content="https://jasale.app/assets/apple-touch-icon.png">
+<meta property="og:locale" content="fr_FR">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Rubik:wght@500;700;800;900&family=Outfit:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@600&display=swap">
+<style>
+/* Lagoon & Sunshine: luminous light hero with magic wand → aqua marquee → light bento → tossed industry tiles → deep-aqua security → sunny close */
+:root{
+ --aqua-b:#6C8FB0;--aqua:#46647F;--aqua-d:#22384F;--aqua-t:#EEF2F5;
+ --sun:#A68A5B;--sun-ink:#251B08;--sun-t:#F5EEDF;--coral:#6C8FB0;--coral-t:#EEF2F5;--lilac:#BCCCDB;--lilac-t:#EEF2F5;
+ --bg:#F7F6F3;--sur:#fff;--line:#E6E4DF;--head:#1B2B3B;--ink:#1B2B3B;--mut:#616B74;
+ --star:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%);
+ --display:'Rubik','IBM Plex Sans Hebrew',system-ui,sans-serif;--body:'IBM Plex Sans Hebrew',system-ui,sans-serif;--brand:'Outfit',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;color:var(--head)}
+.brand{display:inline-flex;align-items:center;gap:10px;direction:ltr}
+.brand img{width:34px;height:34px}
+.word{font-family:var(--brand);font-size:24px;letter-spacing:-.4px;line-height:1;color:var(--head)}
+.word b{font-weight:700}.word span{font-weight:400;color:var(--aqua)}
+/* buttons */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 24px;border-radius:14px;font-weight:700;font-size:15.5px;border:none;cursor:pointer;transition:transform .18s,box-shadow .18s,background .18s;font-family:var(--body)}
+.btn:hover{transform:translateY(-2px)}
+.btn:focus-visible{outline:3px solid var(--aqua-b);outline-offset:3px}
+.btn-sun{background:linear-gradient(180deg,#E2D5BC,var(--sun));color:var(--sun-ink);box-shadow:0 10px 26px rgba(166,138,91,.42),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-sun:hover{box-shadow:0 14px 32px rgba(255,150,40,.5),inset 0 1px 0 rgba(255,255,255,.55)}
+.btn-sun::after{content:"";position:absolute;top:0;bottom:0;width:46%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-18deg);animation:sheen 4.6s ease-in-out 1.2s infinite}
+@keyframes sheen{0%{left:-60%}28%,100%{left:130%}}
+.btn-ghost{background:rgba(255,255,255,.75);color:var(--aqua-d);border:1px solid var(--line);box-shadow:0 6px 18px rgba(70,100,127,.08);backdrop-filter:blur(6px)}
+.btn-ghost:hover{border-color:#C2D1DE}
+.btn-aqua{background:var(--aqua);color:#fff;box-shadow:0 8px 20px rgba(70,100,127,.28)}
+.btn-line{background:#fff;color:var(--aqua-d);border:1px solid rgba(255,255,255,.7)}
+/* nav */
+nav{position:absolute;top:0;left:0;right:0;z-index:30}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:74px}
+.links{display:flex;gap:28px;font-size:14.5px;font-weight:600;color:var(--mut)}
+.links a{transition:color .15s}.links a:hover{color:var(--aqua)}
+nav .btn{height:42px;padding:0 18px;font-size:14px}
+/* hero */
+.hero{position:relative;background:linear-gradient(160deg,#EEF2F5 0%,#FFFFFF 48%,#F5EEDF 100%);color:var(--ink);padding:130px 0 0;overflow:hidden;isolation:isolate}
+.blob{position:absolute;border-radius:50%;pointer-events:none;z-index:0;will-change:transform}
+.blob.k1{width:620px;height:620px;left:-140px;top:-160px;background:radial-gradient(circle,rgba(108,143,176,.34),rgba(108,143,176,0) 66%);animation:driftA 22s ease-in-out infinite alternate}
+.blob.k2{width:560px;height:560px;right:-160px;bottom:-200px;background:radial-gradient(circle,rgba(166,138,91,.36),rgba(166,138,91,0) 66%);animation:driftB 26s ease-in-out infinite alternate}
+.blob.k3{width:380px;height:380px;left:30%;bottom:-120px;background:radial-gradient(circle,rgba(108,143,176,.22),rgba(108,143,176,0) 66%);animation:driftC 19s ease-in-out infinite alternate}
+.blob.k4{width:300px;height:300px;right:24%;top:-80px;background:radial-gradient(circle,rgba(188,204,219,.14),rgba(188,204,219,0) 66%);animation:driftB 24s ease-in-out infinite alternate-reverse}
+@keyframes driftA{to{transform:translate(120px,80px) scale(1.12)}}
+@keyframes driftB{to{transform:translate(-110px,-70px) scale(1.08)}}
+@keyframes driftC{to{transform:translate(90px,-90px) scale(1.15)}}
+.hero .route{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none;z-index:0}
+.route path{fill:none;stroke:#AFC1D3;stroke-width:2;stroke-dasharray:6 10;stroke-linecap:round}
+.route .draw{stroke:var(--aqua-b);stroke-dasharray:1400;stroke-dashoffset:1400;stroke-width:3;animation:draw 5s ease-out .4s forwards}
+.route circle{fill:var(--sun)}
+.route .pin{opacity:0;animation:pop .5s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:1.12fr .88fr;gap:30px;align-items:end}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.8);border:1px solid var(--line);color:var(--aqua-d);font-weight:600;font-size:13px;padding:7px 14px;border-radius:99px;box-shadow:0 6px 18px rgba(70,100,127,.08)}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 4px rgba(108,143,176,.18)}
+.hero h1{font-size:clamp(30px,4.9vw,64px);line-height:1.08;letter-spacing:-.025em;font-weight:900;margin:22px 0 20px}
+.hero h1 .l1{display:block;font-size:.5em;font-weight:700;color:var(--mut);letter-spacing:-.01em;margin-bottom:.12em}
+.hero h1 .l2{display:block;white-space:nowrap}
+.hero h1 em{font-style:normal;color:var(--coral);position:relative;white-space:nowrap;display:inline-block}
+.hero h1 em::after{content:"";position:absolute;inset-inline:-.04em;bottom:.08em;height:.2em;background:linear-gradient(90deg,var(--sun),#E2D5BC);opacity:.55;border-radius:6px;z-index:-1}
+.hero h1 em::before{content:"";position:absolute;width:.26em;height:.26em;top:-.06em;left:-.14em;background:var(--sun);clip-path:var(--star);animation:tw 2.4s ease-in-out infinite}
+.lead{font-size:clamp(17px,1.6vw,20px);color:var(--mut);max-width:540px;margin:0 0 30px}
+.lead b{color:var(--head);font-weight:600}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+.hero-copy{padding-bottom:90px;min-width:0}
+.trust{display:flex;gap:20px;flex-wrap:wrap;margin-top:30px;color:var(--aqua-d);font-size:13.5px;font-weight:600}
+.trust span{display:inline-flex;align-items:center;gap:7px}
+.phones{position:relative;height:600px;min-width:0}
+.phone{position:absolute;width:250px;border-radius:38px;padding:9px;background:#1B2B3B;box-shadow:0 40px 80px rgba(8,94,91,.28),0 12px 30px rgba(31,46,45,.18),0 0 0 1px rgba(255,255,255,.4)}
+.phone img{display:block;width:100%;border-radius:30px;aspect-ratio:390/844;object-fit:cover;object-position:top}
+.phone::before{content:"";position:absolute;top:17px;left:50%;transform:translateX(-50%);width:80px;height:20px;border-radius:12px;background:#1B2B3B;z-index:2}
+.p1{left:50%;transform:translateX(-50%);bottom:-70px;z-index:3;width:270px}
+.p2{left:4%;bottom:-120px;transform:rotate(-8deg);z-index:2}
+.p3{right:2%;bottom:-120px;transform:rotate(8deg);z-index:2}
+.tag{position:absolute;z-index:4;background:#fff;color:var(--head);border-radius:14px;padding:10px 14px;box-shadow:0 16px 34px rgba(8,94,91,.18);border:1px solid var(--line);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;white-space:nowrap;animation:bob 6s ease-in-out infinite}
+.tag .ti{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}
+.tag b{color:var(--aqua)}
+.t1{top:40px;right:2%}.t2{top:250px;left:-4%;animation-delay:-3s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+/* magic wand */
+.wand{position:absolute;z-index:5;left:-6%;top:-40px;width:150px;height:150px;pointer-events:none;transform-origin:22% 88%;animation:sway 7s ease-in-out infinite}
+.wand svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 10px 14px rgba(8,94,91,.22))}
+.wand .tip{transform-box:fill-box;transform-origin:center;animation:tipPulse 2.6s ease-in-out infinite}
+.wand .glow{animation:glow 2.6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:translate(0,0) rotate(-7deg)}50%{transform:translate(8px,-14px) rotate(7deg)}}
+@keyframes tipPulse{50%{transform:scale(1.12) rotate(12deg)}}
+@keyframes glow{50%{opacity:.35}}
+.trail{position:absolute;left:75%;top:24%;width:0;height:0}
+.sp{position:absolute;left:0;top:0;width:var(--s,10px);height:var(--s,10px);margin:calc(var(--s,10px)/-2) 0 0 calc(var(--s,10px)/-2);background:var(--c,var(--sun));opacity:0}
+.sp.st{clip-path:var(--star)}
+.sp.dot{border-radius:50%}
+.trail .sp{animation:fall var(--t,3.4s) ease-out var(--d,0s) infinite}
+@keyframes fall{0%{opacity:0;transform:translate(0,0) scale(.2) rotate(0)}15%{opacity:1;transform:translate(calc(var(--dx)*.15),calc(var(--dy)*.15)) scale(1) rotate(30deg)}60%{opacity:.9}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.35) rotate(140deg)}}
+.burst .sp{animation:pop2 1.3s ease-out forwards}
+@keyframes pop2{0%{opacity:0;transform:translate(0,0) scale(.2)}25%{opacity:1;transform:translate(calc(var(--dx)*.45),calc(var(--dy)*.45)) scale(1.1) rotate(40deg)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3) rotate(120deg)}}
+@keyframes tw{0%,100%{transform:scale(.7) rotate(0);opacity:.7}50%{transform:scale(1.15) rotate(45deg);opacity:1}}
+/* industries marquee */
+.ind{background:linear-gradient(90deg,var(--aqua-d),var(--aqua) 50%,var(--aqua-d));color:#fff;overflow:hidden;padding:17px 0;position:relative}
+.marq{display:flex;width:max-content;animation:marq 60s linear infinite;font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.01em}
+.marq span{display:inline-flex;align-items:center;gap:30px;padding-inline-end:30px;white-space:nowrap}
+.marq span::after{content:"";width:9px;height:9px;background:var(--sun);clip-path:var(--star);transform:scale(1.3)}
+.marq span:nth-child(3n+2)::after{background:#BCCCDB}
+.marq span:nth-child(3n)::after{background:#CBD8E4}
+@keyframes marq{to{transform:translateX(50%)}}
+/* sections */
+section{padding:96px 0}
+.sh{max-width:720px;margin:0 0 48px}
+.sh.c{text-align:center;margin-inline:auto}
+.kicker{display:inline-flex;align-items:center;gap:8px;color:var(--aqua);font-weight:700;font-size:13.5px;letter-spacing:.04em;margin-bottom:12px}
+.kicker::before{content:"";width:11px;height:11px;background:var(--coral);clip-path:var(--star);animation:tw 3s ease-in-out infinite}
+.sh h2{font-size:clamp(32px,4.4vw,52px);line-height:1.08;letter-spacing:-.022em;font-weight:800;margin-bottom:16px}
+.sh p{color:var(--mut);font-size:18px;margin:0}
+/* bento */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.b{background:var(--sur);border:1px solid var(--line);border-radius:22px;padding:28px;position:relative;overflow:hidden;min-width:0;transition:transform .25s,box-shadow .25s;box-shadow:0 1px 2px rgba(31,46,45,.04)}
+.b:hover{transform:translateY(-4px);box-shadow:0 22px 44px -18px rgba(70,100,127,.28)}
+.b h3{font-size:22px;letter-spacing:-.01em;margin:14px 0 8px;font-weight:700}
+.b p{margin:0;color:var(--mut);font-size:15.5px}
+.b .ic{width:48px;height:48px;border-radius:14px;background:var(--aqua-t);display:flex;align-items:center;justify-content:center}
+.b .ic.sun{background:var(--sun-t)}.b .ic.cor{background:var(--coral-t)}.b .ic.lil{background:var(--lilac-t)}
+.b.w4{grid-column:span 4}.b.w2{grid-column:span 2}.b.w3{grid-column:span 3}
+.b.feature{background:radial-gradient(420px 260px at 0% 100%,rgba(166,138,91,.28),transparent 70%),linear-gradient(150deg,#46647F,var(--aqua-d));color:#fff;border:none;box-shadow:0 24px 50px -20px rgba(70,100,127,.55)}
+.b.feature h3{color:#fff}
+.b.feature p{color:#E3EAF0}.b.feature .ic{background:rgba(255,255,255,.16)}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:6px 13px;font-size:13px;font-weight:700}
+.b .pill{background:var(--aqua-t);border-color:transparent;color:var(--aqua-d)}
+.b.feature .pill{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.26);color:#fff}
+.mini-route{position:absolute;left:-10px;bottom:-10px;width:300px;height:180px;opacity:.95}
+.mini-route path{fill:none;stroke:var(--sun);stroke-width:3;stroke-dasharray:7 9;stroke-linecap:round}
+.mini-route circle{fill:#fff}
+.soon{display:inline-flex;align-items:center;gap:6px;margin-top:16px;background:var(--sun-t);color:#5E4A28;border:1px solid #E2D5BC;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:700}
+.ledger{margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px}
+.ledger div{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.ledger div:first-child{border-top:none;background:#EEF2F5;color:var(--mut);font-weight:700;font-size:12px}
+.ledger .ok{color:#0E7D55;font-weight:700}.ledger .late{color:#46647F;font-weight:700}
+/* fit + tossed tiles */
+.fit{display:grid;grid-template-columns:1fr 1.05fr;gap:56px;align-items:center}
+.fit h2{font-size:clamp(30px,4vw,48px);line-height:1.08;letter-spacing:-.02em;font-weight:800;margin-bottom:16px}
+.toss{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 12px;padding:18px 6px}
+.toss::before{content:"";position:absolute;inset:6% 4%;border-radius:40px;background:radial-gradient(closest-side,rgba(108,143,176,.16),transparent);z-index:-1}
+.tile{transform:translate(var(--jx,0),var(--jy,0)) rotate(var(--r,0deg));z-index:var(--z,1);position:relative}
+.face{height:100%;min-height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;padding:14px 8px 12px;border-radius:20px;background:var(--tb,var(--aqua-t));border:1px solid rgba(255,255,255,.9);box-shadow:0 14px 26px -12px var(--tsh,rgba(70,100,127,.45)),0 2px 4px rgba(31,46,45,.05);font-weight:700;font-size:14.5px;line-height:1.25;color:var(--head);transition:transform .25s cubic-bezier(.3,1.6,.5,1),box-shadow .25s}
+.face:hover{transform:translateY(-7px) rotate(calc(var(--r,0deg) * -.6)) scale(1.04);box-shadow:0 24px 34px -14px var(--tsh,rgba(70,100,127,.5))}
+.face .ico{width:46px;height:46px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px -4px var(--tsh,rgba(70,100,127,.4))}
+.face svg{width:26px;height:26px;fill:none;stroke:var(--tc,var(--aqua));stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.c-aq{--tb:linear-gradient(160deg,#EEF2F5,#E3EAF0);--tc:#46647F;--tsh:rgba(70,100,127,.42)}
+.c-su{--tb:linear-gradient(160deg,#F7F3EA,#EDE3CF);--tc:#A68A5B;--tsh:rgba(230,150,0,.42)}
+.c-co{--tb:linear-gradient(160deg,#EEF2F5,#DFE7EE);--tc:#46647F;--tsh:rgba(108,143,176,.42)}
+.c-li{--tb:linear-gradient(160deg,#F1F4F7,#E1E8EF);--tc:#6C8FB0;--tsh:rgba(188,204,219,.42)}
+.tile.more{grid-column:2 / span 2}
+.tile.more .face{min-height:64px;flex-direction:row;background:#fff;border:2px dashed #B5C7D7;color:var(--aqua-d);font-size:16px;box-shadow:none}
+.tile.more .ico{width:34px;height:34px;border-radius:50%;background:var(--sun);box-shadow:0 6px 14px -4px rgba(166,138,91,.7)}
+.tile.more svg{stroke:var(--sun-ink);stroke-width:2.6;width:18px;height:18px}
+.js .toss .tile{opacity:0}
+.toss.in .tile{animation:toss 1.15s cubic-bezier(.22,.75,.3,1) calc(var(--i,0) * 80ms) both}
+@keyframes toss{
+ 0%{opacity:0;transform:translate(calc(var(--jx,0px) + var(--fx,0px) * .35),calc(var(--jy,0px) - 460px)) rotate(var(--fr,0deg)) scale(1.1)}
+ 14%{opacity:1}
+ 60%{transform:translate(var(--jx,0px),calc(var(--jy,0px) + 16px)) rotate(calc(var(--r,0deg) * -.7)) scale(.98)}
+ 76%{transform:translate(var(--jx,0px),calc(var(--jy,0px) - 10px)) rotate(calc(var(--r,0deg) * 1.3)) scale(1.01)}
+ 89%{transform:translate(var(--jx,0px),calc(var(--jy,0px) + 3px)) rotate(calc(var(--r,0deg) * .9))}
+ 100%{opacity:1;transform:translate(var(--jx,0px),var(--jy,0px)) rotate(var(--r,0deg)) scale(1)}
+}
+.ticks{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:12px}
+.ticks li{display:flex;gap:11px;align-items:flex-start;font-size:16px;color:var(--head)}
+.ticks li::before{content:"";flex:none;width:22px;height:22px;margin-top:2px;border-radius:50%;background:var(--aqua-t) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%2308807C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
+/* split */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.split.rev .txt{order:2}
+.txt h2{font-size:clamp(30px,3.6vw,44px);line-height:1.1;letter-spacing:-.02em;font-weight:800;margin-bottom:16px}
+.txt p{color:var(--mut);font-size:17px;margin:0}
+.shot{display:flex;justify-content:center;position:relative}
+.shot .phone{position:relative;width:280px}
+.shot::before{content:"";position:absolute;width:420px;height:420px;max-width:110%;border-radius:50%;background:radial-gradient(circle at 40% 40%,rgba(108,143,176,.30),transparent 62%),radial-gradient(circle at 70% 70%,rgba(166,138,91,.28),transparent 58%);top:50%;left:50%;transform:translate(-50%,-50%)}
+.split.rev .shot::before{background:radial-gradient(circle at 40% 40%,rgba(108,143,176,.20),transparent 62%),radial-gradient(circle at 70% 65%,rgba(108,143,176,.30),transparent 58%)}
+/* security */
+.sec{background:radial-gradient(500px 300px at 100% 0%,rgba(108,143,176,.45),transparent 70%),linear-gradient(140deg,var(--aqua-d) 0%,var(--aqua) 100%);color:#fff;border-radius:32px;padding:56px;display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:center;position:relative;overflow:hidden;box-shadow:0 30px 60px -28px rgba(34,56,79,.6)}
+.sec h2{font-size:clamp(30px,3.6vw,44px);line-height:1.1;font-weight:800;margin:0 0 14px;color:#fff}
+.sec p{color:#DCE5EC;margin:0;font-size:17px}
+.sec .kicker{color:var(--sun)}.sec .kicker::before{background:var(--sun)}
+.sec>div{position:relative;z-index:1}.sec .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sec .it{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:20px;transition:background .2s}
+.sec .it:hover{background:rgba(255,255,255,.14)}
+.sec .it b{display:block;font-size:16px;margin-bottom:4px}
+.sec .it span{color:#D3DEE8;font-size:14.5px}
+.shield{position:absolute;z-index:0;left:-60px;bottom:-80px;width:280px;opacity:.08}
+/* setup */
+.setup h2.big{font-size:clamp(40px,7vw,92px);line-height:1.02;letter-spacing:-.03em;font-weight:900;margin:0 0 44px}
+.setup h2.big span{display:block}
+.setup h2.big span+span{color:var(--aqua);background:linear-gradient(90deg,var(--aqua-b),var(--aqua));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;width:fit-content;padding-bottom:.06em}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{background:#fff;border:1px solid var(--line);border-radius:22px;padding:26px;transition:transform .25s,box-shadow .25s}
+.step:hover{transform:translateY(-4px);box-shadow:0 20px 40px -18px rgba(70,100,127,.3)}
+.step .n{font-family:var(--brand);font-weight:700;font-size:15px;color:var(--aqua);background:var(--aqua-t);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step:nth-child(2) .n{background:var(--sun-t);color:#22384F}.step:nth-child(3) .n{background:var(--coral-t);color:#46647F}
+.step h3{font-size:19px;margin-bottom:6px}.step p{margin:0;color:var(--mut);font-size:15px}
+/* cta */
+.cta{position:relative;overflow:hidden;background:radial-gradient(400px 240px at 10% 0%,rgba(255,255,255,.35),transparent 70%),linear-gradient(135deg,var(--sun),#A68A5B);color:var(--sun-ink);border-radius:32px;padding:56px;display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;box-shadow:0 30px 60px -28px rgba(255,138,61,.7)}
+.cta>div{position:relative;z-index:1}
+.cta h2{font-size:clamp(28px,3.6vw,44px);line-height:1.1;font-weight:800;margin:0 0 8px;color:var(--sun-ink)}
+.cta p{margin:0;font-size:17px;color:#3A2D14}
+.cta .btn-dark{background:var(--head);color:#fff;box-shadow:0 10px 24px rgba(31,46,45,.3)}
+.cta .deco{position:absolute;background:#fff;clip-path:var(--star);opacity:.75;animation:tw 3s ease-in-out infinite;pointer-events:none}
+.mail{font-family:var(--brand);font-weight:700;direction:ltr;unicode-bidi:isolate}
+footer{padding:40px 0 56px;color:var(--mut);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){
+ .marq,.route .draw,.route .pin,.blob,.tag,.wand,.wand .tip,.wand .glow,.btn-sun::after,.kicker::before,.hero h1 em::before,.cta .deco{animation:none!important}
+ .route .draw{stroke-dashoffset:0}.route .pin{opacity:1}
+ .trail .sp{animation:none;opacity:.85;transform:translate(calc(var(--dx)*var(--k,.5)),calc(var(--dy)*var(--k,.5))) scale(.8)}
+ .btn-sun::after{display:none}
+ .js .toss .tile{opacity:1}.toss.in .tile{animation:none}
+ .face,.b,.step,.btn{transition:none}
+}
+@media (max-width:980px){
+ .hero .wrap,.fit,.split,.sec{grid-template-columns:1fr}
+ .split.rev .txt{order:0}
+ .links{display:none}
+ .hero-copy{padding-bottom:20px}
+ .phones{height:520px}
+ .bento{grid-template-columns:1fr 1fr}
+ .b.w4,.b.w3,.b.w2{grid-column:span 2}
+ .steps{grid-template-columns:1fr}
+ .sec{padding:40px 28px}
+ .wand{left:2%;top:-10px}
+}
+@media (max-width:560px){
+ .hero{padding-top:104px}
+ .hero h1{font-size:min(9.2vw,40px)}
+ .phones{height:440px}
+ .phone{width:200px}.p1{width:220px}
+ .p2{left:-14%}.p3{right:-14%}
+ .t2{display:none}.t1{right:0;top:10px}
+ .wand{width:104px;height:104px;left:-2%;top:0}
+ section{padding:68px 0}
+ .sec .grid{grid-template-columns:1fr}
+ .cta{padding:36px 24px}
+ nav .btn-ghost{display:none}
+ .b{padding:22px}
+ .mini-route{opacity:.3;width:220px;height:132px}
+ .toss{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 9px;padding:10px 2px}
+ .tile{transform:translate(calc(var(--jx,0px) * .4),calc(var(--jy,0px) * .5)) rotate(calc(var(--r,0deg) * .55))}
+ .tile.more{grid-column:1 / -1}
+ .face{min-height:104px;font-size:13px;padding:12px 4px 10px;border-radius:16px}
+ .face .ico{width:40px;height:40px;border-radius:12px}
+ .face svg{width:23px;height:23px}
+ @keyframes toss{
+  0%{opacity:0;transform:translate(calc(var(--jx,0px) * .4),-420px) rotate(var(--fr,0deg))}
+  14%{opacity:1}
+  60%{transform:translate(calc(var(--jx,0px) * .4),calc(var(--jy,0px) * .5 + 12px)) rotate(calc(var(--r,0deg) * -.4))}
+  78%{transform:translate(calc(var(--jx,0px) * .4),calc(var(--jy,0px) * .5 - 7px)) rotate(calc(var(--r,0deg) * .75))}
+  100%{opacity:1;transform:translate(calc(var(--jx,0px) * .4),calc(var(--jy,0px) * .5)) rotate(calc(var(--r,0deg) * .55))}
+ }
+}
+.hero h1 em{background:linear-gradient(90deg,#22384F,#6C8FB0);-webkit-background-clip:text;background-clip:text;color:transparent}.hero h1 em::after{background:linear-gradient(90deg,#BCCCDB,#EEF2F5);opacity:.45}.hero h1 em::before{background:#A68A5B}
+/* LTR mirroring for the English page */
+@keyframes marq{to{transform:translateX(-50%)}}
+.hero h1 .l2{white-space:normal}
+.hero h1 em::before{left:auto;right:-.14em}
+.b.feature{background:radial-gradient(420px 260px at 100% 100%,rgba(166,138,91,.28),transparent 70%),linear-gradient(210deg,#46647F,var(--aqua-d))}
+.mini-route{left:auto;right:-10px;transform:scaleX(-1)}
+.sec{background:radial-gradient(500px 300px at 0% 0%,rgba(108,143,176,.45),transparent 70%),linear-gradient(220deg,var(--aqua-d) 0%,var(--aqua) 100%)}
+.shield{left:auto;right:-60px}
+.cta{background:radial-gradient(400px 240px at 90% 0%,rgba(255,255,255,.35),transparent 70%),linear-gradient(225deg,var(--sun),#A68A5B)}
+@media (max-width:560px){}
+/* language menu */
+.lng{position:relative}
+.lng summary{list-style:none;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 12px;border-radius:12px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;user-select:none;transition:color .15s,background .15s;white-space:nowrap}
+.lng summary::-webkit-details-marker{display:none}
+.lng summary:hover,.lng[open] summary{color:var(--aqua);background:rgba(255,255,255,.75)}
+.lng summary:focus-visible{outline:3px solid var(--aqua-b);outline-offset:2px}
+.lng .chev{transition:transform .2s;opacity:.7}
+.lng[open] .chev{transform:rotate(180deg)}
+.lng-m{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:40;min-width:168px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 22px 44px -16px rgba(34,56,79,.35),0 4px 12px rgba(31,46,45,.06);display:grid;gap:2px;animation:lngIn .16s ease-out}
+.lng-m a{display:block;padding:9px 12px;border-radius:10px;font-size:14.5px;font-weight:600;color:var(--head);transition:background .12s,color .12s}
+.lng-m a:hover,.lng-m a:focus-visible{background:var(--aqua-t);color:var(--aqua);outline:none}
+.lng-m a[aria-current]{color:var(--aqua);background:var(--aqua-t)}
+.lng-m a[aria-current]::after{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--sun);margin-inline-start:8px;vertical-align:middle}
+.lng-m a[lang=ar]{font-family:'IBM Plex Sans Arabic',var(--body)}
+@keyframes lngIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (max-width:560px){.lng summary{padding:0 8px;gap:5px;font-size:13.5px}.lng summary svg:first-child{display:none}}
+@media (max-width:380px){.lng summary{padding:0 6px}}
+/* Signature background 2026-10: faint road network + dashed daily route; focal point = the "current stop" */
+:root{--roads:rgba(27,43,59,.10);--stop:#A68A5B;--stop-soft:rgba(166,138,91,.24);--stop-glow:rgba(166,138,91,.12)}
+html,body{overflow-x:clip}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.05;mix-blend-mode:overlay;
+ background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.stopbox{position:absolute;inset:0;max-width:1160px;margin:0 auto;pointer-events:none;z-index:0}
+.stop{position:absolute;top:124px;inset-inline-start:calc(20px + (100% - 70px) * .56 - 110px);width:12px;height:12px}
+.stop::before{content:"";position:absolute;left:50%;top:50%;width:1400px;height:1100px;transform:translate(-50%,-50%);
+ background:var(--roads);-webkit-mask:url(/assets/roads.svg) center/contain no-repeat;mask:url(/assets/roads.svg) center/contain no-repeat}
+.stop::after{content:"";position:absolute;left:50%;top:50%;width:900px;height:700px;transform:translate(-50%,-50%);
+ background:radial-gradient(closest-side,var(--stop-glow),transparent);z-index:-1}
+.stop .dot{position:absolute;inset:0;border-radius:50%;background:var(--stop);box-shadow:0 0 0 5px var(--stop-soft)}
+.stop .lbl{position:absolute;left:22px;top:-4px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:var(--mut);white-space:nowrap;direction:ltr}
+@media (max-width:980px){
+ .stop .dot,.stop .lbl{display:none}
+ .stop{top:auto;bottom:calc(520px + 44px);inset-inline-start:auto;left:62%}
+}
+@media (max-width:560px){.stop{bottom:calc(440px + 44px)}}
+@media (prefers-reduced-motion:no-preference){
+ .stop::before{animation:roadDrift 36s ease-in-out infinite alternate}
+ @keyframes roadDrift{from{transform:translate(-50%,-50%) scale(1) rotate(0)}to{transform:translate(-50%,-50%) scale(1.06) rotate(3deg)}}
+ .stop .dot{animation:stopPing 3s ease-out infinite}
+ @keyframes stopPing{0%{box-shadow:0 0 0 0 var(--stop-soft),0 0 0 5px var(--stop-soft)}100%{box-shadow:0 0 0 26px transparent,0 0 0 5px var(--stop-soft)}}
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+ <a href="#" class="brand" aria-label="JaSale"><img src="../assets/jasale-icon.svg" alt=""><span class="word"><b>Ja</b><span>Sale</span></span></a>
+ <div class="links"><a href="#features">Fonctionnalités</a><a href="#fit">Tous secteurs</a><a href="#managers">Pour les managers</a><a href="#security">Sécurité</a><a href="#setup">Mise en place</a></div>
+ <div style="display:flex;gap:8px;align-items:center"><details class="lng"><summary aria-label="Langue: Français"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span lang="fr">Français</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="lng-m"><a href="../" hreflang="he" lang="he" onclick="try{localStorage.setItem('sg-lang','he')}catch(e){}">עברית</a><a href="../en/" hreflang="en" lang="en" onclick="try{localStorage.setItem('sg-lang','en')}catch(e){}">English</a><a href="../ru/" hreflang="ru" lang="ru" onclick="try{localStorage.setItem('sg-lang','ru')}catch(e){}">Русский</a><a href="../ar/" hreflang="ar" lang="ar" onclick="try{localStorage.setItem('sg-lang','ar')}catch(e){}">العربية</a><a href="../es/" hreflang="es" lang="es" onclick="try{localStorage.setItem('sg-lang','es')}catch(e){}">Español</a><a href="../de/" hreflang="de" lang="de" onclick="try{localStorage.setItem('sg-lang','de')}catch(e){}">Deutsch</a><a href="../it/" hreflang="it" lang="it" onclick="try{localStorage.setItem('sg-lang','it')}catch(e){}">Italiano</a><a href="../fr/" hreflang="fr" lang="fr" aria-current="page" onclick="try{localStorage.setItem('sg-lang','fr')}catch(e){}">Français</a><a href="../pt/" hreflang="pt" lang="pt" onclick="try{localStorage.setItem('sg-lang','pt')}catch(e){}">Português</a></div></details><a class="btn btn-ghost" href="#contact">Réserver une démo</a><a class="btn btn-sun" href="../app/">Se connecter</a></div>
+</div></nav>
+
+<header class="hero">
+ <div class="blob k1"></div><div class="blob k2"></div><div class="blob k3"></div><div class="blob k4"></div>
+ <svg class="route" viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <path d="M-20 640 C 180 560, 260 700, 420 600 S 640 420, 760 470 S 980 640, 1100 520 S 1300 300, 1480 340"/>
+  <path class="draw" d="M-20 640 C 180 560, 260 700, 420 600 S 640 420, 760 470 S 980 640, 1100 520 S 1300 300, 1480 340"/>
+  <circle class="pin" style="animation-delay:1.2s" cx="420" cy="600" r="7"/>
+  <circle class="pin" style="animation-delay:2.2s" cx="760" cy="470" r="7"/>
+  <circle class="pin" style="animation-delay:3.2s" cx="1100" cy="520" r="7"/>
+  <circle class="pin" style="animation-delay:4.2s" cx="1340" cy="330" r="7"/>
+ </svg>
+ <div class="stopbox" aria-hidden="true"><div class="stop"><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
+ <div class="fx" id="fx" aria-hidden="true"></div>
+ <div class="wrap">
+  <div class="hero-copy">
+   <span class="eyebrow"><i></i>L'appli des commerciaux terrain et des directeurs commerciaux</span>
+   <h1><span class="l1">Chef d'entreprise,</span><span class="l2">vous méritez la <em>sérénité</em> sur le terrain.</span></h1>
+   <p class="lead">Tournées, commandes, encaissements et rappels – <b>organisés à l'avance, dans une seule appli.</b> JaSale sait qui visiter aujourd'hui, qui a un paiement en attente et ce qu'il a commandé la dernière fois : chaque heure sur le terrain devient une heure de vente.</p>
+   <div class="ctas"><a class="btn btn-sun" href="#contact">Réserver une démo</a><a class="btn btn-ghost" href="../app/">Se connecter</a></div>
+   <div class="trust">
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2.2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.6a10 10 0 0 1 14 0M8.5 16.4a5 5 0 0 1 7 0"/><path d="M3 3l18 18"/></svg>Fonctionne aussi hors ligne</span>
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2.2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>Sans passer par un store</span>
+    <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>Vos données restent protégées</span>
+   </div>
+  </div>
+  <div class="phones" aria-hidden="true">
+   <div class="phone p2"><img src="../assets/week-fr.webp" alt=""></div>
+   <div class="phone p3"><img src="../assets/report-fr.webp" alt=""></div>
+   <div class="phone p1"><img src="../assets/home-fr.webp" alt="" loading="eager"></div>
+   <div class="tag t1"><span class="ti" style="background:var(--aqua-t)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span><span>Le plan de la semaine est <b>prêt</b></span></div>
+   <div class="tag t2"><span class="ti" style="background:var(--sun-t)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A68A5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></span><span>Encaissements en cours sur la tournée · <b>24 480 ₪</b></span></div>
+   <div class="wand" id="wand">
+    <svg viewBox="0 0 160 160">
+     <defs>
+      <linearGradient id="wg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#1B2B3B"/><stop offset="1" stop-color="#46647F"/></linearGradient>
+      <linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E2D5BC"/><stop offset="1" stop-color="#A68A5B"/></linearGradient>
+      <radialGradient id="gg"><stop offset="0" stop-color="#E2D5BC" stop-opacity=".9"/><stop offset="1" stop-color="#A68A5B" stop-opacity="0"/></radialGradient>
+     </defs>
+     <circle class="glow" cx="120" cy="38" r="40" fill="url(#gg)"/>
+     <line x1="30" y1="140" x2="108" y2="52" stroke="url(#wg)" stroke-width="9" stroke-linecap="round"/>
+     <line x1="94" y1="68" x2="105" y2="55.5" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".92"/>
+     <line x1="34" y1="132" x2="58" y2="105" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".25"/>
+     <g class="tip"><path d="M120 16 125.6 30.3 140.9 31.2 129 40.9 132.9 55.8 120 47.5 107.1 55.8 111 40.9 99.1 31.2 114.4 30.3Z" fill="url(#sg)" stroke="#A68A5B" stroke-width="2.5" stroke-linejoin="round"/><circle cx="116" cy="33" r="3" fill="#fff" opacity=".8"/></g>
+    </svg>
+    <div class="trail" id="trail"></div>
+   </div>
+  </div>
+ </div>
+</header>
+
+<div class="ind" aria-label="Secteurs"><div class="marq" id="marq">
+ <span>Pharmacie</span><span>Parfumerie &amp; cosmétique</span><span>Agroalimentaire</span><span>Boissons &amp; spiritueux</span><span>Outillage</span><span>Matériaux de construction</span><span>Industrie</span><span>Électricité &amp; éclairage</span><span>Plomberie &amp; peinture</span><span>Fournitures médicales &amp; dentaires</span><span>Optique</span><span>Animalerie</span><span>Entretien &amp; jetable</span><span>Emballage</span><span>Fournitures de bureau</span><span>Pièces auto &amp; lubrifiants</span><span>Accessoires mobiles &amp; électronique</span><span>Puériculture</span><span>Jouets &amp; cadeaux</span><span>Sport &amp; loisirs</span><span>Arts de la table &amp; cuisine</span><span>Équipement CHR</span><span>Agriculture &amp; jardinage</span><span>Mode &amp; chaussures</span>
+ <span aria-hidden="true">Pharmacie</span><span aria-hidden="true">Parfumerie &amp; cosmétique</span><span aria-hidden="true">Agroalimentaire</span><span aria-hidden="true">Boissons &amp; spiritueux</span><span aria-hidden="true">Outillage</span><span aria-hidden="true">Matériaux de construction</span><span aria-hidden="true">Industrie</span><span aria-hidden="true">Électricité &amp; éclairage</span><span aria-hidden="true">Plomberie &amp; peinture</span><span aria-hidden="true">Fournitures médicales &amp; dentaires</span><span aria-hidden="true">Optique</span><span aria-hidden="true">Animalerie</span><span aria-hidden="true">Entretien &amp; jetable</span><span aria-hidden="true">Emballage</span><span aria-hidden="true">Fournitures de bureau</span><span aria-hidden="true">Pièces auto &amp; lubrifiants</span><span aria-hidden="true">Accessoires mobiles &amp; électronique</span><span aria-hidden="true">Puériculture</span><span aria-hidden="true">Jouets &amp; cadeaux</span><span aria-hidden="true">Sport &amp; loisirs</span><span aria-hidden="true">Arts de la table &amp; cuisine</span><span aria-hidden="true">Équipement CHR</span><span aria-hidden="true">Agriculture &amp; jardinage</span><span aria-hidden="true">Mode &amp; chaussures</span>
+</div></div>
+
+<section id="features"><div class="wrap">
+ <div class="sh"><div class="kicker">Fonctionnalités</div><h2>Les outils qui transforment une visite en vente.</h2><p>JaSale a été conçue sur le terrain, avec des commerciaux, autour de ce qui se passe vraiment dans une journée de travail – pas autour de tableurs au bureau.</p></div>
+ <div class="bento">
+  <div class="b w4 feature">
+   <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div>
+   <h3>Planification quotidienne, hebdomadaire et mensuelle</h3>
+   <p style="max-width:430px">Chaque semaine, vous recevez un plan prêt à l'emploi : qui doit être visité, qui n'a pas été vu depuis longtemps et qui a un paiement à encaisser – réparti par secteur, dans un ordre de route logique, avec le nombre d'arrêts que vous avez choisi. Chaque minute sur le terrain compte.</p>
+   <div class="pills"><span class="pill">Quotidien</span><span class="pill">Hebdomadaire</span><span class="pill">Mensuel</span><span class="pill">Une carte pour chaque jour</span><span class="pill">Envoi au responsable</span></div>
+   <svg class="mini-route" viewBox="0 0 300 180" aria-hidden="true"><path d="M20 160 C 80 120, 60 60, 130 70 S 210 140, 280 30"/><circle cx="20" cy="160" r="6"/><circle cx="130" cy="70" r="6"/><circle cx="205" cy="112" r="6"/><circle cx="280" cy="30" r="6"/></svg>
+  </div>
+  <div class="b w2">
+   <div class="ic cor"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.6a10 10 0 0 1 14 0M8.5 16.4a5 5 0 0 1 7 0"/><circle cx="12" cy="20" r="1.3" fill="#46647F" stroke="none"/></svg></div>
+   <h3>Fonctionne aussi hors ligne</h3>
+   <p>Le catalogue et les clients sont sur le téléphone. Pas de réseau ? Commandes, visites et paiements sont enregistrés sur l'appareil et se synchronisent tout seuls dès que vous êtes de nouveau en ligne.</p>
+  </div>
+  <div class="b w3">
+   <div class="ic sun"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A68A5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></svg></div>
+   <h3>Encaissements précis par compte client</h3>
+   <p>Chaque client a un compte complet : conditions de paiement, délai de crédit, balance âgée et chaque facture ouverte avec son échéance. Les paiements sont rapprochés de la bonne facture, avec la photo du chèque ou du reçu – et le solde se met à jour instantanément.</p>
+   <div class="ledger" aria-hidden="true">
+    <div><span>Facture</span><span>Montant</span><span>Statut</span></div>
+    <div><span>#1050 · 30 jours</span><span>3 468 ₪</span><span class="ok">Payée</span></div>
+    <div><span>#1033 · 60 jours</span><span>2 140 ₪</span><span class="late">68 jours</span></div>
+   </div>
+   <span class="soon">⏳ Bientôt : intégration au logiciel comptable pour émettre les reçus</span>
+  </div>
+  <div class="b w3">
+   <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg></div>
+   <h3>Catalogue et commandes en déplacement</h3>
+   <p>Recherche par nom ou référence, avec photos, tarifs et bonus calculés automatiquement. La commande part au bureau par e-mail et WhatsApp, avec un document propre pour le client – en un geste.</p>
+   <div class="pills"><span class="pill">Catalogue par type de client</span><span class="pill">Bonus &amp; remises</span><span class="pill">PDF pour le client</span></div>
+  </div>
+  <div class="b w3">
+   <div class="ic lil"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6C8FB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></div>
+   <h3>Un agenda qui anticipe</h3>
+   <p>Rendez-vous, tournées prévues, visites de suivi et rappels – en vue hebdomadaire et mensuelle. JaSale place les rendez-vous selon la localisation et propose le meilleur jour pour chaque secteur, pour une journée fluide, sans kilomètres inutiles.</p>
+  </div>
+  <div class="b w3">
+   <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#46647F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+   <h3>Des rapports qui racontent l'histoire</h3>
+   <p>Visites, taux de conversion, couverture par secteur, nouveaux clients et clients qui ont cessé de commander – sur n'importe quelle période, à partager sur WhatsApp ou en PDF.</p>
+  </div>
+ </div>
+</div></section>
+
+<section id="fit" style="padding-top:20px"><div class="wrap fit">
+ <div>
+  <div class="kicker">Adapté à votre activité</div>
+  <h2>Tous les secteurs, tous les catalogues,<br>toutes les équipes.</h2>
+  <p style="color:var(--mut);font-size:17px;margin:0">JaSale s'adapte à votre façon de travailler : types de clients et catalogues, tarifs et bonus, secteurs et jours de livraison, et rôles – commercial, manager, back-office et chauffeur.</p>
+  <ul class="ticks"><li>Un catalogue distinct pour chaque type de client, avec ses propres prix et bonus</li><li>Secteurs, jours de livraison et tournées alignés sur votre logistique</li><li>Commissions et objectifs selon la politique de votre entreprise</li></ul>
+ </div>
+ <div class="toss" id="toss" role="list" aria-label="Exemples de secteurs">
+  <div class="tile" role="listitem" style="--i:0;--jx:4px;--jy:6px;--r:-6deg;--fx:-160px;--fr:-50deg;--z:2"><div class="face c-aq"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg></span>Pharmacie</div></div>
+  <div class="tile" role="listitem" style="--i:3;--jx:-6px;--jy:-4px;--r:5deg;--fx:120px;--fr:40deg;--z:3"><div class="face c-co"><span class="ico"><svg viewBox="0 0 24 24"><rect x="5" y="9" width="14" height="12" rx="3"/><path d="M9.5 9V6.5h5V9"/><rect x="10.5" y="3" width="3" height="3.5" rx=".8"/><path d="M15 3.5l2.5-1M15 5.5h2.5"/><circle cx="12" cy="15" r="2.2"/></svg></span>Parfumerie &amp; cosmétique</div></div>
+  <div class="tile" role="listitem" style="--i:1;--jx:3px;--jy:10px;--r:-3deg;--fx:-90px;--fr:-30deg;--z:1"><div class="face c-su"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 10h18l-1.8 8.6A2 2 0 0 1 17.2 20H6.8a2 2 0 0 1-2-1.4z"/><path d="M8 10l3-6M16 10l-3-6M9 14v3M12 14v3M15 14v3"/></svg></span>Agroalimentaire</div></div>
+  <div class="tile" role="listitem" style="--i:5;--jx:-4px;--jy:-2px;--r:8deg;--fx:180px;--fr:60deg;--z:2"><div class="face c-li"><span class="ico"><svg viewBox="0 0 24 24"><path d="M13.6 10.4 5 19" stroke-width="2.6"/><rect x="10.5" y="5" width="10" height="5.2" rx="1.3" transform="rotate(45 15.5 7.6)"/></svg></span>Outillage</div></div>
+  <div class="tile" role="listitem" style="--i:2;--jx:8px;--jy:-8px;--r:4deg;--fx:-200px;--fr:35deg;--z:3"><div class="face c-co"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 9.7h18M3 14.3h18M9 5v4.7M15 5v4.7M6 9.7v4.6M12 9.7v4.6M18 9.7v4.6M9 14.3V19M15 14.3V19"/></svg></span>Matériaux de construction</div></div>
+  <div class="tile" role="listitem" style="--i:7;--jx:-2px;--jy:6px;--r:-8deg;--fx:60px;--fr:-70deg;--z:1"><div class="face c-aq"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 20v-9l5 3v-3l5 3v-3l5 3V4h3v16z"/><path d="M7 17h2M12 17h2"/></svg></span>Industrie</div></div>
+  <div class="tile" role="listitem" style="--i:4;--jx:5px;--jy:2px;--r:6deg;--fx:-120px;--fr:45deg;--z:2"><div class="face c-su"><span class="ico"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/><path d="M12 7.5l-1.5 3h3L12 13.5"/></svg></span>Électricité &amp; éclairage</div></div>
+  <div class="tile" role="listitem" style="--i:9;--jx:-7px;--jy:-6px;--r:-4deg;--fx:150px;--fr:-40deg;--z:3"><div class="face c-aq"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg></span>Fournitures médicales</div></div>
+  <div class="tile" role="listitem" style="--i:6;--jx:6px;--jy:4px;--r:-7deg;--fx:-170px;--fr:-55deg;--z:1"><div class="face c-li"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 12.5c-2.6 0-5 2.6-5 5 0 1.6 1.2 2.5 2.6 2.5 1 0 1.6-.5 2.4-.5s1.4.5 2.4.5c1.4 0 2.6-.9 2.6-2.5 0-2.4-2.4-5-5-5z"/><circle cx="5.8" cy="10.8" r="1.9"/><circle cx="9.4" cy="6.6" r="1.9"/><circle cx="14.6" cy="6.6" r="1.9"/><circle cx="18.2" cy="10.8" r="1.9"/></svg></span>Animalerie</div></div>
+  <div class="tile" role="listitem" style="--i:10;--jx:-3px;--jy:-4px;--r:5deg;--fx:90px;--fr:50deg;--z:2"><div class="face c-aq"><span class="ico"><svg viewBox="0 0 24 24"><path d="M7.5 11h7l1.5 3v6a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-6z"/><path d="M9 11V7h4.5l2.5 1.6"/><path d="M8 7h5.5"/><path d="M18.5 5.5h2M18.5 8.5h2.5M18.5 11.5h2"/></svg></span>Entretien &amp; jetable</div></div>
+  <div class="tile" role="listitem" style="--i:8;--jx:4px;--jy:8px;--r:-5deg;--fx:-140px;--fr:-35deg;--z:3"><div class="face c-co"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 0 1 17 0z"/><path d="M2 17h20M5 20.5h14"/><path d="M12 8.5V6.5M10.3 6.5h3.4"/></svg></span>Équipement CHR</div></div>
+  <div class="tile" role="listitem" style="--i:11;--jx:-5px;--jy:2px;--r:7deg;--fx:170px;--fr:65deg;--z:1"><div class="face c-su"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 12C12 8 9.2 5.5 4.5 5.5 4.5 9.6 7.4 12 12 12z"/><path d="M12 14.5c0-3.6 2.6-6.2 7.5-6.2 0 4-3 6.2-7.5 6.2z"/><path d="M7 21h10"/></svg></span>Agriculture &amp; jardinage</div></div>
+  <div class="tile more" role="listitem" style="--i:12;--jx:0px;--jy:6px;--r:-2deg;--fx:0px;--fr:-20deg;--z:2"><div class="face"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Tout autre secteur</div></div>
+ </div>
+</div></section>
+
+<section style="padding-top:20px"><div class="wrap split">
+ <div class="txt">
+  <div class="kicker">Planification intelligente</div>
+  <h2>Vos commerciaux ne devinent pas où aller.<br>JaSale le sait déjà.</h2>
+  <p>Le système apprend à connaître vos clients : qui commande presque à chaque visite, qui n'a pas été vu depuis plus d'un mois et qui a un chèque qui attend. Il en tire un plan pour la semaine – avec le nombre d'arrêts que vous avez choisi – carte à l'appui, envoyé au responsable pour validation.</p>
+  <ul class="ticks"><li>Score automatique pour chaque client, du vert (visite ≈ vente) au gris</li><li>Les clients urgents d'un secteur voisin ne sont ajoutés que si cela vaut le détour</li><li>Un client marqué non pertinent ne réapparaît plus</li></ul>
+ </div>
+ <div class="shot"><div class="phone"><img src="../assets/week-fr.webp" alt="Plan hebdomadaire dans JaSale" loading="lazy"></div></div>
+</div></section>
+
+<section id="managers" style="padding-top:20px"><div class="wrap split rev">
+ <div class="txt">
+  <div class="kicker">Pour les managers</div>
+  <h2>Toute l'équipe en un coup d'œil,<br>sans décrocher le téléphone.</h2>
+  <p>Performance par commercial, validation des plans hebdomadaires, approbation des remises et avoirs exceptionnels, logistique par secteur et jour de livraison – le tout mis à jour en temps réel depuis le terrain.</p>
+  <ul class="ticks"><li>Visites, commandes et encaissements du jour – pour toute l'équipe ou un seul commercial</li><li>Analyse des ventes par produit, marque, client et secteur, avec export Excel</li><li>Gestion des équipes, secteurs et produits, y compris le transfert de clients entre commerciaux</li></ul>
+ </div>
+ <div class="shot"><div class="phone"><img src="../assets/report-fr.webp" alt="Rapports dans JaSale" loading="lazy"></div></div>
+</div></section>
+
+<section id="security" style="padding-top:20px"><div class="wrap"><div class="sec">
+ <svg class="shield" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2l8 3.5v6.2c0 5-3.4 8.6-8 10.3-4.6-1.7-8-5.3-8-10.3V5.5L12 2z"/></svg>
+ <div>
+  <div class="kicker">Sécurité des données</div>
+  <h2>Votre portefeuille clients<br>n'appartient qu'à vous.</h2>
+  <p>Votre liste de clients, vos prix et vos soldes sont le cœur de votre entreprise. C'est pourquoi chaque couche de JaSale est conçue pour les protéger.</p>
+ </div>
+ <div class="grid">
+  <div class="it"><b>Chaque commercial ne voit que les siens</b><span>Des droits au niveau des lignes dans la base de données – pas seulement masqués à l'écran.</span></div>
+  <div class="it"><b>Chiffré en transit et au repos</b><span>Communication chiffrée (HTTPS), données stockées chiffrées sur le serveur.</span></div>
+  <div class="it"><b>Contrôle total pour les managers</b><span>Ajoutez, désactivez ou bloquez instantanément un membre de l'équipe, et réattribuez ses clients.</span></div>
+  <div class="it"><b>Cloisonnement entre entreprises</b><span>Les données de chaque entreprise sont isolées et accessibles uniquement à sa propre équipe.</span></div>
+ </div>
+</div></div></section>
+
+<section id="setup" class="setup"><div class="wrap">
+ <div class="kicker">Mise en place</div>
+ <h2 class="big"><span>On s'occupe de la mise en place.</span><span>Vous vous occupez des ventes.</span></h2>
+ <div class="steps">
+  <div class="step"><div class="n">1</div><h3>Importez ce que vous avez déjà</h3><p>Catalogue, tarifs, liste de clients et balance âgée – depuis Excel ou PDF. On s'occupe du reste.</p></div>
+  <div class="step"><div class="n">2</div><h3>Configurez votre équipe et vos secteurs</h3><p>Chaque membre de l'équipe reçoit un code personnel et des droits. Les managers voient tout ; les commerciaux ne voient que leurs propres clients.</p></div>
+  <div class="step"><div class="n">3</div><h3>En route</h3><p>Ajoutez JaSale à l'écran d'accueil de votre téléphone et commencez à travailler – sans installation, sans serveur.</p></div>
+ </div>
+</div></section>
+
+<section id="contact" style="padding-top:0"><div class="wrap"><div class="cta">
+ <i class="deco" style="width:18px;height:18px;top:22px;right:38%" aria-hidden="true"></i><i class="deco" style="width:11px;height:11px;bottom:28px;right:8%;animation-delay:-1s" aria-hidden="true"></i><i class="deco" style="width:14px;height:14px;top:40%;left:46%;animation-delay:-2s" aria-hidden="true"></i>
+ <div><h2>Découvrons JaSale<br>avec votre équipe.</h2><p>Une courte démo, sur vos propres données. Écrivez-nous : <span class="mail">hello@jasale.app</span></p></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-dark" href="mailto:hello@jasale.app?subject=JaSale%20demo">Réserver une démo</a><a class="btn btn-line" href="../app/">Se connecter</a></div>
+</div></div></section>
+
+<footer><div class="wrap">
+ <a href="#" class="brand"><img src="../assets/jasale-icon.svg" alt="" style="width:26px;height:26px"><span class="word" style="font-size:18px"><b>Ja</b><span>Sale</span></span></a>
+ <div>© <span id="yr">2026</span> JaSale · <span class="mail" style="font-weight:400">hello@jasale.app</span> · <a class="sgco" href="https://sinai-global.com/fr/" lang="fr" style="color:inherit;text-decoration:underline;text-underline-offset:3px;white-space:nowrap">Une société SINAI Global</a></div>
+</div></footer>
+<script>
+try{document.getElementById('yr').textContent=new Date().getFullYear();}catch(e){}
+(function(){
+ var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ var cols=['#A68A5B','#6C8FB0','#6C8FB0','#BCCCDB','#E2D5BC'];
+ function rnd(a,b){return a+Math.random()*(b-a)}
+ function sp(cls,c,s){var e=document.createElement('i');e.className='sp '+cls;e.style.setProperty('--c',c);e.style.setProperty('--s',s+'px');return e}
+ /* wand trail: ~18 sparkles drifting down/left from the star tip */
+ var trail=document.getElementById('trail');
+ if(trail){for(var i=0;i<18;i++){var star=i%3!==2;var e=sp(star?'st':'dot',cols[i%cols.length],star?rnd(8,15):rnd(4,6));
+  e.style.setProperty('--dx',rnd(-150,30).toFixed(0)+'px');e.style.setProperty('--dy',rnd(30,170).toFixed(0)+'px');
+  e.style.setProperty('--t',rnd(2.8,4.4).toFixed(2)+'s');e.style.setProperty('--d',(-rnd(0,4.4)).toFixed(2)+'s');e.style.setProperty('--k',rnd(.2,.8).toFixed(2));trail.appendChild(e);}}
+ /* occasional bursts across the hero, kept away from the copy column */
+ var fx=document.getElementById('fx'),hero=document.querySelector('.hero'),on=true;
+ if(fx&&!reduce){
+  if('IntersectionObserver' in window){new IntersectionObserver(function(es){on=es[0].isIntersecting}).observe(hero)}
+  setInterval(function(){
+   if(!on||document.hidden)return;
+   var w=fx.clientWidth,h=fx.clientHeight,mob=w<980,x,y;
+   if(mob){x=rnd(.05,.95)*w;y=rnd(.62,.95)*h}else{x=rnd(.58,.96)*w;y=rnd(.15,.85)*h}
+   var b=document.createElement('div');b.className='burst';b.style.cssText='position:absolute;left:'+x+'px;top:'+y+'px';
+   for(var j=0;j<7;j++){var a=j/7*Math.PI*2+rnd(-.3,.3),r=rnd(28,64),st=j%2===0;var e=sp(st?'st':'dot',cols[(j+Math.floor(x))%cols.length],st?rnd(9,14):rnd(4,6));
+    e.style.setProperty('--dx',(Math.cos(a)*r).toFixed(0)+'px');e.style.setProperty('--dy',(Math.sin(a)*r).toFixed(0)+'px');b.appendChild(e)}
+   fx.appendChild(b);setTimeout(function(){b.remove()},1500);
+  },2300);
+ }
+ /* tossed industry tiles */
+ var toss=document.getElementById('toss');
+ if(toss){
+  if(reduce||!('IntersectionObserver' in window)){toss.classList.add('in')}
+  else{var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){toss.classList.add('in');io.disconnect()}})},{threshold:.25});io.observe(toss)}
+ }
+})();
+</script>
+<script>document.addEventListener('click',function(e){var d=document.querySelectorAll('details.lng[open]');for(var i=0;i<d.length;i++){if(!d[i].contains(e.target))d[i].removeAttribute('open')}});document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.querySelector('details.lng[open]');if(d){d.removeAttribute('open');d.querySelector('summary').focus()}}});</script>
+</body>
+</html>
