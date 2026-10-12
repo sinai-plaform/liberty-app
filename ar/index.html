@@ -331,7 +331,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 .stop .dot{position:absolute;inset:0;border-radius:50%;background:var(--stop);box-shadow:0 0 0 5px var(--stop-soft)}
 .stop .lbl{position:absolute;left:22px;top:-4px;font:600 11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:var(--mut);white-space:nowrap;direction:ltr}
 @media (max-width:980px){
- .hero-copy{padding-bottom:64px}
+ .stop .dot,.stop .lbl{display:none}
  .stop{top:auto;bottom:calc(520px + 44px);inset-inline-start:auto;left:62%}
 }
 @media (max-width:560px){.stop{bottom:calc(440px + 44px)}}
