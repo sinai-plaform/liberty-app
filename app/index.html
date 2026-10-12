@@ -493,7 +493,8 @@ var ROUTE_ALL='all',ROUTE_SELV='sel';
 var TRUCK_DAYS={};
 function logisticsOf(code){var L=(typeof LOC!=='undefined'&&LOC.logistics)||[];for(var i=0;i<L.length;i++){if(+L[i].area_code===+code)return L[i]}return null}
 function truckDaysOf(code){if(TRUCK_DAYS[code]&&TRUCK_DAYS[code].length)return TRUCK_DAYS[code].slice();var l=logisticsOf(code);if(!l||l.delivery_mode!=='truck')return [];return (l.truck_days||[]).map(Number).sort(function(a,b){return a-b});}
-function focusAreasFor(dateStr){var dow=ilDow(dateStr||todayStr()),out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.focus_days||[]).map(Number).indexOf(dow)>-1)out.push(+l.area_code)});out.sort(function(a,b){return a-b});return out;}
+function schedAreasFor(ds){var out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.schedule_dates||[]).indexOf(ds)>-1)out.push(+l.area_code)});out.sort(function(a,b){return a-b});return out;}
+function focusAreasFor(dateStr){var sd=schedAreasFor(dateStr||todayStr());if(sd.length)return sd;var dow=ilDow(dateStr||todayStr()),out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.focus_days||[]).map(Number).indexOf(dow)>-1)out.push(+l.area_code)});out.sort(function(a,b){return a-b});return out;}
 function focusAreasToday(){return focusAreasFor(todayStr());}
 function nextTruckDay(code,fromStr){var days=truckDaysOf(code);if(!days.length)return null;var ds=fromStr||todayStr();for(var i=1;i<=7;i++){var d=ilShift(ds,i);if(days.indexOf(ilDow(d))>-1)return d;}return null;}
 function heDayShort(d){return _tv('HEDAYS_S',HEDAYS_S[d])+_g()+''}
@@ -2059,11 +2060,11 @@ function customersView(){
 }
 // ---------- PROSPECTS (phase 4: businesses from the map not yet in the customer base) ----------
 var _pros=null,_prosTried=false,_prosF={area:undefined,kind:'all',status:'new',q:''},_prosBusy=false;
-var PROS_KIND={pharmacy:['💊',_t('בית מרקחת')],orthopedic:['🦴',_t('אורתופדיה')],chemist:['🧴',_t('פארם')],dental:['🦷',_t('שיניים')],other:['🏪',_t('אחר')]};
+var PROS_KIND={pharmacy:['💊',_t('בית מרקחת')],orthopedic:['🦴',_t('אורתופדיה')],chemist:['🧴',_t('פארם')],dental:['🦷',_t('שיניים · שתלים')],nursing_home:['🏥',_t('בית אבות')],other:['🏪',_t('אחר')]};
 var PROS_ST={new:[_t('חדש'),'b-acc'],contacted:[_t('יצרתי קשר'),'b-warn'],converted:[_t('נוסף כלקוח'),'b-good'],irrelevant:[_t('לא רלוונטי'),'b-mut']};
 var OVERPASS_URL='https://overpass-api.de/api/interpreter';
 var OVERPASS_BBOX='32.45,34.85,33.30,35.70';
-function overpassQuery(){var b='('+OVERPASS_BBOX+')';return '[out:json][timeout:90];(nwr["amenity"="pharmacy"]'+b+';nwr["healthcare"="pharmacy"]'+b+';nwr["shop"="medical_supply"]'+b+';nwr["shop"="chemist"]'+b+';);out center tags;';}
+function overpassQuery(){var b='('+OVERPASS_BBOX+')';return '[out:json][timeout:90];(nwr["shop"="medical_supply"]'+b+';nwr["amenity"="nursing_home"]'+b+';nwr["social_facility"="nursing_home"]'+b+';);out center tags;';}
 function prosLoad(cb,force){
  if(_pros&&!force){if(cb)cb(_pros);return}
  if(navigator.onLine===false&&_pros){if(cb)cb(_pros);return}
@@ -2113,8 +2114,8 @@ function prosRender(){
  if(_prosF.area===undefined&&all.length)_prosF.area=prosDefaultArea(all);
  var chip=function(cls,val,label,on){return '<button class="chip '+cls+(on?' on':'')+'" data-v="'+val+'" style="white-space:nowrap">'+label+'</button>'};
  var h='<div style="display:flex;gap:6px;overflow:auto;padding:2px 0 6px">'+chip('prosa','all',_t('הכל'),_prosF.area==='all');
- for(var i=1;i<=6;i++)h+=chip('prosa',i,_t('אזור ')+i,_prosF.area===i);
- h+='</div><div style="display:flex;gap:6px;overflow:auto;padding:0 0 6px">'+chip('prosk','all',_t('הכל'),_prosF.kind==='all')+chip('prosk','pharmacy',_t('💊 בתי מרקחת'),_prosF.kind==='pharmacy')+chip('prosk','orthopedic',_t('🦴 אורתופדיה'),_prosF.kind==='orthopedic')+chip('prosk','chemist',_t('🧴 פארם'),_prosF.kind==='chemist')+'</div>';
+ (LOC.areas&&LOC.areas.length?LOC.areas.map(function(a){return +a.code}).sort(function(a,b){return a-b}):[1,2,3,4,5,6]).forEach(function(i){var an=(LOC.areas||[]).filter(function(a){return +a.code===i})[0];h+=chip('prosa',i,an&&an.name?esc(an.name):_t('אזור ')+i,_prosF.area===i)});
+ h+='</div><div style="display:flex;gap:6px;overflow:auto;padding:0 0 6px">'+chip('prosk','all',_t('הכל'),_prosF.kind==='all')+chip('prosk','orthopedic',_t('🦴 אורתופדיה'),_prosF.kind==='orthopedic')+chip('prosk','dental',_t('🦷 שתלים'),_prosF.kind==='dental')+chip('prosk','nursing_home',_t('🏥 בתי אבות'),_prosF.kind==='nursing_home')+'</div>';
  h+='<div style="display:flex;gap:6px;overflow:auto">'+chip('pross','new',_t('חדשים'),_prosF.status==='new')+chip('pross','contacted',_t('יצרתי קשר'),_prosF.status==='contacted')+chip('pross','all',_t('הכל'),_prosF.status==='all')+'</div>';
  $('prosfilters').innerHTML=h;
  var bindChips=function(cls,key){var el=document.querySelectorAll('.'+cls);for(var j=0;j<el.length;j++){el[j].onclick=function(){var v=this.getAttribute('data-v');_prosF[key]=(key==='area'&&v!=='all')?+v:v;prosRender()}}};
@@ -2161,6 +2162,7 @@ function openProspect(id){
  h+='<div style="font-size:13px;margin-top:3px">📍 '+esc(p.city||'')+(p.address?' · '+esc(p.address):'')+(p.area_code?_t(' · אזור ')+p.area_code:'')+(d!=null?' · '+d.toFixed(1)+_t(' ק"מ מנקודת המוצא'):'')+'</div>';
  if(p.opening_hours)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:3px">🕒 '+esc(p.opening_hours)+'</div>';
  if(p.phone)h+='<div style="font-size:12.5px;color:var(--mut);margin-top:3px">📞 '+esc(p.phone)+'</div>';
+ if(p.website)h+='<div style="font-size:12.5px;margin-top:3px">🌐 <a href="'+esc(p.website)+'" target="_blank" rel="noopener" style="color:var(--acc)">'+_t('אתר העסק')+'</a></div>';
  if(p.notes)h+='<div style="font-size:12.5px;color:var(--accd);margin-top:5px;white-space:pre-wrap">📝 '+esc(p.notes)+'</div>';
  h+='</div>';
  var lk=function(id,href,label,bg){return '<a id="'+id+'" href="'+esc(href)+'" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:10px 6px;background:'+(bg||'#fff')+';border:1px solid var(--line);border-radius:11px;text-decoration:none;font-size:12.5px;font-weight:700;color:var(--accd)">'+label+'</a>'};
@@ -2187,7 +2189,7 @@ function prosMapRow(el){
  if(lat==null||lng==null)return null;
  if((lat<32.62&&lng>35.22)||(lat<32.75&&lng>35.40))return null; // West Bank exclusion
  var name=t['name:he']||t.name||t['name:en'];if(!name)return null;
- var kind=(t.shop==='medical_supply')?'orthopedic':((t.amenity==='pharmacy'||t.healthcare==='pharmacy')?'pharmacy':(t.shop==='chemist'?'chemist':'other'));
+ var kind=(t.shop==='medical_supply')?'orthopedic':(t.amenity==='nursing_home'||t.social_facility==='nursing_home')?'nursing_home':((t.amenity==='pharmacy'||t.healthcare==='pharmacy')?'pharmacy':(t.shop==='chemist'?'chemist':'other'));
  var addr=[t['addr:street'],t['addr:housenumber']].filter(function(x){return !!x}).join(' ');
  return {source:'osm',source_id:el.type+'/'+el.id,name:name,name_en:t['name:en']||null,kind:kind,city:t['addr:city']||null,address:addr||null,phone:t.phone||t['contact:phone']||null,opening_hours:t.opening_hours||null,lat:lat,lng:lng};
 }
@@ -2922,7 +2924,7 @@ function areaCustomers(area){
 // ---------- BROADCAST ----------
 var bcArea='all';
 function broadcastView(){
- var areaOpts=('<option value="'+'all'+'">'+_t('כל האזורים')+'<\/option>');for(var i=1;i<=6;i++)areaOpts+='<option value="'+i+'"'+(bcArea==(''+i)?' selected':'')+('>'+_t('אזור '))+i+'</option>';
+ var areaOpts=('<option value="'+'all'+'">'+_t('כל האזורים')+'<\/option>');((LOC.areas&&LOC.areas.length)?LOC.areas.slice().sort(function(x,y){return x.code-y.code}):[1,2,3,4,5,6].map(function(c){return {code:c}})).forEach(function(ar){var i=+ar.code;areaOpts+='<option value="'+i+'"'+(bcArea==(''+i)?' selected':'')+'>'+(ar.name?esc(ar.name):_t('אזור ')+i)+'</option>';});
  shell(('<div style="'+'background:var(--acc);padding:14px 16px 15px;position:sticky;top:0;z-index:5'+'">'+'<div style="'+'display:flex;align-items:center;gap:10px'+'">'+'<button onclick="'+'goBack()'+'" style="'+'border:none;background:rgba(255,255,255,.16);color:#fff;width:30px;height:30px;border-radius:9px;font-size:18px;line-height:1;cursor:pointer'+'">'+'‹'+'<\/button>'+'<div style="'+'font-size:19px;font-weight:700;color:#fff;letter-spacing:-.02em'+'">'+_t('תפוצה ללקוחות')+'<\/div>'+'<\/div>'+'<\/div>')+
   '<div class="list" style="padding-bottom:0">'+
   ('<textarea id="'+'bc_msg'+'" class="'+'field'+'" style="'+'min-height:80px'+'" placeholder="'+_ta('הודעה ללקוחות — משלוח הגיע / מבצע / קטלוג חדש…')+'">'+'<\/textarea>')+
@@ -7307,7 +7309,7 @@ function apptGeoConflicts(list){
  return out;
 }
 /* focus areas for a date — same data as focusAreasFor(), weekday from the calendar date itself */
-function calFocusAreas(ds){var dow=parseYmd(ds).getDay(),out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.focus_days||[]).map(Number).indexOf(dow)>-1)out.push(+l.area_code)});return out;}
+function calFocusAreas(ds){var sd=schedAreasFor(ds);if(sd.length)return sd;var dow=parseYmd(ds).getDay(),out=[];((typeof LOC!=='undefined'&&LOC.logistics)||[]).forEach(function(l){if((l.focus_days||[]).map(Number).indexOf(dow)>-1)out.push(+l.area_code)});return out;}
 
 /* ---------- data: appointments cached per month ---------- */
 var _calMon={},_calStale={},_calRoutes={};
