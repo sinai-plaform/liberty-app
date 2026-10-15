@@ -1,5 +1,5 @@
 /* JaSale field-agent PWA service worker */
-var V='jasale-v6';
+var V='jasale-v7';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var CORE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./favicon-32.png','./jasale-icon.svg',
  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
@@ -39,7 +39,7 @@ function openApp(target){
 self.addEventListener('notificationclick',function(e){
  var n=e.notification,D=n.data||{},act=e.action||'';
  n.close();
- var q=function(a){return './index.html#act='+a+(D.cid?'&cid='+encodeURIComponent(D.cid):'')+(D.id?'&rid='+encodeURIComponent(D.id):'')+(D.kind?'&k='+encodeURIComponent(D.kind):'');};
+ var q=function(a){return './index.html#act='+a+(D.cid?'&cid='+encodeURIComponent(D.cid):'')+(D.id?'&rid='+encodeURIComponent(D.id):'')+(D.kind?'&k='+encodeURIComponent(D.kind):'')+(D.lat!=null&&D.lng!=null?'&lat='+D.lat+'&lng='+D.lng:'');};
  if(act==='done'&&D.id&&D.tok){e.waitUntil(rpcAction(D.id,D.tok,'done').then(function(ok){if(!ok)return openApp(q('done'));}));return;}
  if(act==='snooze'&&D.id&&D.tok){var mins=D.kind==='collection'?60:10;
   e.waitUntil(rpcAction(D.id,D.tok,'snooze',mins).then(function(ok){if(!ok)return openApp(q('snooze'));
@@ -49,8 +49,8 @@ self.addEventListener('notificationclick',function(e){
  if(act==='visit'||act==='pay'||act==='cust'){e.waitUntil(openApp(q(act)));return;}
  // body tap: reports keep their url; customer-linked alerts open the matching screen
  var target=D.url||'./index.html';
- if(target.indexOf('#')<0&&D.cid)target=q(D.kind==='meeting_start'?'visit':D.kind==='collection'?'pay':'cust');
- else if(target.indexOf('#')<0&&D.id)target=q('rem');
+ /* v87: tapping the alert (the only option on iPhone) opens a quick-actions sheet */
+ if(target.indexOf('#')<0&&D.id)target=q('sheet');
  e.waitUntil(openApp(target));
 });
 self.addEventListener('fetch',function(e){

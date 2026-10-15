@@ -197,7 +197,7 @@ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&
   ':root[lang=ar] body{font-family:"IBM Plex Sans Hebrew","Heebo",system-ui,"Segoe UI",Tahoma,sans-serif}';
   (document.head||de).appendChild(st);}catch(e){}})();
 /* ================= /i18n ================= */
-var APP_VERSION='2026-10-15-86';
+var APP_VERSION='2026-10-15-87';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -4938,7 +4938,39 @@ function notifAct(h){if(!me)return;var P={};String(h).split('&').forEach(functio
  if(a==='pay'&&c&&typeof openPaymentSheet==='function'){openCustomer(cid);setTimeout(function(){try{openPaymentSheet(c);}catch(e){}},300);return;}
  if(a==='call'&&cid){openCustomer(cid);custPhone(cid,function(ph){if(ph)location.href=telHref(ph);});return;}
  if((a==='cust'||a==='nav')&&cid){openCustomer(cid);return;}
+ if(a==='sheet'&&P.rid){quickSheet(P);return;}
  route='reminders';render();}
+/* v87: quick-actions sheet opened by tapping a notification (iPhone shows no buttons on web notifications) */
+function quickSheet(P,_try){
+ if(!_remLoaded&&(_try||0)<6){setTimeout(function(){quickSheet(P,(_try||0)+1);},700);return;}
+ var k=P.k||'general',rid=P.rid,cid=P.cid||null,c=cid?custById(cid):null,cn=(c&&c.name)||remCustName(cid)||'';
+ var rm=null;for(var i=0;i<(_reminders||[]).length;i++){if(_reminders[i].id===rid){rm=_reminders[i];break;}}
+ var lat=(c&&c.lat!=null)?c.lat:(P.lat?+P.lat:null),lng=(c&&c.lng!=null)?c.lng:(P.lng?+P.lng:null);
+ var T={meeting_start:['📅',_t('הפגישה מתחילה עכשיו')],meeting:['📅',_t('פגישה בקרוב')],collection:['💰',_t('תזכורת גבייה')],no_sale:['📞',_t('מעקב אחרי ביקור')]}[k]||['🔔',_t('תזכורת')];
+ var B=[];
+ var nav=function(){if(lat!=null&&lng!=null)B.push(['nav',_t('🚗 ניווט')]);};
+ if(k==='meeting_start'){nav();if(cid)B.push(['visit',_t('📝 פתיחת ביקור')]);if(cid)B.push(['call',_t('📞 התקשרות')]);}
+ else if(k==='meeting'){nav();if(cid)B.push(['call',_t('📞 התקשרות')]);B.push(['snz10',_t('⏰ עוד 10 דק׳')]);}
+ else if(k==='collection'){if(c)B.push(['pay',_t('💰 רישום גבייה')]);if(cid)B.push(['call',_t('📞 התקשרות')]);B.push(['snz60',_t('⏰ עוד שעה')]);B.push(['done',_t('✓ בוצע')]);}
+ else{if(cid)B.push(['call',_t('📞 התקשרות')]);if(cid)B.push(['cust',_t('👤 כרטיס לקוח')]);B.push(['snz10',_t('⏰ עוד 10 דק׳')]);B.push(['done',_t('✓ בוצע')]);}
+ var txt=rm?rm.text:'';
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ ov.innerHTML='<div class="sheet" style="max-width:380px;margin:auto;border-radius:18px;padding:20px 18px 16px;border-top:5px solid var(--acc)"><div style="font-size:36px;text-align:center">'+T[0]+'</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:2px">'+T[1]+'</div>'+(cn?'<div style="font-size:14px;color:var(--acc);font-weight:800;text-align:center;margin-top:4px">'+esc(cn)+'</div>':'')+(txt?'<div style="font-size:13.5px;text-align:center;line-height:1.6;margin-top:6px;color:var(--head)">'+esc(txt)+'</div>':'')+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px">'+B.map(function(b){return '<button class="cta qsb" data-a="'+b[0]+'" style="margin:0;height:56px;font-size:15px'+(b[0]==='done'?'':';background:var(--accs);color:var(--accd)')+'">'+b[1]+'</button>';}).join('')+'</div>'+
+  '<button class="qsx" style="width:100%;height:44px;margin-top:10px;background:#E6E4DF;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">'+_t('סגירה')+'</button></div>';
+ document.body.appendChild(ov);
+ ov.querySelector('.qsx').onclick=function(){ov.remove();};
+ var bs=ov.querySelectorAll('.qsb');for(var j=0;j<bs.length;j++)bs[j].onclick=function(){var a=this.getAttribute('data-a');
+  if(a==='nav'){window.open(wazeUrl(lat,lng),'_blank');return;}
+  if(a==='call'){custPhone(cid,function(ph){if(ph)location.href=telHref(ph);else{ov.remove();openCustomer(cid);toast(_t('אין טלפון שמור ללקוח'));}});return;}
+  ov.remove();
+  if(a==='visit'){visitTarget={id:cid,name:cn};route='visits';render();return;}
+  if(a==='pay'){openCustomer(cid);setTimeout(function(){try{openPaymentSheet(c);}catch(e){}},300);return;}
+  if(a==='cust'){openCustomer(cid);return;}
+  if(a==='done'){remMarkDone(rid);toast(_t('סומן כבוצע ✓'));return;}
+  if(a==='snz10'||a==='snz60'){var m=a==='snz60'?60:10;remSnooze(rm||{id:rid},m);toast(_t('התזכורת תחזור בעוד ')+m+_t(' דקות'));return;}
+ };
+}
 var _apptFired={};
 function apptCustName(a){return a.customer_name||remCustName(a.customer_id)||'';}
 function checkApptStarts(){if(!me)return;var now=Date.now();
