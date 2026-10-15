@@ -197,7 +197,7 @@ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&
   ':root[lang=ar] body{font-family:"IBM Plex Sans Hebrew","Heebo",system-ui,"Segoe UI",Tahoma,sans-serif}';
   (document.head||de).appendChild(st);}catch(e){}})();
 /* ================= /i18n ================= */
-var APP_VERSION='2026-10-13-84';
+var APP_VERSION='2026-10-15-86';
 var SB_URL='https://ooxdupeihzvbzudibaoi.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -598,7 +598,7 @@ function restoreDailyRoute(){
   // prefer the server route when it has more stops than the local cache (fixes empty-cache overriding a real route)
   if(todayRow&&todayStops>lrStops){_applyRouteRow(todayRow);if(route==='route')render();}
   var cand=null;for(var i=0;i<stale.length;i++){if((stale[i].selected_ids||[]).length>0){cand=stale[i];break}}
-  var afterDecide=function(){archiveStaleRoutes(function(){if(route==='route')render();});};
+  var afterDecide=function(){archiveStaleRoutes(function(){routePruneSel(todayStr(),function(){if(route==='route')render();});});};
   if(cand&&todayStops===0&&lrStops===0&&!carryDismissed())showCarryPrompt(cand,afterDecide);
   else afterDecide();
  },function(e){netMark(false,e);archiveStaleRoutes(function(){});});
@@ -932,7 +932,7 @@ function boot(){
   if(!me){noMeView();return}
   loadCart();
   route='home';
-  try{var _h=(location.hash||'').replace('#','');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(_h)>-1){route=_h;history.replaceState(null,'',location.pathname+location.search);}}catch(e){}
+  try{var _h=(location.hash||'').replace('#','');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(_h)>-1){route=_h;history.replaceState(null,'',location.pathname+location.search);}else if(_h.indexOf('act=')===0){history.replaceState(null,'',location.pathname+location.search);setTimeout(function(){notifAct(_h);},700);}}catch(e){}
   try{var _cd=JSON.parse(localStorage.getItem('lib_cart')||'null');if(route==='home'&&_cd&&_cd.ts&&(Date.now()-_cd.ts)<24*3600000&&cart&&cart.items&&cart.items.length){route='orders';}}catch(e){}
   render();
   try{obBakRestore()}catch(e){}
@@ -3217,6 +3217,7 @@ var _agFresh=null,_pulse=null;
 /* ================= APPOINTMENTS (פגישות שנקבעו עם הלקוח) ================= */
 var _appts={};            /* 'YYYY-MM-DD' -> [rows]  */
 var _apptsAll=null;       /* upcoming, for the home card */
+var _apptWatch={};        /* v86: id -> appointment, kept until its start alert fires */
 function apptISO(dateStr,hhmm){
  /* build the exact instant for a wall-clock time in Israel */
  var base=Date.UTC(+dateStr.slice(0,4),+dateStr.slice(5,7)-1,+dateStr.slice(8,10),+hhmm.slice(0,2),+hhmm.slice(3,5),0);
@@ -3239,7 +3240,7 @@ function loadApptsUpcoming(cb){
  if(!me){cb&&cb([]);return;}
  sb.from('liberty_appointments').select('*').eq('agent_id',me.id).eq('status','scheduled')
    .gte('starts_at',new Date().toISOString()).order('starts_at').limit(20).then(function(r){
-   _apptsAll=(r&&r.data)||[];cb&&cb(_apptsAll);},function(){cb&&cb([]);});
+   _apptsAll=(r&&r.data)||[];try{_apptsAll.forEach(function(a){_apptWatch[a.id]=a;});}catch(e){}cb&&cb(_apptsAll);},function(){cb&&cb([]);});
 }
 function apptWaText(a,custName){
  var d=new Date(a.starts_at);
@@ -3406,16 +3407,17 @@ function loadFollowups(cb){
  if(navigator.onLine===false||!me){if(!_fuMap){_fuMap={};_msMap={};_ltMap={};_rmMap={}}if(_areaCov===null)areaCovCompute();cb&&cb();return}
  var since14=new Date(Date.now()-14*86400000).toISOString();
  Promise.all([
-  sb.from('liberty_my_next_visits').select('customer_id,next_visit_date'),
+  sb.from('liberty_my_next_visits').select('customer_id,next_visit_date,arrived_at'),
   sb.from('liberty_my_missed').select('customer_id,last_planned'),
   sb.from('liberty_my_last_touch').select('customer_id,last_visit_at,last_order_at'),
   sb.from('liberty_reminders').select('customer_id,kind,due_at').eq('done',false),
   sb.from('liberty_my_visits').select('customer_id,arrived_at').gte('arrived_at',since14)
  ]).then(function(res){
   _covVisits=(res[4]&&res[4].data)||[];
-  var fu={};(res[0]&&res[0].data||[]).forEach(function(x){fu[x.customer_id]=x.next_visit_date});
-  var ms={};(res[1]&&res[1].data||[]).forEach(function(x){ms[x.customer_id]=x.last_planned});
   var lt={};(res[2]&&res[2].data||[]).forEach(function(x){lt[x.customer_id]={v:x.last_visit_at,o:x.last_order_at}});
+  // v85: a next-visit date is dropped once a later visit/order happened (e.g. old 'come back 28/9' fulfilled by an order on 5/10)
+  var fu={};(res[0]&&res[0].data||[]).forEach(function(x){var l=lt[x.customer_id],sv=x.arrived_at?new Date(x.arrived_at).getTime():0;if(l&&sv){var t=Math.max(l.v?new Date(l.v).getTime():0,l.o?new Date(l.o).getTime():0);if(t>sv+3600000)return;}fu[x.customer_id]=x.next_visit_date});
+  var ms={};(res[1]&&res[1].data||[]).forEach(function(x){ms[x.customer_id]=x.last_planned});
   // open reminders per customer: kind of the earliest-due open reminder (only ones due by end of today count as "due")
   var rm={},rmd={};(res[3]&&res[3].data||[]).forEach(function(x){if(!x.customer_id)return;var d=x.due_at?new Date(x.due_at).getTime():0;if(rm[x.customer_id]&&rmd[x.customer_id]<=d)return;rm[x.customer_id]=x.kind||'manual';rmd[x.customer_id]=d;});
   _fuMap=fu;_msMap=ms;_ltMap=lt;_rmMap=rm;_rmDue=rmd;_fuTs=Date.now();areaCovCompute();cb&&cb();
@@ -3432,11 +3434,13 @@ function nextVisitUrg(ds){if(!ds)return null;var days=Math.round((parseYmd(ds)-p
  if(days<=3)return {lvl:2,label:_t('🟡 בעוד ')+days+_t(' י׳'),color:'var(--warn)'};
  if(days<=7)return {lvl:1,label:_t('🟢 בעוד ')+days+_t(' י׳'),color:'var(--good)'};
  return null;}
+function routePruneSel(ds,cb){if(routeBuilt||ds<todayStr()||!(LOC.customers||[]).length){cb&&cb();return}
+ loadFollowups(function(){var ids=routeSelIds(),keep=dayPrune(ds,ids);if(keep.length<ids.length&&curRouteDate()===ds){var gone=ids.length-keep.length;routeSel={};keep.forEach(function(id){routeSel[id]=true});saveDailyRoute(true);setTimeout(function(){toast(_t('הוסרו ')+gone+_t(' לקוחות שביקרת לאחרונה או שביקשו מועד מאוחר יותר'));},500);}cb&&cb();});}
 function loadRouteForDate(ds,cb){cancelRouteSave();routeArea=null;routeSel={};routeBuilt=false;routeRev=false;
  if(navigator.onLine===false||!me){cb&&cb();return}
  sb.from('daily_routes').select('*').eq('agent_id',me.id).eq('route_date',ds).eq('status','active').limit(1).then(function(r){
   var row=(r&&r.data)?r.data[0]:null;
-  if(row){routeArea=routeAreaFromRow(row);(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;routeRev=!!row.reversed;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);}
+  if(row){routeArea=routeAreaFromRow(row);(row.selected_ids||[]).forEach(function(id){routeSel[id]=true});routeBuilt=!!row.built;routeRev=!!row.reversed;if(row.origin&&row.origin.lat!=null)setOrigin(row.origin);routePruneSel(ds,cb);return;}
   cb&&cb();
  },function(){cb&&cb();});}
 function planFor(ds){
@@ -3543,8 +3547,9 @@ function renderHomeCoverage(){
 function lastTouchTs(id){var lt=(_ltMap||{})[id];if(!lt)return null;var a=lt.v?new Date(lt.v).getTime():0;var b=lt.o?new Date(lt.o).getTime():0;var m=Math.max(a,b);return m||null;}
 // Suggestion engine. Returns {c,score,reasons:[{t,c}],recent?:true,daysSince?:n}
 // recent:true = visited within the last 7 days and no explicit reason to go back → not suggested (shown greyed in a separate section)
+var RECENT_DAYS=14,_rsDs=null;
 function routeScore(c){
- var sc=0,rs=[];
+ var sc=0,rs=[],_ds=_rsDs||curRouteDate();
  if(!c||c.lifecycle==='disqualified')return {c:c,score:0,reasons:[],excluded:true};
  var lt=(_ltMap||{})[c.id]||{};
  var dv=lt.v?Math.floor((Date.now()-new Date(lt.v).getTime())/86400000):null;   // days since last visit
@@ -3552,12 +3557,14 @@ function routeScore(c){
  var ts=lastTouchTs(c.id);
  var ag=c.debt_agorot>0?collAge(c):null;var agedDebt=(c.debt_agorot>0&&ag!=null&&ag>90);
  var due=(_fuMap||{})[c.id],dd=null,dueNow=false;
- if(due){dd=Math.round((parseYmd(due)-parseYmd(todayStr()))/86400000);dueNow=dd<=0;}
+ if(due){dd=Math.round((parseYmd(due)-parseYmd(_ds))/86400000);dueNow=dd<=0;}
  var missed=!!(_msMap||{})[c.id];
  var rk=remDueKind(c.id);
  var explicit=dueNow||missed||agedDebt||!!rk;
- // recent-visit exclusion
- if(dv!=null&&dv<7&&!explicit)return {c:c,score:0,reasons:[],recent:true,daysSince:dv};
+ // v85: the customer asked for a later date (next-visit) — not before it
+ if(due&&dd>0)return {c:c,score:0,reasons:[],recent:true,notyet:due,daysSince:dv};
+ // recent-visit exclusion (v85: 14 days, same as the weekly plan)
+ if(dv!=null&&dv<RECENT_DAYS&&!explicit)return {c:c,score:0,reasons:[],recent:true,daysSince:dv};
  var prio=c.priority||'normal';
  if(prio==='low'&&!(c.debt_agorot>0)&&!dueNow)return {c:c,score:0,reasons:[],lowprio:true};
  // automatic grade — only when there is no manual override (priority normal)
@@ -4900,14 +4907,14 @@ function playReminderSound(kind){var ac=_audioCtx();if(!ac)return;try{if(ac.stat
 function remCustName(id){if(!id)return '';try{for(var i=0;i<(LOC.customers||[]).length;i++){if(LOC.customers[i].id===id)return LOC.customers[i].name;}}catch(e){}return '';}
 function reqNotify(){try{if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();}catch(e){}}
 var _remLoaded=false;
-function apptAutoDone(cid){if(!me||!cid||navigator.onLine===false)return;var eod=new Date(parseYmd(todayStr()).getTime()+86400000).toISOString();
+function apptAutoDone(cid){try{for(var _k in _apptWatch){if(_apptWatch[_k].customer_id===cid&&new Date(_apptWatch[_k].starts_at).getTime()<parseYmd(todayStr()).getTime()+86400000)_apptFired[_k]=1;}}catch(e){}if(!me||!cid||navigator.onLine===false)return;var eod=new Date(parseYmd(todayStr()).getTime()+86400000).toISOString();
  try{sb.from('appointments').update({status:'done',updated_at:new Date().toISOString()}).eq('agent_id',me.id).eq('customer_id',cid).eq('status','scheduled').lt('starts_at',eod).then(function(){try{apptInvalidate();}catch(e){}_calX.ts=0;},function(){});}catch(e){}}
 function custOff(id){var c=id?custById(id):null;return !!(c&&c.lifecycle==='disqualified');}
 function remDropOff(){var off=(_reminders||[]).filter(function(r){return r.customer_id&&custOff(r.customer_id);});if(!off.length)return;_reminders=_reminders.filter(function(r){return !(r.customer_id&&custOff(r.customer_id));});
  if(navigator.onLine!==false)off.forEach(function(r){sb.from('liberty_reminders').update({done:true,closed_reason:'not_relevant'}).eq('id',r.id).then(function(){},function(){});});}
-function loadReminders(cb){if(!me){cb&&cb();return;}sb.from('liberty_reminders').select('*').eq('agent_id',me.id).eq('done',false).order('due_at').then(function(r){_reminders=(r&&r.data)||[];try{remDropOff();}catch(e){}_remLoaded=true;cb&&cb();nsReconcile();},function(){cb&&cb();});}
-function startReminderScheduler(){if(_remTimer)clearInterval(_remTimer);_remTimer=setInterval(checkReminders,20000);checkReminders();}
-function checkReminders(){if(!me||!_reminders.length)return;var now=Date.now();for(var i=0;i<_reminders.length;i++){var rm=_reminders[i];if(rm.done||_remFired[rm.id])continue;if(rm.customer_id&&custOff(rm.customer_id)){_remFired[rm.id]=1;continue;}if(new Date(rm.due_at).getTime()<=now){_remFired[rm.id]=1;if(rm.kind==='no_sale')nsFireChecked(rm);else fireReminder(rm);}}}
+function loadReminders(cb){if(!me){cb&&cb();return;}sb.from('liberty_reminders').select('*').eq('agent_id',me.id).eq('done',false).order('due_at').then(function(r){_reminders=(r&&r.data)||[];try{remDropOff();}catch(e){}_remLoaded=true;cb&&cb();nsReconcile();try{loadApptsUpcoming(function(){});}catch(e){}},function(){cb&&cb();});}
+var _apptRefTs=0;function startReminderScheduler(){if(_remTimer)clearInterval(_remTimer);_remTimer=setInterval(function(){if(me&&navigator.onLine!==false&&Date.now()-_apptRefTs>300000){_apptRefTs=Date.now();try{loadApptsUpcoming(function(){});}catch(e){}}checkReminders();},20000);checkReminders();}
+function checkReminders(){try{checkApptStarts();}catch(e){}if(!me||!_reminders.length)return;var now=Date.now();for(var i=0;i<_reminders.length;i++){var rm=_reminders[i];if(rm.done||_remFired[rm.id])continue;if(rm.customer_id&&custOff(rm.customer_id)){_remFired[rm.id]=1;continue;}if(new Date(rm.due_at).getTime()<=now){_remFired[rm.id]=1;if(rm.kind==='no_sale')nsFireChecked(rm);else fireReminder(rm);}}}
 function fireReminder(rm){
  if(rm.kind==='no_sale'){fireNoSaleReminder(rm);return;}
  if(rpIsRep(rm)){rpFireRem(rm);return;}
@@ -4916,11 +4923,39 @@ function fireReminder(rm){
  try{if('Notification'in window&&Notification.permission==='granted')new Notification(rm.kind==='collection'?_t('💰 תזכורת גבייה'):_t('🔔 תזכורת'),{body:(cn?cn+' — ':'')+rm.text,tag:rm.id});}catch(e){}
  var col=rm.kind==='collection'?'var(--bad)':'var(--acc)',ic=rm.kind==='collection'?'💰':'🔔';
  var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
- ov.innerHTML='<div class="sheet" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px;border-top:5px solid '+col+';animation:rpop .4s ease-out"><div style="font-size:36px;text-align:center">'+ic+'</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:2px">'+(rm.kind==='collection'?_t('תזכורת גבייה'):_t('תזכורת'))+'</div>'+(cn?'<div style="font-size:13px;color:'+col+';font-weight:800;text-align:center;margin-top:4px">'+esc(cn)+'</div>':'')+'<div style="font-size:14px;text-align:center;line-height:1.6;margin-top:8px;color:var(--head)">'+esc(rm.text)+'</div>'+(rm.customer_id?('<button class="'+'cta rmo'+'" style="'+'margin-top:14px;background:var(--accs);color:var(--accd)'+'">'+_t('פתיחת כרטיס הלקוח')+'<\/button>'):'')+('<button class="'+'cta rmd'+'" style="'+'margin-top:9px'+'">'+_t('✓ בוצע')+'<\/button>'+'<button class="'+'rms'+'" style="'+'width:100%;height:44px;margin-top:9px;background:#E6E4DF;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer'+'">'+_t('⏰ נודניק (שעה)')+'<\/button>'+'<\/div>');
+ ov.innerHTML='<div class="sheet" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px;border-top:5px solid '+col+';animation:rpop .4s ease-out"><div style="font-size:36px;text-align:center">'+ic+'</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:2px">'+(rm.kind==='collection'?_t('תזכורת גבייה'):_t('תזכורת'))+'</div>'+(cn?'<div style="font-size:13px;color:'+col+';font-weight:800;text-align:center;margin-top:4px">'+esc(cn)+'</div>':'')+'<div style="font-size:14px;text-align:center;line-height:1.6;margin-top:8px;color:var(--head)">'+esc(rm.text)+'</div>'+((rm.kind==='meeting'&&rm.customer_id&&custById(rm.customer_id)&&custById(rm.customer_id).lat!=null)?'<a class="cta" href="'+wazeUrl(custById(rm.customer_id).lat,custById(rm.customer_id).lng)+'" target="_blank" rel="noopener" style="margin-top:14px;display:flex;align-items:center;justify-content:center;text-decoration:none">'+_t('🚗 ניווט')+'</a>':'')+(rm.customer_id?('<button class="'+'cta rmo'+'" style="'+'margin-top:14px;background:var(--accs);color:var(--accd)'+'">'+_t('פתיחת כרטיס הלקוח')+'<\/button>'):'')+('<button class="'+'cta rmd'+'" style="'+'margin-top:9px'+'">'+_t('✓ בוצע')+'<\/button>'+'<button class="'+'rms'+'" style="'+'width:100%;height:44px;margin-top:9px;background:#E6E4DF;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer'+'">'+_t('⏰ נודניק (שעה)')+'<\/button>'+'<\/div>');
  document.body.appendChild(ov);
  ov.querySelector('.rmd').onclick=function(){remMarkDone(rm.id);ov.remove();};
  var s=ov.querySelector('.rms');if(s)s.onclick=function(){remSnooze(rm,60);ov.remove();};
  var o=ov.querySelector('.rmo');if(o)o.onclick=function(){ov.remove();openCustomer(rm.customer_id);};
+}
+/* v86: notification quick actions → the matching screen */
+function custPhone(cid,cb){if(!cid||navigator.onLine===false){cb(null);return;}sb.from('liberty_customer_phones').select('phone').eq('customer_id',cid).not('phone','is',null).limit(1).then(function(r){cb((r&&r.data&&r.data[0]&&r.data[0].phone)||null);},function(){cb(null);});}
+function telHref(p){return 'tel:'+String(p||'').replace(/[^\d+]/g,'');}
+function notifAct(h){if(!me)return;var P={};String(h).split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)P[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1));});
+ var a=P.act,cid=P.cid||null,c=cid?custById(cid):null;if(P.rid)_remFired[P.rid]=1;
+ if(a==='visit'&&cid){visitTarget={id:cid,name:(c&&c.name)||remCustName(cid)};route='visits';render();return;}
+ if(a==='pay'&&c&&typeof openPaymentSheet==='function'){openCustomer(cid);setTimeout(function(){try{openPaymentSheet(c);}catch(e){}},300);return;}
+ if(a==='call'&&cid){openCustomer(cid);custPhone(cid,function(ph){if(ph)location.href=telHref(ph);});return;}
+ if((a==='cust'||a==='nav')&&cid){openCustomer(cid);return;}
+ route='reminders';render();}
+var _apptFired={};
+function apptCustName(a){return a.customer_name||remCustName(a.customer_id)||'';}
+function checkApptStarts(){if(!me)return;var now=Date.now();
+ Object.keys(_apptWatch).map(function(k){return _apptWatch[k];}).forEach(function(a){if(a.status!=='scheduled'||_apptFired[a.id])return;var t=new Date(a.starts_at).getTime();if(t<=now&&t>now-30*60000){_apptFired[a.id]=1;fireApptStart(a);}});}
+function fireApptStart(a){
+ playReminderSound('collection');
+ var cn=apptCustName(a),c=a.customer_id?custById(a.customer_id):null,tm=apptTime(a);
+ try{if('Notification'in window&&Notification.permission==='granted')new Notification(_t('📅 הפגישה מתחילה עכשיו'),{body:(cn?cn+' — ':'')+tm,tag:'start-'+a.id});}catch(e){}
+ var ov=document.createElement('div');ov.className='ovl';ov.style.alignItems='center';
+ var nav=(c&&c.lat!=null&&c.lng!=null)?'<a class="cta" href="'+wazeUrl(c.lat,c.lng)+'" target="_blank" rel="noopener" style="margin-top:14px;display:flex;align-items:center;justify-content:center;text-decoration:none">'+_t('🚗 ניווט')+'</a>':'';
+ ov.innerHTML='<div class="sheet" style="max-width:360px;margin:auto;border-radius:18px;padding:20px 18px 16px;border-top:5px solid var(--acc);animation:rpop .4s ease-out"><div style="font-size:36px;text-align:center">📅</div><div style="font-size:16px;font-weight:800;text-align:center;margin-top:2px">'+_t('הפגישה מתחילה עכשיו')+'</div>'+(cn?'<div style="font-size:13px;color:var(--acc);font-weight:800;text-align:center;margin-top:4px">'+esc(cn)+'</div>':'')+'<div style="font-size:14px;text-align:center;margin-top:6px;color:var(--head)">'+esc(tm)+(a.note?' · '+esc(a.note):'')+'</div>'+
+  nav+(a.customer_id?'<button class="cta asv" style="margin-top:9px;background:var(--accs);color:var(--accd)">'+_t('📝 פתיחת ביקור')+'</button><button class="cta asc" style="margin-top:9px;background:var(--accs);color:var(--accd)">'+_t('📞 התקשרות')+'</button>':'')+
+  '<button class="asx" style="width:100%;height:44px;margin-top:9px;background:#E6E4DF;color:var(--ink);border:none;border-radius:12px;font-weight:700;cursor:pointer">'+_t('סגירה')+'</button></div>';
+ document.body.appendChild(ov);
+ ov.querySelector('.asx').onclick=function(){ov.remove();};
+ var v=ov.querySelector('.asv');if(v)v.onclick=function(){ov.remove();visitTarget={id:a.customer_id,name:cn};route='visits';render();};
+ var cl=ov.querySelector('.asc');if(cl)cl.onclick=function(){custPhone(a.customer_id,function(ph){if(ph){location.href=telHref(ph);}else{ov.remove();openCustomer(a.customer_id);toast(_t('אין טלפון שמור ללקוח'));}});};
 }
 function remMarkDone(id){_reminders=_reminders.filter(function(r){return r.id!==id});sb.from('liberty_reminders').update({done:true}).eq('id',id).then(function(){},function(){});if(route==='reminders')render();}
 function remSnooze(rm,mins){var nd=new Date(Date.now()+mins*60000).toISOString();rm.due_at=nd;delete _remFired[rm.id];sb.from('liberty_reminders').update({due_at:nd}).eq('id',rm.id).then(function(){},function(){});}
@@ -6131,7 +6166,7 @@ function meMonthCard(){var box=$('hf_me');if(!box||!me||isMgr())return;var mStar
 
 render();
 /* push-notification click while the app is open → jump to the report screen */
-try{if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='nav'||!d.url)return;var h=(String(d.url).split('#')[1]||'');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(h)>-1&&me){route=h;render();}});}catch(e){}
+try{if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',function(e){var d=e&&e.data;if(!d||d.type!=='nav'||!d.url)return;var h=(String(d.url).split('#')[1]||'');if(['wkreport','moreport','map','monthplan','calendar'].indexOf(h)>-1&&me){route=h;render();}else if(h.indexOf('act=')===0&&me){notifAct(h);}});}catch(e){}
 
 /* ================= v70 FEATURES ================= */
 var FEAT_HOME=[];function featHome(){for(var i=0;i<FEAT_HOME.length;i++){try{FEAT_HOME[i]()}catch(e){try{console.error('featHome',e)}catch(e2){}}}}
@@ -6729,7 +6764,10 @@ var WP_RECENT_DAYS=14;
 /* v81: weekly plan never suggests customers visited/ordered in the last 14 days, unless a follow-up date or reminder falls in the plan week */
 function wpRecentTouch(c){var t=Math.max(lastTouchTs(c.id)||0,(typeof lastVisitTs==='function'?lastVisitTs(c.id):0)||0);if(!t)return null;return Math.floor((Date.now()-t)/86400000);}
 function wpForced(c){var we=(_wp&&_wp.ws)?dateAdd(_wp.ws,6):dateAdd(todayStr(),7);var due=(_fuMap||{})[c.id];if(due&&due<=we)return true;var k=(_rmMap||{})[c.id];if(k){var d=(_rmDue||{})[c.id]||0;if(d&&d<parseYmd(we).getTime()+86400000)return true;}return false;}
-function wpScore(c){var td=wpRecentTouch(c);if(td!=null&&td<WP_RECENT_DAYS&&!wpForced(c))return null;var s=routeScore(c);if(!s||s.excluded||s.recent||s.lowprio||s.gray||s.score<=0)return null;
+/* v85: drop from a not-built day anyone touched in the 14 days before it (unless due/reminder by that day) or whose next-visit date is after it. Touches on the day itself = done stops, kept. */
+function dayKeep(id,ds){var c=custById(id);if(!c)return true;var du=(_fuMap||{})[id];if(du&&du>ds)return false;if(du&&du<=ds)return true;var rd=(_rmDue||{})[id];if((_rmMap||{})[id]&&rd&&rd<parseYmd(ds).getTime()+86400000)return true;var t=lastTouchTs(id);if(!t)return true;var td=ymd(new Date(t));if(td>=ds)return true;return Math.round((parseYmd(ds)-parseYmd(td))/86400000)>=WP_RECENT_DAYS;}
+function dayPrune(ds,ids){return (ids||[]).filter(function(id){return dayKeep(id,ds);});}
+function wpScore(c){var td=wpRecentTouch(c);if(td!=null&&td<WP_RECENT_DAYS&&!wpForced(c))return null;var ws0=(_wp&&_wp.ws)||todayStr();if(ws0<todayStr())ws0=todayStr();var we0=dateAdd((_wp&&_wp.ws)||todayStr(),6),du=(_fuMap||{})[c.id];_rsDs=(du&&du>ws0&&du<=we0)?du:ws0;var s;try{s=routeScore(c);}finally{_rsDs=null;}if(!s||s.excluded||s.recent||s.lowprio||s.gray||s.score<=0)return null;
  var sc=s.score,debt=+c.debt_agorot||0;if(debt>0){sc+=60+Math.min(80,Math.round(debt/100000)*8);}
  return {c:c,score:sc,reasons:s.reasons,debt:debt,dv:s.daysSince};}
 function wpPool(){var P={};(LOC.customers||[]).forEach(function(c){if(!c||c.lifecycle==='disqualified')return;var s=wpScore(c);if(s)P[c.id]=s;});return P;}
@@ -6737,7 +6775,7 @@ function wpAreaCents(){var by={};(LOC.customers||[]).forEach(function(c){if(c.ar
 /* pick up to cap stops for one day from the pool (mutates used) */
 function wpPickDay(ds,areas,P,used,cap){
  var AC=wpAreaCents(),inA=function(s){return areas.indexOf(+s.c.area_code)>-1;};
- var cands=[];for(var id in P){var s=P[id];if(used[id]||wpClosed(s.c,ds))continue;cands.push(s);}
+ var cands=[];for(var id in P){var s=P[id];if(used[id]||wpClosed(s.c,ds))continue;var du=(_fuMap||{})[id];if(du&&du>ds)continue;cands.push(s);}
  var mine=cands.filter(inA).sort(function(a,b){return b.score-a.score;});
  if(!mine.length)return [];
  var pick=[mine[0]],cen=function(){var c=wpCent(pick.map(function(x){return x.c;}));return c||AC[pick[0].c.area_code]||getOrigin();};
@@ -6794,7 +6832,7 @@ function wpLoad(ws,cb){
    var pruned=0,T=todayStr();
    for(var k2 in keep){var d=keep[k2];if(d.ds<T||d.built)continue;
     if(d.auto&&!saved[d.ds]){delete keep[k2];continue;}
-    var before=(d.ids||[]).length;d.ids=(d.ids||[]).filter(function(id){var c=custById(id);if(!c)return true;var td=wpRecentTouch(c);return !(td!=null&&td<WP_RECENT_DAYS&&!wpForced(c));});
+    var before=(d.ids||[]).length;d.ids=dayPrune(d.ds,d.ids);
     if(d.ids.length<before){pruned+=before-d.ids.length;d._topup=true;}}
    _wp.days=wpSuggest(keep);
    if(pruned){wpSave(function(){},true);setTimeout(function(){toast(_t('הוסרו ')+pruned+_t(' לקוחות שביקרת אצלם ב-14 הימים האחרונים'));},600);}
