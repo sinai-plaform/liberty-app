@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>תשלום מאובטח · JaSale</title>
+<meta name="theme-color" content="#22384F">
+<link rel="icon" type="image/svg+xml" href="/jasale-icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;600;700&family=Outfit:wght@700&display=swap">
+<style>
+:root{--ink:#1B2B3B;--mut:#616B74;--line:#E6E4DF;--acc:#46647F;--accd:#22384F;--accs:#EEF2F5;--good:#1c7a4f;--goods:#e4f0e8;--warn:#9a6207;--warns:#f8eeda;--bad:#a52f27}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#22384F 0,#22384F 210px,#F7F6F3 210px);color:var(--ink);font-family:"IBM Plex Sans Hebrew",Heebo,system-ui,sans-serif}
+.wrap{max-width:440px;margin:0 auto;padding:22px 16px 40px}
+.brand{display:flex;align-items:center;gap:8px;color:#fff;font:700 16px Outfit,sans-serif}
+.brand img{width:26px;height:26px;border-radius:7px}
+.card{background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(27,43,59,.12);padding:22px 20px;margin-top:18px}
+.lbl{font-size:12.5px;color:var(--mut);font-weight:600}
+.amt{font-size:38px;font-weight:800;color:var(--accd);letter-spacing:-.02em;margin:4px 0 2px}
+.to{font-size:14px;font-weight:700}
+.cta{width:100%;height:54px;border:none;border-radius:14px;background:var(--acc);color:#fff;font-size:17px;font-weight:800;cursor:pointer;margin-top:18px;font-family:inherit}
+.cta:disabled{opacity:.5}
+.field{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 13px;font-size:16px;margin-top:6px;font-family:inherit;direction:ltr;text-align:left}
+.row{display:flex;gap:10px}.row>label{flex:1}
+.test{background:var(--warns);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;line-height:1.6;margin-top:14px}
+.sec{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--mut);margin-top:14px}
+.big{font-size:52px;text-align:center}
+.center{text-align:center}
+.err{color:var(--bad);font-size:13px;font-weight:700;margin-top:10px;min-height:1em}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="brand"><img src="/jasale-icon.svg" alt=""> JaSale</div>
+ <div class="card" id="c"><div class="center lbl">טוען…</div></div>
+ <div class="sec">🔒 תשלום מאובטח · פרטי הכרטיס לא נשמרים אצלנו</div>
+</div>
+<script>
+(function(){
+var SB='https://ooxdupeihzvbzudibaoi.supabase.co',K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9veGR1cGVpaHp2Ynp1ZGliYW9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NTk2ODUsImV4cCI6MjA5MjUzNTY4NX0.-phHZwltk41dIJM6tal9B7t2WZVLrAXLV6is4djN9_A';
+var P=new URLSearchParams(location.search),T=P.get('t')||'',R=P.get('r');
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+var ils=function(a){return '₪'+(a/100).toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2});};
+var H={apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'};
+function get(){return fetch(SB+'/rest/v1/rpc/pay_link_get',{method:'POST',headers:H,body:JSON.stringify({p_token:T})}).then(function(r){return r.json();});}
+function fn(b){return fetch(SB+'/functions/v1/pay',{method:'POST',headers:H,body:JSON.stringify(b)}).then(function(r){return r.json();});}
+function show(h){$('c').innerHTML=h;}
+function head(d){return '<div class="lbl">'+esc(d.company||'')+'</div><div class="amt">'+ils(d.amount_agorot)+'</div><div class="to">'+esc(d.customer)+'</div>';}
+function paid(d){show('<div class="big">✅</div><div class="center" style="font-size:19px;font-weight:800;margin-top:6px">התשלום התקבל, תודה!</div><div class="center lbl" style="margin-top:6px">'+ils(d.amount_agorot)+' · '+esc(d.customer)+(d.paid_at?' · '+new Date(d.paid_at).toLocaleDateString('he-IL'):'')+'</div>');}
+function load(poll){get().then(function(d){
+ if(!d){show('<div class="big">🔗</div><div class="center">הקישור לא נמצא. בקשו מהסוכנת קישור חדש.</div>');return;}
+ if(d.status==='paid'){paid(d);return;}
+ if(d.status==='expired'||d.status==='cancelled'){show('<div class="big">⌛</div><div class="center">תוקף הקישור פג. בקשו מהסוכנת קישור חדש.</div>');return;}
+ if(R==='ok'&&poll<20){show(head(d)+'<div class="center lbl" style="margin-top:14px">מאמת את התשלום…</div>');setTimeout(function(){load(poll+1);},2000);return;}
+ show(head(d)+(R==='fail'?'<div class="err">התשלום לא הושלם. אפשר לנסות שוב.</div>':'')+'<button class="cta" id="go">לתשלום באשראי</button>');
+ $('go').onclick=function(){var b=this;b.disabled=true;b.textContent='מעביר לדף התשלום…';
+  fn({action:'start',t:T}).then(function(r){
+   if(r&&r.redirect){location.href=r.redirect;return;}
+   if(r&&r.mode==='sandbox'){sandbox(d);return;}
+   b.disabled=false;b.textContent='לתשלום באשראי';show(head(d)+'<div class="err">לא ניתן לפתוח את התשלום כרגע ('+esc(r&&r.error||'')+'). נסו שוב מאוחר יותר.</div>');
+  },function(){b.disabled=false;b.textContent='לתשלום באשראי';});};
+},function(){show('<div class="center">אין חיבור לאינטרנט. נסו שוב.</div>');});}
+function sandbox(d){
+ show(head(d)+'<div class="test">🧪 סביבת בדיקות — אין חיוב אמיתי.<br>כרטיס בדיקה: 4580 0000 0000 0000 · תוקף ותעודת זהות כלשהם</div>'+
+  '<label style="display:block;margin-top:14px" class="lbl">מספר כרטיס<input id="cn" class="field" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000"></label>'+
+  '<div class="row" style="margin-top:10px"><label class="lbl">תוקף<input id="ce" class="field" inputmode="numeric" placeholder="MM/YY"></label><label class="lbl">CVV<input id="cv" class="field" inputmode="numeric" placeholder="123"></label></div>'+
+  '<label style="display:block;margin-top:10px" class="lbl">תעודת זהות<input id="ci" class="field" inputmode="numeric"></label>'+
+  '<div class="err" id="er"></div><button class="cta" id="pay">תשלום '+ils(d.amount_agorot)+'</button>');
+ $('pay').onclick=function(){var b=this,cn=($('cn').value||'').replace(/\D/g,'');if(cn.length<12){$('er').textContent='נא להזין מספר כרטיס';return;}
+  b.disabled=true;b.textContent='מעבד…';$('er').textContent='';
+  fn({action:'sandbox_pay',t:T,card:cn}).then(function(r){if(r&&r.ok){load(0);return;}b.disabled=false;b.textContent='תשלום '+ils(d.amount_agorot);$('er').textContent=r&&r.error==='declined'?'הכרטיס נדחה (בסביבת הבדיקות עובד רק כרטיס הבדיקה)':'התשלום נכשל, נסו שוב';},
+   function(){b.disabled=false;b.textContent='תשלום '+ils(d.amount_agorot);$('er').textContent='אין חיבור לאינטרנט';});};}
+if(!T||T.length<16){show('<div class="big">🔗</div><div class="center">הקישור לא תקין.</div>');return;}
+load(0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>JaSale</title>
+<script>
+/* short customer links: jasale.app/o/<token> → /o/?t=<token>, jasale.app/p/<token> → /pay/?t=<token> */
+(function(){var p=location.pathname,m=p.match(/^\/o\/([A-Za-z0-9_\-]{12,40})\/?$/);if(m){location.replace('/o/?t='+m[1]);return;}
+ m=p.match(/^\/p\/([A-Za-z0-9_\-]{16,40})\/?$/);if(m){location.replace('/pay/?t='+m[1]);}})();
+</script>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F7F6F3;color:#1B2B3B;font-family:"IBM Plex Sans Hebrew",Heebo,system-ui,sans-serif;text-align:center}a{color:#46647F;font-weight:700}img{width:64px;height:64px;border-radius:16px}</style>
+</head>
+<body>
+<div><img src="/jasale-icon.svg" alt="JaSale"><h1 style="font-size:20px">העמוד לא נמצא</h1><p><a href="/">לדף הבית של JaSale</a></p></div>
+</body>
+</html>
