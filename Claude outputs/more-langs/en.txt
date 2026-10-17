@@ -1,0 +1,1891 @@
+0	Admin
+1	or
+2	Or pick an area above — then mark the customers you'll visit, and the system will build an organized driving route
+3	Automatic
+4	Automatic by location
+5	Automatic» = by the customer's score
+6	Delivery method
+7	How the order was placed
+8	Estimated length
+9	Orthopedics
+10	Approved
+11	Approved by the manager
+12	Area
+13	New area
+14	Today's focus area
+15	Truck area · days
+16	Courier area
+17	Areas
+18	areas to agent
+19	Areas covered by the agent
+20	Out of stock
+21	out of stock — will be supplied when back
+22	Percent
+23	Other
+24	Later
+25	after the import
+26	After that it works even without signal
+27	Which area is most urgent today
+28	How should
+29	None
+30	No areas
+31	Area
+32	No bonus
+33	No recorded visit
+34	No recorded visit/order
+35	No visits in range
+36	No visits this week
+37	No visits yet
+38	No location access
+39	No location access on the device
+40	No messages right now
+41	No orders in preparation right now
+42	No orders in range
+43	No orders in the selected range
+44	No orders this month
+45	No orders for this customer yet
+46	No ready orders from the last two days
+47	No orders scheduled on the truck for today
+48	No open orders in this filter
+49	No orders waiting to be picked
+50	No returns
+51	No recommendations in this radius 👌 — try a larger radius
+52	No differences — the price list in the system already matches the file
+53	No permission
+54	No microphone permission — allow it in the browser settings
+55	None this week
+56	No debts in this category
+57	No connection
+58	No connection · working offline
+59	No internet connection
+60	No internet connection — try again when you have signal
+61	No network connection — actions will be sent automatically when the connection returns
+62	No network connection — transcription requires internet
+63	No network connection — sharing requires internet
+64	No connection —
+65	No connection — try again
+66	No phone
+67	The customer has no phone
+68	No urgent stops for this day — you can add manually
+69	No urgent stops — all customers here were visited this week
+70	No urgent targets right now
+71	You don't have management permission
+72	No customers in this area
+73	No customers in this list
+74	No new customers in the period
+75	No customers to move in this area
+76	No customers selected — pick an area or «All» to mark customers
+77	No registered potential customers near the route. Search for new businesses nearby (priority to those with a phone
+78	No matching customers
+79	Nothing to approve — no returns and no excess discounts
+80	No products marked for approval
+81	No order ID
+82	No location
+83	No sales in the selected range
+84	No deliveries completed in the last 30 days
+85	No route · tap to plan
+86	Not enough data
+87	No room
+88	No deliveries in the last 14 days
+89	No shipments in the last 30 days
+90	No deliveries scheduled for today
+91	No deliveries scheduled on the truck for today
+92	No attendance in range
+93	No data
+94	No data (customer coordinates required
+95	No data to export in this tab
+96	No saved data for this period
+97	No agents
+98	No agents to show
+99	No active agents
+100	No summary
+101	No days in history yet
+102	No customers to plan yet
+103	No attendance records yet
+104	No catalog pages for this product
+105	No stops on the route
+106	No stops today
+107	No meetings
+108	No meetings that day
+109	No distant meetings that day
+110	No prospects match the filter
+111	No actions to show
+112	No actions waiting to send
+113	No details to show
+114	No items
+115	No open items this week
+116	No items. Add products from the catalog or with the search below
+117	No signal
+118	No signal — showing saved data (may be partial
+119	No signal — saved on the device and will be sent automatically
+120	No records in range
+121	No customer list
+122	No customer list available for this agent — can't calculate coverage
+123	No active reminders
+124	No completed reminders yet
+125	No stops in the plan
+126	No image
+127	No movements yet
+128	No cap — challenge yourself with as many stops as you like (up to
+129	Intimate
+130	Where am I
+131	Reset personal code (leave empty to keep
+132	Contact person
+133	New contact
+134	Approve
+135	Approve discount
+136	Order confirmation
+137	Order confirmation in Liberty format — to create and share with the customer
+138	Approve and create products
+139	Confirm delivery
+140	Approvals
+141	Approvals · returns
+142	to them
+143	If the agent has a route for today and by the set time has no work check-in and no visit
+144	Payment method
+145	Future payment method
+146	Contacts
+147	Reference
+148	Reference / check no. (optional
+149	delivery
+150	Grey
+151	Storekeeper
+152	warehouse keeper · version
+153	You can undo the import with one tap from the import screen
+154	You can enter the original tax invoice number here, if it was already issued in the company system
+155	You can end the workday
+156	you can combine quantities of different products in the group to reach the threshold
+157	You can only plan the current or a future week
+158	You can give more — but the order will go to the manager for approval first
+159	Excel
+160	Excel · CSV · PDF — always with confirmation before saving
+161	Excel and CSV are more accurate; PDF is read approximately and always goes through review
+162	pack
+163	Credit
+164	all debt data
+165	You're editing an existing order — saving will update it and won't create a new order. For a new order: «Cancel editing» above
+166	you
+167	on the same day
+168	That day you have a meeting in
+169	in this area
+170	Overdue
+171	overdue since
+172	in any area
+173	Under construction — coming in the next phase
+174	On the way to you
+175	On the way by truck
+176	In preparation
+177	being prepared by
+178	if unchecked, the agent will see "Out of stock"
+179	Good luck
+180	Cancelled
+181	Bonus
+182	Mixed bonus
+183	Bonus — get
+184	Bonus — buy
+185	Done
+186	Visited
+187	Done
+188	Visited
+189	Visited this month
+190	Visited this week
+191	Visited
+192	Visited this month
+193	Manually choose customers to move from
+194	Multi-select
+195	Choose customer
+196	Choose a customer to visit
+197	Choose a customer for the order
+198	Choose a customer for the meeting
+199	Choose
+200	Select all
+201	Choose who to move the customers to
+202	Choose an agent
+203	Choose an employee
+204	Pick an area and customers and build a driving route
+205	Choose a new area in the menu to move a customer
+206	Pick an area — then mark the customers you'll visit, and the system will build an organized driving route
+207	Select areas
+208	Select at least one customer
+209	Choose what to import. Either way you'll see
+210	Choose a target agent
+211	Choose file
+212	Choose a catalog file
+213	Choose a date
+214	in the range
+215	in this range
+216	In the selected range
+217	Sure? Tap again to remove
+218	Sure? Tap again to end the day
+219	Sure? Delete
+220	Clear all
+221	per day
+222	Cancel
+223	Cancel the meeting
+224	Stop sharing
+225	Undo the last aging import
+226	Undo the last customer import
+227	Undo the last price list import
+228	Cancel editing
+229	Medium
+230	Performance
+231	Visit
+232	Last visit
+233	Last visit today
+234	Visit overdue by
+235	Next visit
+236	Next visit (optional
+237	Next visit by
+238	Scheduled return visit
+239	Visit without a sale
+240	Visit planned for today
+241	In-person visit
+242	Visit expected in
+243	Visit that led to an order
+244	Visit ≈ sale
+245	Potential visits
+246	Visits
+247	Visits · orders · amount · collections, per agent
+248	visits · collected
+249	Recent visits
+250	Visits in range
+251	visits per day
+252	return visits
+253	Missed visits
+254	Visited this week
+255	Pharmacy
+256	Private pharmacy
+257	Each order stores a snapshot of the classification
+258	Without this no alert will reach you — the system will run the checks and have no one to send to
+259	In the «Orders» metric each order is counted once per cell — so the sum of the cells is larger than the total. This is correct and intended
+260	In warehouse
+261	only in warehouse:
+262	In stock
+263	Only in stock:
+264	On the route
+265	The route already has
+266	Tracked
+267	Build anyway
+268	Build route
+269	Build daily route
+270	Commission base
+271	Ltd.
+272	in
+273	Ltd
+274	At the current pace the month will close at
+275	Coming soon
+276	at the moment of the order
+277	the moment you cross it, that's
+278	default
+279	Default: area
+280	Barcode
+281	In the list
+282	No alerts are sent on Saturday at all
+283	at
+284	in shekels
+285	Pharmacies
+286	Pharmacies nearby
+287	High
+288	is higher than the amount paid
+289	High
+290	Collection
+291	Open collections
+292	Incoming collection
+293	Pack size
+294	Version
+295	A new version is available
+296	Live version — connected live to the database
+297	m
+298	Report
+299	Aging report
+300	The aging report is a monthly snapshot — the import
+301	Monthly report
+302	Monthly agent report · no amounts
+303	Agent activity report · no amounts
+304	Weekly report
+305	Rejecting
+306	Reports
+307	Needs attention
+308	Postpone a week
+309	Urgent nearby
+310	Reject
+311	Talked — interested
+312	Skip this area
+313	Skipping page
+314	minutes
+315	min
+316	min drive
+317	Wed
+318	The area is covered this month
+319	Area added
+320	Areas are ranked by the number and urgency of stops — due visits, neglected customers and aging debt. Pick an area and get a route suggestion
+321	Whether a sale of the product counts toward the agent's bonus base
+322	Next
+323	Checks run every 15 minutes. Nothing is sent on Saturday, and on Friday only until the set time. Each alert is sent only once — you won't get the same order again and again
+324	Bonus shared with group
+325	The bonus — e.g.: ₪200 for each new customer
+326	Undo restores the previous details and removes customers created by the import — except customers that already have activity (visit/order/payment
+327	Visit saved
+328	The visit was saved but the meeting wasn't
+329	The visit was saved on the device · will be sent when there's signal
+330	Visit recorded
+331	Settings
+332	Alert settings saved
+333	Due
+334	Due
+335	Visit is due (every
+336	Paste two columns from Excel
+337	The monthly report is ready
+338	The monthly report for
+339	The weekly report is ready
+340	The report includes activity only — no amounts
+341	The rating is shown to the manager when sharing the route
+342	The browser doesn't support push notifications
+343	Print
+344	The message was published
+345	The order was already handled
+346	Order not found
+347	The order is ready to ship
+348	The order is waiting to be sent — it will open after sync
+349	Order rejected
+350	Order deleted
+351	The order was sent for manager approval — the discount exceeds the cap
+352	Order saved
+353	The order was saved on the device · will be sent when there's signal
+354	Order updated
+355	The order will be recorded as customer debt · payment terms
+356	The order will be saved and sent for manager approval
+357	The order will be saved and sent to the manager for approval. Continue
+358	of the orders were placed during a visit
+359	of the orders were placed by phone
+360	My orders
+361	orders — one round in the warehouse
+362	Return approved
+363	Return rejected
+364	Return recorded
+365	The return was saved on the device · will be sent when there's signal
+366	The return will be recorded as "pending manager approval". The credit will be applied after approval
+367	The discount
+368	Discount approved
+369	The order discount
+370	The suggestion combines
+371	Suggestion updated to
+372	Message
+373	Message to customers — delivery arrived / promotion / new catalog
+374	messages
+375	Announcements & competitions
+376	Announcements, bonuses & competitions
+377	oldest overdue by
+378	ordered
+379	Returned to the agent
+380	Returned for changes
+381	Add a reminder and it will pop up at the time you set
+382	Add
+383	Add all of them
+384	Add anyway
+385	Add as potential customer
+386	Add
+387	Add and update customers with automatic area assignment
+388	Add to
+389	Add to order
+390	Add to route
+391	Add to the existing route
+392	Add, disable, role, areas and code reset
+393	Add
+394	Add area
+395	Add customer
+396	Add product
+397	Add product manually
+398	Add product — name or SKU
+399	Removed from the route
+400	removed
+401	Removed / inactive
+402	loaded
+403	Generated
+404	Stop stock tracking
+405	Download to device
+406	Reached
+407	Enter a quantity
+408	Enter a discount value
+409	Enter a value for at least one product
+410	Ordered
+411	Ordered in the past — and no order in the last 60 days
+412	Order
+413	Order
+414	Last order
+415	Large order
+416	New order
+417	First order
+418	Order waiting for approval
+419	Orders
+420	orders · conversion
+421	orders · total
+422	Orders in range
+423	orders in the period
+424	orders recalculated
+425	Orders without a visit (phone/WhatsApp
+426	orders for the truck
+427	orders marked as loaded. Continue to the route anyway
+428	orders with an over-cap discount
+429	Open orders by area — schedule on truck or courier
+430	orders scheduled for the truck on
+431	orders waiting to be prepared
+432	Oldest debt
+433	This month
+434	The month is over
+435	The month is still in progress
+436	My month
+437	Return
+438	Return to the agent with a note
+439	Back to active
+440	Return to the picking queue
+441	Return with a note
+442	Returns
+443	Recent returns
+444	Returns and excess discounts waiting for you
+445	Returns to collect
+446	returns pending
+447	Replace
+448	Full replacement
+449	Replace the route
+450	Apply
+451	Apply benefit
+452	A blocker prevented opening a window
+453	Exception saved
+454	Agent benefit
+455	Agent benefit / discount
+456	Agent discount on
+457	They were on a previous route and weren't visited — don't forget this time
+458	Today
+459	Today · whole team
+460	The day is over
+461	The day is over · well done
+462	My day
+463	Import undone
+464	last days
+465	History
+466	Order history
+467	Route history
+468	Activity history
+469	Next stop
+470	Target reached
+471	First target reached
+472	targets completed
+473	Reverse order
+474	All
+475	Most active
+476	All
+477	All synced
+478	Actual quantity in warehouse
+479	The button re-syncs orders from last month and this month, and recalculates their commission base
+480	Customer moved
+481	The customer will disappear from the app for all agents. Order and payment history stays in the reports
+482	Customer added
+483	Customer deleted
+484	Customer closed
+485	They'll be removed from today's route and added to tomorrow's selection (tomorrow's route won't be built automatically
+486	They behave as if they don't earn commission
+487	The product was removed from the catalog
+488	Product removed from tracking
+489	The product is out of stock right now
+490	Product added
+491	Product updated
+492	Delete failed
+493	Delete failed — try again
+494	Location unavailable — showing the starting point
+495	Location captured ✓ — tap save
+496	Location updated
+497	The device doesn't support recording — you can type manually
+498	Stock updated to
+499	The manager requested changes
+500	Route moved to today
+501	The route and daily report will be saved here automatically at the end of each day
+502	The document was downloaded to the device
+503	The document is ready
+504	updated
+505	Follow-up postponed by a week
+506	Follow-up closed
+507	Follow-up closed — interested
+508	The system will rank the areas and suggest a ready route
+509	the system will arrange them into an efficient driving route from the starting point
+510	The system will split it into pages, detect product codes (a page with a new code = a new product; a page without a code = belongs to the product from the previous page), attach the full slides and read barcode/name — and then you can review and approve
+511	The map is available only with signal
+512	The map is unavailable right now, try again in a minute
+513	The map didn't load
+514	The map is busy, try again in a minute
+515	My map
+516	Your place
+517	Conversion
+518	Continue to order
+519	Continue to differences
+520	Continue to route
+521	Approval wait (min
+522	they will be sent before signing out
+523	Driver created
+524	The driver was created but the role update failed
+525	Discount
+526	General discount
+527	A discount up to the cap is saved normally. Above it, the order is saved but goes to «Approvals» and waits for you. Empty field = no limit
+528	A discount that exceeds the agent's cap — including the customer, agent, amount and discount percent
+529	Discounts
+530	My stats
+531	The order lets you reach all meetings on time (estimate: 35 km/h, 20 min per stop
+532	Agent created
+533	The amounts will be included in the share and in the
+534	Remove
+535	Remove permanently from the list
+536	Remove benefit
+537	Remove product from catalog
+538	Ended
+539	Hide
+540	Move
+541	Move some to tomorrow
+542	Move to today
+543	Transfer
+544	Bank transfer
+545	Moving the customers failed
+546	Move selected
+547	Move some of the customers
+548	Move customers
+549	Move customers to
+550	Cart loaded
+551	Cart saved — open the order on the other device
+552	The cart is empty
+553	The employee will be removed from the app and their login blocked. Their visit and order history is kept in the reports
+554	The city wasn't recognized, so they won't appear in route planning until the area is assigned manually in the customer card
+555	Loading
+556	Next stop
+557	The nearest stop
+558	Note
+559	Note (optional
+560	Document note
+561	Note for the driver/agent (optional
+562	Notes
+563	Manager's note
+564	Copy link
+565	Meeting cancelled
+566	Next appointment
+567	Meeting moved to
+568	The meeting wasn't saved — try again from the customer card
+569	Meeting added to the route
+570	Meeting set for
+571	Stopped ordering
+572	This can't be undone
+573	Your activity · no amounts
+574	Enable push notifications to get reminders even when the app is closed or in the background
+575	Enable notifications
+576	Enable notifications on this device
+577	Create and share
+578	Create document / invoice
+579	Details saved but the PIN reset failed
+580	Details saved, but the price wasn't
+581	The prize — e.g.: dinner for two
+582	Show
+583	Show all
+584	Show less
+585	Show
+586	The score is calculated automatically every night from visits, orders and payments. Manual priority overrides it
+587	Offer
+588	Suggestion
+589	New suggestion
+590	Suggestion for the day — all areas
+591	suggestion ready
+592	Re-suggest
+593	Area suggestion for today
+594	Price quote
+595	Automatic route suggestion
+596	Previous
+597	Catalog imported
+598	Link copied
+599	The links open private businesses around the route in Google Maps — with phone, address and opening hours. If a business looks suitable, add it as a new customer via «New customer
+600	Tap to classify
+601	Tap a row so it won't be imported
+602	Record
+603	On account / charge
+604	Longest jump
+605	Pop up a message to all agents — straight to their phone
+606	Pop up a message to agents
+607	Allocation is higher than the invoice balance
+608	the farthest from the starting point
+609	This week
+610	this week
+611	This week so far
+612	Sharing stopped — the link is no longer active
+613	Sharing and PDF — without amounts
+614	Sharing not supported — downloading the file
+615	Saving creates a route for each day (you can change it each day in the route screen). Days whose route is already built don't change
+616	This year
+617	The selected time has already passed
+618	Date updated — you can schedule
+619	Plan approved
+620	This week's plan
+621	Reminder saved
+622	Start day
+623	Start workday
+624	Sign out
+625	Ignore
+626	Received by (optional
+627	Today's progress
+628	Progress to the first target
+629	Call
+630	Alerts
+631	Push notifications enabled
+632	Push notifications are off on this device
+633	Push notifications turned off
+634	Push notifications are active on this device
+635	Push notifications active — they'll pop up even when the app is closed
+636	Manager alerts
+637	Payment not collected
+638	Payment collected
+639	and
+640	Make sure the columns are identified correctly — the system guessed from the headers
+641	and the route is planned for area
+642	WhatsApp
+643	and
+644	and secondary breakdown
+645	Detected
+646	Detected automatically
+647	Identified
+648	Customers identified
+649	A request to come back/check was detected in the visit summary. Confirm or edit the reminder
+650	Duplicate detection ignores spaces and punctuation
+651	Available for sale
+652	Available only with signal
+653	Availability
+654	Wait time must be at least a minute
+655	Company ID
+656	Company / business ID
+657	Courier company
+658	New
+659	new (optional
+660	New
+661	New
+662	Debt
+663	Aging debt
+664	Aging debt >90 days
+665	Aging debt in the area — not on the route
+666	Open debt
+667	Open debt of the agent's customers
+668	Current open debt
+669	Open debts — feeds collections and the route
+670	Month
+671	Next month
+672	Previous month
+673	Last month
+674	Monthly
+675	Overlaps a meeting in
+676	exceeds the cap
+677	exceeds cap
+678	exceeds your discount cap
+679	Back to automatic frequency
+680	Back
+681	Back to the original order
+682	Call
+683	Free
+684	Search by name, SKU or brand
+685	Search customer or city
+686	Search product — name or SKU
+687	Suggested split into weeks
+688	Partial
+689	Missing
+690	Out of stock
+691	out of stock, will be supplied when back
+692	Missing mapping for required fields
+693	Time overlap
+694	Exception
+695	Exceptions
+696	Account and sign-out
+697	invoices
+698	Open invoices
+699	Invoice
+700	Tax invoice
+701	Tax invoice — enter the official number from the accounting software above. The system does not issue invoice numbers
+702	Custom range
+703	Selected range
+704	Loading
+705	Loading your day
+706	Loading today's deliveries
+707	Loading orders
+708	Loading recommendations
+709	Loading open invoices
+710	Loading customers
+711	Loading sales
+712	Loading engine
+713	Loading map
+714	Loading team data
+715	Loading data
+716	Loading agents
+717	handled
+718	Draft
+719	Draft is saved automatically — won't be lost even without internet
+720	Phone
+721	by phone
+722	phones
+723	phones added
+724	By phone
+725	Load
+726	No commission activated yet
+727	Not sold yet
+728	No exact location set yet
+729	No results recorded yet
+730	Let's go, I'm in
+731	Manual
+732	days
+733	One day with a conflict
+734	days without a visit
+735	Have a good day
+736	Focus day for area
+737	Truck day in area
+738	Workday started
+739	two days
+740	Activity log
+741	Creating
+742	More
+743	Units
+744	units for the price of
+745	Same bonus ratio — a lower threshold was set in the system on purpose. Marked as no-change; tap to include anyway
+746	units
+747	Free bonus units
+748	units in the group — models can be mixed for a shared bonus
+749	free units
+750	units of
+751	units — will ship
+752	Units
+753	Import
+754	Data import
+755	Automatic catalog import
+756	will be sent when there is signal
+757	The PDF may be an image without a text layer. You can add products manually
+758	credit days
+759	Sales focus days
+760	Truck days
+761	attendance days
+762	Working days
+763	working days (Sun–Thu
+764	working days this month — the percentage doesn't reflect a full month yet
+765	working days, remaining
+766	days
+767	days in routes
+768	days by frequency (every
+769	days with a conflict
+770	Target
+771	Target (optional
+772	First target
+773	Second target
+774	targets · tap a customer to add or remove
+775	targets need attention
+776	Targets & commissions
+777	targets to the route
+778	targets added to the route
+779	Will be updated when there's a connection
+780	Creating a PDF is available only with signal — you can print
+781	Create agent
+782	I made contact
+783	They'll pop up with a sound on time
+784	out
+785	Green
+786	Green
+787	There are
+788	Has debt
+789	online · tap for details
+790	Has phone
+791	There is a recent aging import that can be undone
+792	There is a recent customer import that can be undone
+793	There is a recent price list import that can be undone
+794	There's already a route
+795	There is a route from
+796	d
+797	d without a visit
+798	Already in the database
+799	You already have a meeting in
+800	is already assigned to
+801	Already added as customers
+802	already sold
+803	already exists — edit the existing product
+804	Consider removing stops before the meeting or moving it
+805	Consider moving
+806	consider importing an up-to-date report
+807	Consider adding a collection visit — add to the route
+808	Consider scheduling the visit during opening hours or skipping for now and coming back
+809	To reach the target you need
+810	To use the app for the first time on this device you need to connect to the network once
+811	incl.
+812	Title — e.g.: Today's competition
+813	Turn off
+814	Coverage
+815	Area coverage this week
+816	Monthly coverage
+817	Coverage by area
+818	All
+819	All areas
+820	All visits
+821	Whole order
+822	Well done
+823	All customers in the area move to
+824	All customers in the areas you select will move to the chosen agent. An agent can cover several areas — select as many as needed
+825	All customers were visited recently and there's no open debt
+826	All active customers were visited
+827	All of this month's customers were visited
+828	All products are classified
+829	Full route
+830	All analyses for the range of your choice
+831	All analyses — for any date range
+832	All data has been sent
+833	All agents
+834	All of today's stops were handled
+835	All business actions · tap for details
+836	All items of
+837	whole team
+838	Visit every how many days
+839	Each customer by its frequency: green 14 · yellow 21 · orange/new 30 · potential 45 · grey 56 days
+840	Everything the manager sent
+841	Every payment recorded in the field
+842	Include
+843	that is
+844	How long to wait before reminding you
+845	How many stops per day
+846	Real-time quantities · goods receipt · count
+847	Quantity
+848	Quantity received
+849	As a manager you can change the document type, dates, general discount and notes — and the changes are saved to the order
+850	Almost no chance
+851	Yes — qualifies for commission
+852	Sign in
+853	now
+854	Duplicate in file
+855	Duplicates in file
+856	Reports to manager
+857	currently
+858	Currently in the system
+859	Credit card
+860	Customer card
+861	Agent card
+862	Once you pass the threshold, all eligible sales will earn
+863	Write a note
+864	Write a message first
+865	Address
+866	Orange
+867	not
+868	Not visited
+869	Never visited
+870	Not visited in range
+871	Not visited this month
+872	You haven't visited for
+873	Not tracked
+874	Didn't order
+875	Didn't order
+876	Couldn't get location — showing the starting point
+877	Couldn't move it — try again
+878	Couldn't load — try again
+879	Couldn't save — try again
+880	Not identified
+881	Not identified
+882	No product codes were detected in the catalog
+883	No rows identified
+884	Two products can't share the same SKU. You can edit the existing product and update its details
+885	Didn't start
+886	Not eligible
+887	not enough time
+888	not allocated to an invoice
+889	Notification permission wasn't granted on the device
+890	Can't get location
+891	Can't check product classification
+892	Can't add
+893	Can't subscribe to notifications
+894	Can't copy
+895	Can't copy on this device
+896	Can't start recording
+897	Can't start recording
+898	Can't load the PDF engine — internet required
+899	Couldn't load the Excel engine — internet required
+900	Can't plan for a past date
+901	Not present
+902	Not present at the visit
+903	are not on the route. Build anyway
+904	Not found
+905	No suitable day found in the next 21 days
+906	Not found
+907	No urgent stops found in any area right now
+908	No customers found
+909	No products found
+910	No products found in this category
+911	No rows found in the file
+912	No voice detected — try speaking again
+913	Not saved — try again
+914	Not now
+915	Didn't check in today
+916	Inactive
+917	Not relevant
+918	Not relevant for now
+919	Not paid
+920	No, archive it
+921	be assigned to the area
+922	to collect
+923	To visit in the coming days
+924	To visit this month
+925	To collect
+926	Collect on delivery
+927	To collect
+928	To collect — debt over 90 days
+929	for route geocoding
+930	Reject the order? The order will be cancelled and the agent will see it
+931	Add anyway
+932	Replace the suggestion with a new one? (days whose route was already built won't change
+933	Replace the current cart
+934	To today
+935	Continue on tablet/phone
+936	Move
+937	Move the meeting with
+938	Call
+939	Logistics
+940	Monthly board — plan each date
+941	Management board
+942	Dispatch board
+943	Dispatch board (all open orders
+944	Calendar
+945	Picked
+946	Picked
+947	Come back in two weeks
+948	On account / debt
+949	tap to send from your own account
+950	Tap an action to see details
+951	Tap 💬 for each customer to send
+952	Handle the reminder
+953	Liberty
+954	Near
+955	Near my location
+956	per day
+957	per working day
+958	per unit effectively
+959	per unit
+960	Picking
+961	Order picking
+962	Order picking
+963	Warehouse picking
+964	Consolidated picking
+965	for each product you want to discount
+966	Include in share
+967	to sign in
+968	None
+969	No area
+970	No visit for
+971	No limit
+972	No order
+973	No address
+974	No customer
+975	No location
+976	No location on map
+977	no amounts
+978	No channel
+979	Not scheduled
+980	No change
+981	No changes
+982	no cap
+983	To pick
+984	Delete
+985	Delete the order of
+986	To whom
+987	To route
+988	To today's route
+989	to place
+990	To truck
+991	for the truck on
+992	e.g.
+993	e.g.: was closed at 11:30, no answer on the phone
+994	e.g.: was closed, come back tomorrow at ten with a price quote
+995	e.g.: 2 cartons missing
+996	e.g.: come back with a price quote
+997	e.g.: tomorrow at four call Carmel Pharmacy about the debt
+998	e.g.: switching to truck in November
+999	Clear the selection
+1000	Sync last month's and this month's orders by the current classification? The commission base for these orders will be recalculated
+1001	vs.
+1002	to commission
+1003	A meeting needs a date — fill in «Next visit
+1004	at least, and it grows with every additional sale
+1005	by
+1006	By area
+1007	By due visits, neglected customers and aging debt
+1008	With the current order you won't make it in time
+1009	due
+1010	before the import
+1011	less than a day ago
+1012	before anything is saved — nothing is written automatically
+1013	Schedule anyway
+1014	Set a reminder
+1015	Customer
+1016	New customer
+1017	Good customer
+1018	Green customer
+1019	Linked customer (optional
+1020	Yellow customer
+1021	Existing customer
+1022	Customers
+1023	customers · no more working days this month
+1024	customers · from
+1025	Grey customers
+1026	Customers in the area
+1027	customers without an area
+1028	Urgent customers from other areas within 15 km of the starting point or your selected stops
+1029	customers moved
+1030	customers moved to
+1031	New customers
+1032	customers to
+1033	customers from
+1034	customers from area
+1035	customers added
+1036	customers with open debt in the area
+1037	Customers with open debt worth not missing — add them for collection
+1038	customers with a phone
+1039	Nearby potential customers not on the route — add with a tap
+1040	Active customers
+1041	Customers visited
+1042	customers you visited in the last 14 days
+1043	Customers whose first order was in the period
+1044	customers assigned to
+1045	Distinct customers
+1046	Unidentified customers (the row will be saved with the name from the file
+1047	has no customers waiting for a visit this month
+1048	Customers with a next visit set — by urgency. Add to the route
+1049	customers — who should take them over
+1050	To current week
+1051	Send the customer a meeting confirmation
+1052	Save anyway
+1053	Set up a meeting
+1054	Plan for
+1055	Due in
+1056	Due today
+1057	Due by
+1058	from
+1059	loses them
+1060	Approving
+1061	Locating
+1062	Locating
+1063	Overview of the team and activity
+1064	Cancelling
+1065	Metric
+1066	Commission tiers: below ₪75,000 no commission · from ₪75,000 → 2% · above ₪85,000 → 3%. Commission is calculated from house products only (Fresh Gum, MO, Watts etc.) — not Schwartz/Dorcas
+1067	What's worth doing now
+1068	What wasn't delivered / why
+1069	What to deliver
+1070	What to send
+1071	What should change in the plan
+1072	Recently sent
+1073	What was agreed, what to bring next time
+1074	What counts
+1075	What happened
+1076	What happened with the customer
+1077	of target
+1078	of them over 90 days
+1079	from cache
+1080	Deleting
+1081	ready
+1082	Ready to ship
+1083	Ready to start
+1084	ready to ship
+1085	Vs.
+1086	Recommended
+1087	An in-person meeting is recommended
+1088	Phone contact recommended
+1089	Adding as customer
+1090	Hidden
+1091	hidden/removed
+1092	Origin
+1093	Shown
+1094	Shown in the agent catalog
+1095	Showing
+1096	Showing meetings saved on the device
+1097	Showing
+1098	Showing the first 250 — search to narrow down
+1099	Product
+1100	An unclassified product behaves as if it does
+1101	New product
+1102	Product, SKU, customer, brand, area
+1103	Core products — what the customer buys most
+1104	Products
+1105	products · "available" = in warehouse minus orders not yet picked
+1106	products · tap to edit
+1107	products · sorted by brand
+1108	unclassified products
+1109	products without a commission classification
+1110	products from
+1111	Selected products
+1112	products created/updated successfully
+1113	products marked as
+1114	products updated · can be undone from the import screen
+1115	products restored
+1116	Products left empty — no discount
+1117	Disabled
+1118	Fetching from the map… (up to a minute
+1119	Custom
+1120	Brand
+1121	Aging
+1122	Cash
+1123	Commission-eligible
+1124	qualify for commission — but nobody made that decision. Already sold:
+1125	Commission-eligible
+1126	Connected
+1127	outside the area
+1128	Calculated from customer coordinates — the closest customers between two areas
+1129	Delete
+1130	Delete
+1131	Delete employee
+1132	Delete customer
+1133	Delete employee
+1134	Price
+1135	Invalid price
+1136	Agent price
+1137	Consumer price
+1138	Price list
+1139	replaces
+1140	Warehouse
+1141	Tomorrow
+1142	Calculating
+1143	Who received
+1144	Who received the goods
+1145	For your eyes only
+1146	More info
+1147	Importing
+1148	Importing
+1149	Immediate
+1150	The minimum order is ₪600 (before VAT). Still missing
+1151	focus on areas
+1152	Sales focus · 🚚 Truck day · tapping a cell toggles focus (saved in the area card
+1153	GPS location (for villages without an address
+1154	Current location
+1155	Preparing
+1156	Preparing Excel
+1157	Preparing a suggestion for the week
+1158	Preparing link
+1159	Sales
+1160	Sales in range
+1161	Qualifying sales
+1162	Qualifying sales this month (house products
+1163	Few sales
+1164	Covers the area and builds new customers · existing ones stay with
+1165	devices
+1166	Stock
+1167	Low stock
+1168	average
+1169	Average per order
+1170	Average by area (days from order to delivery
+1171	of house products
+1172	Pending
+1173	Waiting for approval
+1174	Waiting to send
+1175	pending
+1176	Manager
+1177	System admin
+1178	Sorted by urgency and proximity to this day
+1179	are marked not-to-import
+1180	served by courier
+1181	Removing
+1182	Partial delivery
+1183	a differences screen
+1184	Summarizing
+1185	Route
+1186	Long route — maybe split it over another day
+1187	Delivery route
+1188	Daily route
+1189	Planned route
+1190	Route built
+1191	Daily driving route
+1192	Previous route not completed
+1193	Document
+1194	Order document
+1195	Customer document
+1196	Syncing
+1197	Syncing
+1198	Number
+1199	Number in cell = planned stops · tap a date to plan
+1200	Our order number
+1201	Original tax invoice number
+1202	Invalid number
+1203	Tracking number (optional
+1204	Phone numbers will be added to the customers' contacts
+1205	No.
+1206	Order no.
+1207	Shipment / tracking no.
+1208	Processing page
+1209	Moving
+1210	Moving
+1211	Planned switch (date
+1212	Updating
+1213	over 60 days
+1214	Above this amount you'll get an alert
+1215	Above the amount you set
+1216	Follow-up
+1217	Follow-up after a visit without a sale
+1218	Warehouse tracking — what's waiting, what's being prepared and what's ready to ship
+1219	Sales follow-up
+1220	Follow-up open for
+1221	Today's follow-ups
+1222	Field sales agent system
+1223	VAT
+1224	Map
+1225	Generating
+1226	Enabling
+1227	Week map
+1228	Gets
+1229	Maximum for this invoice
+1230	Listening… speak now
+1231	SKU
+1232	SKU (or barcode
+1233	This SKU already exists in the system
+1234	Unknown SKU
+1235	SKUs not in the system (won't be imported — add them first in the Products screen
+1236	in advance. Tap a row to change
+1237	distance
+1238	Dental clinics
+1239	Dental clinics nearby
+1240	Private dental clinic
+1241	Truck
+1242	Truck · days
+1243	truck on
+1244	Truck, courier and focus days for each area
+1245	assigned to
+1246	Assigning
+1247	Duration
+1248	Delivery
+1249	Delivery: on the truck
+1250	Delivery: planned for truck
+1251	Delivery: delivered
+1252	Delivery: handed to courier
+1253	Office
+1254	User
+1255	Matches an existing customer
+1256	From date
+1257	of
+1258	Scheduled for truck
+1259	Starting from scratch
+1260	Starts
+1261	We start from the area with the most overdue customers and continue to neighboring areas by number, so each week gets a similar load based on its working days
+1262	Year to date
+1263	Below the order minimum
+1264	When to send the summary
+1265	Planning for
+1266	Signing out
+1267	Delayed · 31–60 days
+1268	Please choose a meeting time
+1269	Please choose a date
+1270	Please write what's missing
+1271	Please enter a SKU
+1272	Please enter a reason
+1273	Please enter an amount
+1274	Please enter employee code and
+1275	Please enter a name
+1276	Please enter a name or phone
+1277	Please enter a product name
+1278	Please enter a date and time
+1279	Please enter content
+1280	Selected
+1281	selected for
+1282	selected for today's route
+1283	Selected
+1284	Collected
+1285	Collected (daily
+1286	Rejected
+1287	Snoozed for an hour
+1288	Driver
+1289	driver · version
+1290	Nahariya
+1291	Snooze (1 hour
+1292	Navigate the full route
+1293	Attendance · last 30 days
+1294	Added
+1295	Added as customer
+1296	Added as a potential customer
+1297	Added to order
+1298	Added to today's route
+1299	Added
+1300	created and saved
+1301	Left
+1302	left of
+1303	Left:
+1304	are treated as the same customer
+1305	Management
+1306	Area management
+1307	Product management
+1308	Stock management
+1309	Employee management
+1310	Navigate
+1311	Navigate with
+1312	Navigate to stop
+1313	Revival attempt — not visited 90+ days
+1314	attempts
+1315	You can record an order — it will be supplied when the product is back in stock
+1316	Failed
+1317	Low
+1318	is below the ₪600 minimum (before VAT). Still missing
+1319	Low
+1320	Deleted
+1321	Sold
+1322	Sold (incl. VAT
+1323	Delivered
+1324	Partially delivered
+1325	Handed to courier
+1326	Delivered
+1327	is in area
+1328	Found
+1329	closed
+1330	Try again
+1331	Follow-up set for
+1332	A meeting was set with the customer
+1333	Clear selection
+1334	Starting point
+1335	Departure point
+1336	Starting point
+1337	Route starting point
+1338	Starting point, sync and logout
+1339	Read by
+1340	It looks like there's no signal right now. Here are your recommendations meanwhile
+1341	Payment recorded
+1342	There are still
+1343	Sent
+1344	Sent to manager · pending
+1345	Notification sent to
+1346	Saved
+1347	Saved on the device · will be sent when connected
+1348	Saved: every
+1349	Saved
+1350	kept due to existing activity
+1351	Debt data from the aging report · updated
+1352	Debt data is imported from an aging report — no import yet
+1353	Close
+1354	Close all
+1355	Closed now
+1356	Close
+1357	Close follow-up
+1358	Stop order reversed — last is first
+1359	Reverse order
+1360	Total
+1361	Total orders of new customers
+1362	Total debt
+1363	Total to pay
+1364	Total sales this month
+1365	Total open
+1366	Total hours
+1367	Type
+1368	Discount type
+1369	Customer type
+1370	Document type
+1371	Unknown action type
+1372	Type: collection
+1373	Closes at
+1374	Agent
+1375	Another agent
+1376	New agent
+1377	Target agent
+1378	Agent not found
+1379	Active agent
+1380	Agent who hasn't started
+1381	Field agent
+1382	Agents
+1383	Agents this month
+1384	Marked as not relevant
+1385	Marked as delivered
+1386	Marked not relevant in follow-up
+1387	Marked not relevant — won't pop up again (can be restored in the customer card
+1388	Marked: I made contact
+1389	Weekend
+1390	Status
+1391	Delivery statistics (30 days
+1392	Return reason
+1393	Reason for refusal
+1394	sequential and automatic. If a tax invoice was already issued in the company system, enter its number here and the document will carry it
+1395	Product commission classification
+1396	Done
+1397	Finish loading → to route
+1398	Finish and analyze
+1399	End day
+1400	End day and create report
+1401	End workday
+1402	Tour / potential
+1403	Visit summary
+1404	Voice visit summary
+1405	Your month summary · no amounts
+1406	Week summary
+1407	Day summary
+1408	End-of-day summary
+1409	Mark
+1410	Mark as delivered
+1411	Mark to add to the route
+1412	Record payment
+1413	Record payment · debt
+1414	Free filter
+1415	Filter by agent
+1416	Filter by name/city
+1417	Refused
+1418	Amount
+1419	Subtotal
+1420	The order amount
+1421	Allocated total
+1422	Invalid large-order amount
+1423	Requested credit amount
+1424	Sales amount
+1425	Amount paid
+1426	Mark each order that went on the truck
+1427	Mark as delivered
+1428	Mark all the rows to finish
+1429	Mark «Yes» or «No» for each family
+1430	Select areas. If an area is already assigned to another agent, you'll be asked whether to replace or join
+1431	Select which invoices the payment closes (partial is possible
+1432	Select which agents cover the area. If the area is already assigned, you'll be asked how to assign
+1433	Select the customers to move to
+1434	Select the customers to move to the route of
+1435	Mark the customers you'll visit, then tap
+1436	Select at least one area
+1437	Sync
+1438	Sync existing orders
+1439	Thresholds
+1440	Count
+1441	Count — set quantity
+1442	Stock count / correction
+1443	Overview
+1444	Performance overview
+1445	Team overview
+1446	team-overview
+1447	Business / company ID
+1448	Shared work
+1449	past
+1450	Visit frequency exceeded
+1451	Passed
+1452	Only
+1453	You passed the 3% target! Full commission on all qualifying sales
+1454	Cart from the other device
+1455	to
+1456	By this time an agent should be on the way
+1457	Until the end of the month
+1458	Until the end of the week
+1459	To date
+1460	Still
+1461	No orders for the customer yet — core products will appear after a few orders
+1462	No orders yet. Create your first order
+1463	No prospects yet — tap «🔄 Refresh from map
+1464	not visited yet
+1465	No customers selected yet — mark from the list (you can combine several areas
+1466	No alerts sent yet
+1467	No plans sent yet
+1468	No route planned for today yet
+1469	Priority
+1470	High priority
+1471	Manual priority overrides the automatic score
+1472	Low priority
+1473	Priority updated
+1474	Update
+1475	Order update
+1476	Update orders already saved
+1477	Customer update
+1478	Update prices and bonuses by SKU
+1479	Bulk stock update
+1480	Bulk update
+1481	Delivery update
+1482	Customer details update
+1483	Details update
+1484	Update location
+1485	Employee
+1486	employees · tap to edit. Areas are assigned from the employee card (agent role
+1487	Another
+1488	No messages sent yet. Tap "+ New" to pop up a bonus or a daily competition for agents
+1489	Updated
+1490	A new version was installed — close and reopen the app
+1491	updated
+1492	Process catalog
+1493	City
+1494	City / area
+1495	Now
+1496	on
+1497	on everything
+1498	For every
+1499	On the whole order
+1500	What the meeting is about
+1501	What the discount applies to
+1502	in
+1503	Loaded on the truck
+1504	Checked in
+1505	Checked in today
+1506	with
+1507	Column
+1508	columns of
+1509	Catalog pages
+1510	pages. Review and fix, mark what to include, and confirm
+1511	Commission
+1512	Qualifying commission · monthly target
+1513	Commission active
+1514	Expected commission now
+1515	Commissions & tiers · this month
+1516	businesses on the route are closed now
+1517	Businesses from the map not yet in the database
+1518	Businesses from the map not yet in the database, up to 2 km from a route stop — «Add» creates a potential customer
+1519	Potential businesses near the route
+1520	Current stop
+1521	Stops
+1522	other stops. What should we do
+1523	Today's stops
+1524	stops waiting for you today
+1525	stops planned for today
+1526	open stops. Finish the day
+1527	stops that was not marked as completed. Move it to today's route
+1528	Edit the existing product
+1529	Edit customer selection
+1530	Order channel
+1531	Edit
+1532	Edit
+1533	Edit order
+1534	Edit customer
+1535	Edit product
+1536	Edit meeting
+1537	Edit details
+1538	Cities in the area
+1539	Value
+1540	Discount value
+1541	Discount value on the whole order
+1542	Values
+1543	by
+1544	Drugstore
+1545	Damaged
+1546	Damaged / expired / overstock
+1547	Meeting
+1548	Meeting in
+1549	Meeting on this day
+1550	Meeting today
+1551	A meeting goes into that day's route plan automatically — even if the customer is in another area, and then you'll get an alert
+1552	A meeting goes into that day's route plan automatically, and gets a reminder an hour before
+1553	Upcoming meeting
+1554	A meeting whose customer is in the selected area enters the route automatically
+1555	Meetings
+1556	meetings this year · red dot = conflict
+1557	more meetings planned
+1558	meetings added to the route automatically
+1559	scheduled meetings
+1560	fixed meetings on the route
+1561	Upcoming meetings
+1562	Distant / overlapping meetings
+1563	Distant meetings on the same day
+1564	High potential
+1565	Potential
+1566	potential
+1567	Prospects
+1568	Prospects from the map along the way
+1569	Missed
+1570	missed · planned
+1571	Missed last time
+1572	Missed
+1573	popular in area
+1574	Fewer
+1575	In person
+1576	in person
+1577	Free breakdown by product, agent, customer and more
+1578	Break down by
+1579	Breakdown by channel
+1580	Details
+1581	Visit details
+1582	Collection details
+1583	Order details
+1584	Targets and commissions breakdown
+1585	Free
+1586	Action
+1587	action not sent
+1588	actions
+1589	actions not sent
+1590	actions waiting to be sent
+1591	actions not sent yet
+1592	actions not sent — check the "Pending" screen and try again
+1593	actions were not sent. Sign out once the connection is back
+1594	Active
+1595	Activity
+1596	Team activity
+1597	Details
+1598	Details (optional
+1599	Items
+1600	Open
+1601	Open now
+1602	Open
+1603	Open the existing customer
+1604	Open the customer card
+1605	Open order
+1606	Open map
+1607	Open
+1608	Open the report
+1609	Open the day
+1610	Open customer card
+1611	Yellow
+1612	Team · sales · activity — shared range and filter
+1613	Score
+1614	Grey score — almost no chance of a sale. Not suggested automatically; you can add manually
+1615	Documentation photo (receipt/check) — optional
+1616	narrow the range or use a filter
+1617	ETA
+1618	Expected delivery
+1619	ETA
+1620	View today's report
+1621	View report history
+1622	Week view — plan each day
+1623	A title is required
+1624	You need to choose a customer
+1625	You need to sign in
+1626	Check
+1627	km
+1628	km from the starting point
+1629	fixed
+1630	Schedule a meeting
+1631	Get free
+1632	Goods receipt
+1633	Goods receipt — add
+1634	Set by my location
+1635	PDF file to share
+1636	Code
+1637	Personal code
+1638	Personal code (PIN) — at least 4 digits
+1639	Employee code
+1640	Wrong employee code or personal code
+1641	previous
+1642	Reading the file
+1643	Category
+1644	Strong category
+1645	Catalog
+1646	received by
+1647	Got it
+1648	Link (catalog/promotion) — optional
+1649	Link to customer
+1650	View-only link. The manager doesn't need to install anything — and the page updates itself as you progress through the day
+1651	Pace
+1652	Monthly pace
+1653	Weekly pace
+1654	nearest
+1655	Critical
+1656	Critical · 60 days and over
+1657	Critical · over 60 days
+1658	Mixed contact
+1659	km
+1660	km · centers
+1661	km from
+1662	km from start
+1663	km from the route
+1664	km from here
+1665	km from the starting point
+1666	Main
+1667	Normal
+1668	Radius (km
+1669	Far
+1670	Record visit
+1671	Record return
+1672	Record payment
+1673	Record payment for this order
+1674	Potential level
+1675	Refresh
+1676	Refresh from map
+1677	Only
+1678	Collections only
+1679	Just a moment
+1680	The invoice list is available with signal
+1681	The invoice list is available with signal · the payment will be recorded without allocation
+1682	The customer list hasn't loaded yet
+1683	The agent list is available only with signal
+1684	Consolidated picking list
+1685	h
+1686	Sales queries
+1687	Week
+1688	Next week
+1689	Previous week
+1690	recent weeks
+1691	Weekly
+1692	Schedule
+1693	Schedule on truck
+1694	Error
+1695	Error cancelling
+1696	Error adding
+1697	Error moving
+1698	Recording error
+1699	Loading error
+1700	Error loading areas
+1701	Error loading the report
+1702	Error loading orders
+1703	Error loading the data
+1704	Error loading customers
+1705	Error loading the PDF engine (internet required
+1706	Error creating the document
+1707	Error creating the link
+1708	Error in product
+1709	Error deleting
+1710	Error pulling from the map
+1711	Error reading the file
+1712	Error saving
+1713	Error saving the subscription
+1714	Network error
+1715	Let the system notify you — instead of you checking
+1716	Scheduled for the truck on
+1717	Worth offering — commission-earning house products
+1718	restored
+1719	Net
+1720	Current · up to 30 days
+1721	Auto-assigned to
+1722	Auto-assigned to area
+1723	allocated to
+1724	Sending
+1725	Paid
+1726	Paid on the spot
+1727	Partly paid
+1728	Saving
+1729	Saving
+1730	one row per product
+1731	Rows
+1732	rows (imported according to the selection
+1733	rows · generated in the JaSale app · Liberty
+1734	rows · total
+1735	rows in
+1736	debt rows
+1737	Unchanged rows and duplicates
+1738	rows to mark
+1739	rows of
+1740	rows updated
+1741	rows restored
+1742	Schedule
+1743	Schedule for truck
+1744	Assign areas to agent
+1745	Allocate to invoices
+1746	Assign customers
+1747	Note
+1748	Note before scheduling
+1749	Change
+1750	Change agent benefit
+1751	Changing the classification only affects new orders
+1752	Bonus changes
+1753	Price changes
+1754	changes
+1755	Dental
+1756	Check
+1757	Friday — until
+1758	Share
+1759	Share on WhatsApp
+1760	Share route
+1761	Direct sharing isn't supported on this device — send via WhatsApp or copy
+1762	Share with the manager
+1763	Forgot your code? Contact the office
+1764	Area adjacency (calculated from the map
+1765	Neighbors
+1766	Hello
+1767	Send
+1768	Send now
+1769	Courier
+1770	Send via WhatsApp
+1771	Send and push to phones
+1772	Send for approval
+1773	Send to manager
+1774	Send to agent
+1775	Courier
+1776	Send all now
+1777	Send WhatsApp
+1778	Send email (2 recipients
+1779	Send the order summary
+1780	Name
+1781	Name or city
+1782	Area name
+1783	Area name
+1784	Recipient name
+1785	Business name
+1786	Courier company name
+1787	Customer name
+1788	Product name
+1789	Product name or SKU
+1790	Full name
+1791	reserved
+1792	Reserved for orders
+1793	Save
+1794	Save · area
+1795	Save anyway
+1796	Save as partial
+1797	Save — closed
+1798	Save visit
+1799	Save settings
+1800	Save order
+1801	Save number
+1802	Save the week
+1803	Save corrections
+1804	Save exception
+1805	Save customer
+1806	Save refusal
+1807	Save changes
+1808	Save reminder
+1809	Year
+1810	Next year
+1811	Change SKU
+1812	Previous year
+1813	Both agents on the same businesses · customers are shared, they don't move
+1814	Time
+1815	Time (optional
+1816	Opening hours
+1817	Known opening hours
+1818	Registered opening hours
+1819	Opening hours, contact person, what was agreed
+1820	Hours, contact person, potential
+1821	Latest departure time
+1822	Daily summary time
+1823	Language
+1824	slides
+1825	Sat
+1826	Date
+1827	Estimated delivery date
+1828	Invoice date
+1829	Document date
+1830	Specific date
+1831	Dates
+1832	Better dates
+1833	Visit frequency
+1834	Reminder text
+1835	Weekly plans
+1836	Monthly plan
+1837	Weekly plan
+1838	Planned
+1839	Outcome
+1840	Visit outcome
+1841	Valid
+1842	Visit due by
+1843	Reminders
+1844	Reminders & notes
+1845	completed reminders · archive
+1846	Reminder
+1847	Voice reminder
+1848	Collection reminder
+1849	New reminder
+1850	Open reminder
+1851	stop
+1852	Stops
+1853	Stops per day
+1854	stops per day · collections and neglected customers first
+1855	stops on the route
+1856	stops per day · collections and neglected customers first · sent to the manager
+1857	Sales competition
+1858	under
+1859	The plans inbox isn't enabled in the system yet. Meanwhile plans arrive via WhatsApp
+1860	A reminder will be created after saving
+1861	Correction
+1862	Plan next week
+1863	Monthly planning
+1864	Route planning
+1865	Plan today's route
+1866	Plan route for the day
+1867	Plan tomorrow's route
+1868	Weekly planning
+1869	Plan a day for an area
+1870	Photo (optional
+1871	photos
+1872	Product photos (optional
+1873	Product image
+1874	Payment documentation photo (optional
+1875	Payment terms
+1876	Recent movements
+1877	Delivery note
+1878	Broadcast
+1879	Customer broadcast
+1880	Role
+1881	Preview
+1882	Email preview — SKUs and quantities only
+1883	WhatsApp preview — full summary
+1884	Period
+1885	cap
+1886	Your discount cap
+1887	Discount cap
+1888	Discount cap must be between 0 and 100 (or empty
+1889	agent cap
+1890	Payment

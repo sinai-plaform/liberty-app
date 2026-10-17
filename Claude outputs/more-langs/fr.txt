@@ -1,0 +1,1891 @@
+0	Admin
+1	ou
+2	Ou choisissez un secteur ci-dessus – puis cochez les clients que vous allez visiter, et le système construira un itinéraire organisé
+3	Automatique
+4	Automatique selon la position
+5	Automatique» = selon le score du client
+6	Mode de livraison
+7	Comment la commande a été passée
+8	Durée estimée
+9	Orthopédie
+10	Approuvé
+11	Approuvé par le responsable
+12	Secteur
+13	Nouveau secteur
+14	Secteur prioritaire du jour
+15	Secteur camion · jours
+16	Secteur coursier
+17	Secteurs
+18	secteurs au commercial
+19	Secteurs couverts par le commercial
+20	En rupture
+21	en rupture – sera livré au retour du stock
+22	Pourcentage
+23	Autre
+24	Plus tard
+25	après l'import
+26	Ensuite, cela fonctionne même sans réseau
+27	Quel secteur est le plus urgent aujourd'hui
+28	Comment doit
+29	Aucun
+30	Aucun secteur
+31	Secteur
+32	Pas de bonus
+33	Aucune visite enregistrée
+34	Aucune visite/commande enregistrée
+35	Aucune visite sur la période
+36	Aucune visite cette semaine
+37	Pas encore de visites
+38	Pas d'accès à la position
+39	Pas d'accès à la position sur l'appareil
+40	Aucun message pour le moment
+41	Aucune commande en préparation pour le moment
+42	Aucune commande sur la période
+43	Aucune commande sur la période sélectionnée
+44	Aucune commande ce mois-ci
+45	Pas encore de commande pour ce client
+46	Aucune commande prête ces deux derniers jours
+47	Aucune commande prévue sur le camion aujourd'hui
+48	Aucune commande ouverte avec ce filtre
+49	Aucune commande en attente de préparation
+50	Aucun retour
+51	Aucune recommandation dans ce rayon 👌 – essayez un rayon plus grand
+52	Aucune différence – le tarif dans le système correspond déjà au fichier
+53	Pas d'autorisation
+54	Pas d'autorisation micro – autorisez-la dans les réglages du navigateur
+55	Aucun cette semaine
+56	Aucune créance dans cette catégorie
+57	Pas de connexion
+58	Pas de connexion · mode hors ligne
+59	Pas de connexion internet
+60	Pas de connexion internet – réessayez quand vous aurez du réseau
+61	Pas de connexion réseau – les actions seront envoyées automatiquement au retour de la connexion
+62	Pas de connexion réseau – la transcription nécessite internet
+63	Pas de connexion réseau – le partage nécessite internet
+64	Pas de connexion –
+65	Pas de connexion – réessayez
+66	Pas de téléphone
+67	Le client n'a pas de téléphone
+68	Aucun arrêt urgent ce jour-là – vous pouvez en ajouter manuellement
+69	Aucun arrêt urgent – tous les clients ici ont été visités cette semaine
+70	Aucune cible urgente pour le moment
+71	Vous n'avez pas les droits de gestion
+72	Aucun client dans ce secteur
+73	Aucun client dans cette liste
+74	Aucun nouveau client sur la période
+75	Aucun client à déplacer dans ce secteur
+76	Aucun client sélectionné – choisissez un secteur ou «Tous» pour cocher des clients
+77	Aucun prospect enregistré près de l'itinéraire. Cherchez de nouveaux commerces à proximité (priorité à ceux avec un téléphone
+78	Aucun client correspondant
+79	Rien à approuver – aucun retour ni remise excessive
+80	Aucun produit marqué pour approbation
+81	Pas d'identifiant de commande
+82	Pas de position
+83	Aucune vente sur la période sélectionnée
+84	Aucune livraison effectuée ces 30 derniers jours
+85	Pas d'itinéraire · touchez pour planifier
+86	Pas assez de données
+87	Pas de place
+88	Aucune livraison ces 14 derniers jours
+89	Aucune expédition ces 30 derniers jours
+90	Aucune livraison prévue aujourd'hui
+91	Aucune livraison prévue sur le camion aujourd'hui
+92	Aucune présence sur la période
+93	Aucune donnée
+94	Aucune donnée (coordonnées des clients requises
+95	Aucune donnée à exporter dans cet onglet
+96	Aucune donnée enregistrée pour cette période
+97	Aucun commercial
+98	Aucun commercial à afficher
+99	Aucun commercial actif
+100	Pas de résumé
+101	Pas encore de jours dans l'historique
+102	Pas encore de clients à planifier
+103	Pas encore de pointages
+104	Aucune page de catalogue pour ce produit
+105	Aucun arrêt sur l'itinéraire
+106	Aucun arrêt aujourd'hui
+107	Aucun rendez-vous
+108	Aucun rendez-vous ce jour-là
+109	Aucun rendez-vous éloigné ce jour-là
+110	Aucun prospect ne correspond au filtre
+111	Aucune action à afficher
+112	Aucune action en attente d'envoi
+113	Aucun détail à afficher
+114	Aucun article
+115	Aucun point ouvert cette semaine
+116	Aucun article. Ajoutez des produits depuis le catalogue ou avec la recherche ci-dessous
+117	Pas de réseau
+118	Pas de réseau – affichage des données enregistrées (peut-être partielles
+119	Pas de réseau – enregistré sur l'appareil, sera envoyé automatiquement
+120	Aucun enregistrement sur la période
+121	Pas de liste clients
+122	Aucune liste clients disponible pour ce commercial – impossible de calculer la couverture
+123	Aucun rappel actif
+124	Pas encore de rappels terminés
+125	Aucun arrêt dans le plan
+126	Pas d'image
+127	Pas encore de mouvements
+128	Sans plafond – lancez-vous le défi avec autant d'arrêts que vous voulez (jusqu'à
+129	Hygiène intime
+130	Où suis-je
+131	Réinitialiser le code personnel (laisser vide pour le conserver
+132	Interlocuteur
+133	Nouveau contact
+134	Approuver
+135	Approuver la remise
+136	Confirmation de commande
+137	Confirmation de commande au format Liberty – à créer et partager avec le client
+138	Approuver et créer les produits
+139	Confirmer la livraison
+140	Approbations
+141	Approbations · retours
+142	à eux
+143	Si le commercial a un itinéraire aujourd'hui et qu'à l'heure fixée il n'a ni pointage ni visite
+144	Mode de paiement
+145	Mode de paiement futur
+146	Contacts
+147	Référence
+148	Référence / n° de chèque (facultatif
+149	livraison
+150	Gris
+151	Magasinier
+152	magasinier · version
+153	Vous pouvez annuler l'import d'un geste depuis l'écran d'import
+154	Vous pouvez saisir ici le numéro de la facture d'origine, si elle a déjà été émise dans le système de l'entreprise
+155	Vous pouvez terminer la journée
+156	vous pouvez combiner les quantités de différents produits du groupe pour atteindre le seuil
+157	Vous ne pouvez planifier que la semaine en cours ou une semaine future
+158	Vous pouvez accorder plus – mais la commande ira d'abord au responsable pour approbation
+159	Excel
+160	Excel · CSV · PDF – toujours avec confirmation avant l'enregistrement
+161	Excel et CSV sont plus précis ; le PDF est lu de façon approximative et passe toujours par une vérification
+162	pack
+163	Avoir
+164	toutes les données de créances
+165	Vous modifiez une commande existante – l'enregistrement la mettra à jour sans créer de nouvelle commande. Pour une nouvelle commande : «Annuler la modification» ci-dessus
+166	vous
+167	le même jour
+168	Ce jour-là, vous avez un rendez-vous à
+169	dans ce secteur
+170	En retard
+171	en retard depuis
+172	dans n'importe quel secteur
+173	En construction – arrive dans la prochaine phase
+174	En route vers vous
+175	En route par camion
+176	En préparation
+177	en préparation par
+178	si non coché, le commercial verra « En rupture »
+179	Bonne chance
+180	Annulé
+181	Bonus
+182	Bonus mixte
+183	Bonus – recevez
+184	Bonus – achetez
+185	Fait
+186	Visité
+187	Fait
+188	Visité
+189	Visités ce mois-ci
+190	Visités cette semaine
+191	Visité
+192	Visités ce mois-ci
+193	Choisir manuellement les clients à déplacer depuis
+194	Sélection multiple
+195	Choisir un client
+196	Choisir un client à visiter
+197	Choisir un client pour la commande
+198	Choisir un client pour le rendez-vous
+199	Choisir
+200	Tout sélectionner
+201	Choisissez à qui transférer les clients
+202	Choisir un commercial
+203	Choisir un employé
+204	Choisissez un secteur et des clients et construisez un itinéraire
+205	Choisissez un nouveau secteur dans le menu pour déplacer un client
+206	Choisissez un secteur – puis cochez les clients que vous allez visiter, et le système construira un itinéraire organisé
+207	Sélectionner des secteurs
+208	Sélectionnez au moins un client
+209	Choisissez quoi importer. Dans tous les cas, vous verrez
+210	Choisir un commercial cible
+211	Choisir un fichier
+212	Choisir un fichier catalogue
+213	Choisir une date
+214	sur la période
+215	sur cette période
+216	Sur la période sélectionnée
+217	Vous êtes sûr ? Touchez à nouveau pour retirer
+218	Vous êtes sûr ? Touchez à nouveau pour clôturer la journée
+219	Vous êtes sûr ? Supprimer
+220	Tout effacer
+221	par jour
+222	Annuler
+223	Annuler le rendez-vous
+224	Arrêter le partage
+225	Annuler le dernier import de la balance âgée
+226	Annuler le dernier import clients
+227	Annuler le dernier import du tarif
+228	Annuler la modification
+229	Moyen
+230	Performance
+231	Visite
+232	Dernière visite
+233	Dernière visite aujourd'hui
+234	Visite en retard de
+235	Prochaine visite
+236	Prochaine visite (facultatif
+237	Prochaine visite avant le
+238	Visite de suivi prévue
+239	Visite sans vente
+240	Visite prévue aujourd'hui
+241	Visite sur place
+242	Visite prévue dans
+243	Visite ayant abouti à une commande
+244	Visite ≈ vente
+245	Visites potentielles
+246	Visites
+247	Visites · commandes · montant · encaissements, par commercial
+248	visites · encaissé
+249	Visites récentes
+250	Visites sur la période
+251	visites par jour
+252	visites de suivi
+253	Visites manquées
+254	Visités cette semaine
+255	Pharmacie
+256	Pharmacie privée
+257	Chaque commande enregistre un instantané de la classification
+258	Sans cela, aucune alerte ne vous parviendra – le système fera les vérifications sans personne à qui les envoyer
+259	Dans l'indicateur «Commandes», chaque commande est comptée une fois par cellule – la somme des cellules est donc supérieure au total. C'est correct et voulu
+260	En entrepôt
+261	uniquement en entrepôt :
+262	En stock
+263	Uniquement en stock :
+264	Sur l'itinéraire
+265	L'itinéraire contient déjà
+266	Suivi
+267	Construire quand même
+268	Construire l'itinéraire
+269	Construire l'itinéraire du jour
+270	Base de commission
+271	SARL
+272	à
+273	SARL
+274	Au rythme actuel, le mois se terminera à
+275	Bientôt
+276	au moment de la commande
+277	dès que vous le dépassez, c'est
+278	par défaut
+279	Par défaut : secteur
+280	Code-barres
+281	Dans la liste
+282	Aucune alerte n'est envoyée le samedi
+283	à
+284	en shekels
+285	Pharmacies
+286	Pharmacies à proximité
+287	Élevée
+288	est supérieur au montant payé
+289	Élevé
+290	Encaissement
+291	Encaissements en cours
+292	Encaissement entrant
+293	Conditionnement
+294	Version
+295	Une nouvelle version est disponible
+296	Version live – connectée en direct à la base de données
+297	m
+298	Rapport
+299	Balance âgée
+300	La balance âgée est un instantané mensuel – l'import
+301	Rapport mensuel
+302	Rapport mensuel du commercial · sans montants
+303	Rapport d'activité du commercial · sans montants
+304	Rapport hebdomadaire
+305	Refus en cours
+306	Rapports
+307	À surveiller
+308	Reporter d'une semaine
+309	Urgent à proximité
+310	Refuser
+311	Échangé – intéressé
+312	Passer ce secteur
+313	Page ignorée
+314	minutes
+315	min
+316	min de route
+317	Mer
+318	Le secteur est couvert ce mois-ci
+319	Secteur ajouté
+320	Les secteurs sont classés par nombre et urgence des arrêts – visites dues, clients délaissés et créances anciennes. Choisissez un secteur et obtenez une proposition d'itinéraire
+321	Si la vente du produit compte dans la base de bonus du commercial
+322	Suivant
+323	Les vérifications ont lieu toutes les 15 minutes. Rien n'est envoyé le samedi, et le vendredi seulement jusqu'à l'heure fixée. Chaque alerte n'est envoyée qu'une fois – vous ne recevrez pas la même commande encore et encore
+324	Bonus partagé avec le groupe
+325	Le bonus – ex. : 200 ₪ par nouveau client
+326	L'annulation rétablit les données précédentes et supprime les clients créés par l'import – sauf ceux qui ont déjà de l'activité (visite/commande/paiement
+327	Visite enregistrée
+328	La visite a été enregistrée mais pas le rendez-vous
+329	La visite a été enregistrée sur l'appareil · sera envoyée dès qu'il y aura du réseau
+330	Visite enregistrée
+331	Réglages
+332	Réglages des alertes enregistrés
+333	Dû
+334	À faire
+335	La visite est due (tous les
+336	Collez deux colonnes depuis Excel
+337	Le rapport mensuel est prêt
+338	Le rapport mensuel de
+339	Le rapport hebdomadaire est prêt
+340	Le rapport ne contient que l'activité – aucun montant
+341	La note est montrée au responsable lors du partage de l'itinéraire
+342	Le navigateur ne prend pas en charge les notifications push
+343	Imprimer
+344	Le message a été publié
+345	La commande a déjà été traitée
+346	Commande introuvable
+347	La commande est prête à expédier
+348	La commande attend d'être envoyée – elle s'ouvrira après la synchronisation
+349	Commande refusée
+350	Commande supprimée
+351	La commande a été envoyée au responsable pour approbation – la remise dépasse le plafond
+352	Commande enregistrée
+353	La commande a été enregistrée sur l'appareil · sera envoyée dès qu'il y aura du réseau
+354	Commande mise à jour
+355	La commande sera enregistrée comme créance client · conditions de paiement
+356	La commande sera enregistrée et envoyée au responsable pour approbation
+357	La commande sera enregistrée et envoyée au responsable pour approbation. Continuer
+358	des commandes ont été passées lors d'une visite
+359	des commandes ont été passées par téléphone
+360	Mes commandes
+361	commandes – un seul passage en entrepôt
+362	Retour approuvé
+363	Retour refusé
+364	Retour enregistré
+365	Le retour a été enregistré sur l'appareil · sera envoyé dès qu'il y aura du réseau
+366	Le retour sera enregistré « en attente d'approbation du responsable ». L'avoir sera appliqué après approbation
+367	La remise
+368	Remise approuvée
+369	La remise sur la commande
+370	La proposition combine
+371	Proposition mise à jour :
+372	Message
+373	Message aux clients – livraison arrivée / promotion / nouveau catalogue
+374	messages
+375	Annonces & challenges
+376	Annonces, bonus & challenges
+377	la plus ancienne en retard de
+378	commandé
+379	Renvoyé au commercial
+380	Renvoyé pour modifications
+381	Ajoutez un rappel, il apparaîtra à l'heure choisie
+382	Ajouter
+383	Tous les ajouter
+384	Ajouter quand même
+385	Ajouter comme prospect
+386	Ajouter
+387	Ajouter et mettre à jour des clients avec affectation automatique du secteur
+388	Ajouter à
+389	Ajouter à la commande
+390	Ajouter à l'itinéraire
+391	Ajouter à l'itinéraire existant
+392	Ajout, désactivation, rôle, secteurs et réinitialisation du code
+393	Ajouter
+394	Ajouter un secteur
+395	Ajouter un client
+396	Ajouter un produit
+397	Ajouter un produit manuellement
+398	Ajouter un produit – nom ou référence
+399	Retiré de l'itinéraire
+400	retiré
+401	Retiré / inactif
+402	chargé
+403	Généré
+404	Arrêter le suivi du stock
+405	Télécharger sur l'appareil
+406	Atteint
+407	Saisissez une quantité
+408	Saisissez une valeur de remise
+409	Saisissez une valeur pour au moins un produit
+410	Commandé
+411	A commandé par le passé – aucune commande ces 60 derniers jours
+412	Commande
+413	Commande
+414	Dernière commande
+415	Grosse commande
+416	Nouvelle commande
+417	Première commande
+418	Commande en attente d'approbation
+419	Commandes
+420	commandes · conversion
+421	commandes · total
+422	Commandes sur la période
+423	commandes sur la période
+424	commandes recalculées
+425	Commandes sans visite (téléphone/WhatsApp
+426	commandes pour le camion
+427	commandes marquées comme chargées. Continuer vers l'itinéraire quand même
+428	commandes avec une remise hors plafond
+429	Commandes ouvertes par secteur – planifier sur camion ou coursier
+430	commandes prévues sur le camion le
+431	commandes en attente de préparation
+432	Créance la plus ancienne
+433	Ce mois-ci
+434	Le mois est terminé
+435	Le mois est encore en cours
+436	Mon mois
+437	Retour
+438	Renvoyer au commercial avec une note
+439	Réactiver
+440	Remettre dans la file de préparation
+441	Renvoyer avec une note
+442	Retours
+443	Retours récents
+444	Retours et remises excessives en attente de votre décision
+445	Retours à récupérer
+446	retours en attente
+447	Remplacer
+448	Remplacement complet
+449	Remplacer l'itinéraire
+450	Appliquer
+451	Appliquer l'avantage
+452	Un bloqueur a empêché l'ouverture d'une fenêtre
+453	Exception enregistrée
+454	Avantage commercial
+455	Avantage / remise commercial
+456	Remise commercial sur
+457	Ils figuraient sur un itinéraire précédent et n'ont pas été visités – ne les oubliez pas cette fois
+458	Aujourd'hui
+459	Aujourd'hui · toute l'équipe
+460	La journée est terminée
+461	La journée est terminée · bravo
+462	Ma journée
+463	Import annulé
+464	derniers jours
+465	Historique
+466	Historique des commandes
+467	Historique des itinéraires
+468	Historique d'activité
+469	Prochain arrêt
+470	Objectif atteint
+471	Premier objectif atteint
+472	objectifs atteints
+473	Inverser l'ordre
+474	Tous
+475	Les plus actifs
+476	Tous
+477	Tout est synchronisé
+478	Quantité réelle en entrepôt
+479	Le bouton resynchronise les commandes du mois dernier et de ce mois et recalcule leur base de commission
+480	Client déplacé
+481	Le client disparaîtra de l'appli pour tous les commerciaux. L'historique des commandes et paiements reste dans les rapports
+482	Client ajouté
+483	Client supprimé
+484	Client fermé
+485	Ils seront retirés de l'itinéraire du jour et ajoutés à la sélection de demain (l'itinéraire de demain ne sera pas construit automatiquement
+486	Ils se comportent comme s'ils ne rapportaient pas de commission
+487	Le produit a été retiré du catalogue
+488	Produit retiré du suivi
+489	Le produit est en rupture pour le moment
+490	Produit ajouté
+491	Produit mis à jour
+492	Échec de la suppression
+493	Échec de la suppression – réessayez
+494	Position indisponible – affichage du point de départ
+495	Position enregistrée ✓ – touchez Enregistrer
+496	Position mise à jour
+497	L'appareil ne prend pas en charge l'enregistrement – vous pouvez saisir manuellement
+498	Stock mis à jour à
+499	Le responsable a demandé des modifications
+500	Itinéraire déplacé à aujourd'hui
+501	L'itinéraire et le rapport du jour seront enregistrés ici automatiquement à la fin de chaque journée
+502	Le document a été téléchargé sur l'appareil
+503	Le document est prêt
+504	mis à jour
+505	Suivi reporté d'une semaine
+506	Suivi clôturé
+507	Suivi clôturé – intéressé
+508	Le système classera les secteurs et proposera un itinéraire prêt
+509	le système les organisera en un itinéraire efficace depuis le point de départ
+510	Le système le découpera en pages, détectera les codes produit (une page avec un nouveau code = un nouveau produit ; une page sans code = appartient au produit de la page précédente), joindra les diapositives complètes et lira code-barres/nom – vous pourrez ensuite vérifier et approuver
+511	La carte n'est disponible qu'avec du réseau
+512	La carte est indisponible pour le moment, réessayez dans une minute
+513	La carte ne s'est pas chargée
+514	La carte est occupée, réessayez dans une minute
+515	Ma carte
+516	Votre place
+517	Conversion
+518	Continuer vers la commande
+519	Continuer vers les différences
+520	Continuer vers l'itinéraire
+521	Attente d'approbation (min
+522	elles seront envoyées avant la déconnexion
+523	Chauffeur créé
+524	Le chauffeur a été créé mais la mise à jour du rôle a échoué
+525	Remise
+526	Remise globale
+527	Une remise jusqu'au plafond est enregistrée normalement. Au-delà, la commande est enregistrée mais passe dans «Approbations» et vous attend. Champ vide = pas de limite
+528	Une remise qui dépasse le plafond du commercial – avec client, commercial, montant et pourcentage de remise
+529	Remises
+530	Mes chiffres
+531	Cet ordre vous permet d'arriver à l'heure à tous les rendez-vous (estimation : 35 km/h, 20 min par arrêt
+532	Commercial créé
+533	Les montants seront inclus dans le partage et dans le
+534	Retirer
+535	Retirer définitivement de la liste
+536	Retirer l'avantage
+537	Retirer le produit du catalogue
+538	Terminé
+539	Masquer
+540	Déplacer
+541	Reporter une partie à demain
+542	Déplacer à aujourd'hui
+543	Virement
+544	Virement bancaire
+545	Échec du déplacement des clients
+546	Déplacer la sélection
+547	Déplacer une partie des clients
+548	Déplacer des clients
+549	Déplacer les clients vers
+550	Panier chargé
+551	Panier enregistré – ouvrez la commande sur l'autre appareil
+552	Le panier est vide
+553	L'employé sera retiré de l'appli et sa connexion bloquée. Son historique de visites et commandes reste dans les rapports
+554	La ville n'a pas été reconnue, ils n'apparaîtront donc pas dans la planification tant que le secteur n'est pas attribué manuellement dans la fiche client
+555	Chargement
+556	Prochain arrêt
+557	L'arrêt le plus proche
+558	Note
+559	Note (facultatif
+560	Note du document
+561	Note pour le chauffeur/commercial (facultatif
+562	Notes
+563	Note du responsable
+564	Copier le lien
+565	Rendez-vous annulé
+566	Prochain rendez-vous
+567	Rendez-vous déplacé au
+568	Le rendez-vous n'a pas été enregistré – réessayez depuis la fiche client
+569	Rendez-vous ajouté à l'itinéraire
+570	Rendez-vous fixé le
+571	A arrêté de commander
+572	Cette action est irréversible
+573	Votre activité · sans montants
+574	Activez les notifications push pour recevoir des rappels même quand l'appli est fermée ou en arrière-plan
+575	Activer les notifications
+576	Activer les notifications sur cet appareil
+577	Créer et partager
+578	Créer un document / une facture
+579	Données enregistrées mais la réinitialisation du PIN a échoué
+580	Données enregistrées, mais pas le prix
+581	Le lot – ex. : un dîner pour deux
+582	Afficher
+583	Tout afficher
+584	Afficher moins
+585	Afficher
+586	Le score est calculé automatiquement chaque nuit à partir des visites, commandes et paiements. La priorité manuelle le remplace
+587	Offre
+588	Proposition
+589	Nouvelle proposition
+590	Proposition pour la journée – tous les secteurs
+591	proposition prête
+592	Proposer à nouveau
+593	Secteur proposé pour aujourd'hui
+594	Devis
+595	Proposition d'itinéraire automatique
+596	Précédent
+597	Catalogue importé
+598	Lien copié
+599	Les liens ouvrent dans Google Maps les commerces privés autour de l'itinéraire – avec téléphone, adresse et horaires. Si un commerce semble pertinent, ajoutez-le comme nouveau client via «Nouveau client
+600	Touchez pour classer
+601	Touchez une ligne pour ne pas l'importer
+602	Enregistrer
+603	En compte / débit
+604	Plus grand saut
+605	Envoyer un message à tous les commerciaux – directement sur leur téléphone
+606	Envoyer un message aux commerciaux
+607	L'affectation dépasse le solde de la facture
+608	le plus éloigné du point de départ
+609	Cette semaine
+610	cette semaine
+611	Cette semaine jusqu'ici
+612	Partage arrêté – le lien n'est plus actif
+613	Partage et PDF – sans montants
+614	Partage non pris en charge – téléchargement du fichier
+615	L'enregistrement crée un itinéraire pour chaque jour (modifiable chaque jour dans l'écran itinéraire). Les jours dont l'itinéraire est déjà construit ne changent pas
+616	Cette année
+617	L'heure choisie est déjà passée
+618	Date mise à jour – vous pouvez planifier
+619	Plan approuvé
+620	Plan de la semaine
+621	Rappel enregistré
+622	Commencer la journée
+623	Commencer la journée de travail
+624	Se déconnecter
+625	Ignorer
+626	Reçu par (facultatif
+627	Progression du jour
+628	Progression vers le premier objectif
+629	Appeler
+630	Alertes
+631	Notifications push activées
+632	Les notifications push sont désactivées sur cet appareil
+633	Notifications push désactivées
+634	Les notifications push sont actives sur cet appareil
+635	Notifications push actives – elles apparaîtront même appli fermée
+636	Alertes du responsable
+637	Paiement non encaissé
+638	Paiement encaissé
+639	et
+640	Vérifiez que les colonnes sont bien identifiées – le système a déduit à partir des en-têtes
+641	et l'itinéraire est prévu pour le secteur
+642	WhatsApp
+643	et
+644	et ventilation secondaire
+645	Détecté
+646	Détecté automatiquement
+647	Identifié
+648	Clients identifiés
+649	Une demande de repasser/vérifier a été détectée dans le compte rendu de visite. Confirmez ou modifiez le rappel
+650	La détection des doublons ignore les espaces et la ponctuation
+651	Disponible à la vente
+652	Disponible uniquement avec du réseau
+653	Disponibilité
+654	Le délai d'attente doit être d'au moins une minute
+655	SIRET
+656	SIRET / n° d'entreprise
+657	Société de messagerie
+658	Nouveau
+659	nouveau (facultatif
+660	Nouveau
+661	Nouvelle
+662	Créance
+663	Créance échue
+664	Créance échue >90 jours
+665	Créance échue dans le secteur – pas sur l'itinéraire
+666	Créance ouverte
+667	Créances ouvertes des clients du commercial
+668	Créance ouverte actuelle
+669	Créances ouvertes – alimentent les encaissements et l'itinéraire
+670	Mois
+671	Mois prochain
+672	Mois précédent
+673	Mois dernier
+674	Mensuel
+675	Chevauche un rendez-vous à
+676	dépasse le plafond
+677	hors plafond
+678	dépasse votre plafond de remise
+679	Revenir à la fréquence automatique
+680	Retour
+681	Retour à la commande d'origine
+682	Appeler
+683	Libre
+684	Rechercher par nom, référence ou marque
+685	Rechercher un client ou une ville
+686	Produit – nom ou référence
+687	Répartition proposée par semaine
+688	Partiel
+689	Manquant
+690	En rupture
+691	en rupture, sera livré au retour du stock
+692	Correspondance manquante pour les champs obligatoires
+693	Chevauchement horaire
+694	Exception
+695	Exceptions
+696	Compte et déconnexion
+697	factures
+698	Factures ouvertes
+699	Facture
+700	Facture
+701	Facture – saisissez ci-dessus le numéro officiel issu du logiciel comptable. Le système n'attribue pas de numéros de facture
+702	Période personnalisée
+703	Période sélectionnée
+704	Chargement
+705	Chargement de votre journée
+706	Chargement des livraisons du jour
+707	Chargement des commandes
+708	Chargement des recommandations
+709	Chargement des factures ouvertes
+710	Chargement des clients
+711	Chargement des ventes
+712	Chargement du module
+713	Chargement de la carte
+714	Chargement des données de l'équipe
+715	Chargement des données
+716	Chargement des commerciaux
+717	traité
+718	Brouillon
+719	Le brouillon est enregistré automatiquement – il ne sera pas perdu, même sans internet
+720	Téléphone
+721	par téléphone
+722	téléphones
+723	téléphones ajoutés
+724	Par téléphone
+725	Charger
+726	Aucune commission activée pour l'instant
+727	Pas encore vendu
+728	Pas encore de position exacte définie
+729	Pas encore de résultats enregistrés
+730	C'est parti, j'y vais
+731	Manuel
+732	jours
+733	Un jour avec un conflit
+734	jours sans visite
+735	Bonne journée
+736	Jour prioritaire pour le secteur
+737	Jour camion dans le secteur
+738	Journée de travail commencée
+739	deux jours
+740	Journal d'activité
+741	Création
+742	Plus
+743	Unités
+744	unités au prix de
+745	Même ratio de bonus – un seuil plus bas a été défini volontairement dans le système. Marqué sans changement ; touchez pour l'inclure quand même
+746	unités
+747	Unités offertes en bonus
+748	unités dans le groupe – les modèles peuvent être mélangés pour un bonus commun
+749	unités gratuites
+750	unités de
+751	unités – seront livrées
+752	Unités
+753	Import
+754	Import de données
+755	Import automatique du catalogue
+756	sera envoyé dès qu'il y aura du réseau
+757	Le PDF est peut-être une image sans couche texte. Vous pouvez ajouter les produits manuellement
+758	jours de crédit
+759	Jours de focus commercial
+760	Jours camion
+761	jours de présence
+762	Jours ouvrés
+763	jours ouvrés (dim–jeu
+764	jours ouvrés ce mois-ci – le pourcentage ne reflète pas encore un mois complet
+765	jours ouvrés, restants
+766	jours
+767	jours dans les itinéraires
+768	jours selon la fréquence (tous les
+769	jours avec un conflit
+770	Objectif
+771	Objectif (facultatif
+772	Premier objectif
+773	Deuxième objectif
+774	cibles · touchez un client pour l'ajouter ou le retirer
+775	cibles demandent votre attention
+776	Objectifs & commissions
+777	cibles vers l'itinéraire
+778	cibles ajoutées à l'itinéraire
+779	Sera mis à jour dès qu'il y aura une connexion
+780	La création de PDF n'est disponible qu'avec du réseau – vous pouvez imprimer
+781	Créer un commercial
+782	J'ai pris contact
+783	Ils apparaîtront à l'heure avec un son
+784	sortie
+785	Vert
+786	Vert
+787	Il y a
+788	A une créance
+789	en ligne · touchez pour les détails
+790	A un téléphone
+791	Un import récent de la balance âgée peut être annulé
+792	Un import récent de clients peut être annulé
+793	Un import récent du tarif peut être annulé
+794	Il y a déjà un itinéraire
+795	Il y a un itinéraire du
+796	j
+797	j sans visite
+798	Déjà dans la base
+799	Vous avez déjà un rendez-vous à
+800	est déjà affecté à
+801	Déjà ajoutés comme clients
+802	déjà vendu
+803	existe déjà – modifiez le produit existant
+804	Envisagez de retirer des arrêts avant le rendez-vous ou de le déplacer
+805	Envisagez de déplacer
+806	envisagez d'importer un rapport à jour
+807	Envisagez une visite d'encaissement – ajoutez-la à l'itinéraire
+808	Envisagez de planifier la visite pendant les heures d'ouverture ou de la sauter pour l'instant et revenir
+809	Pour atteindre l'objectif, il vous faut
+810	Pour utiliser l'appli pour la première fois sur cet appareil, vous devez vous connecter une fois au réseau
+811	dont
+812	Titre – ex. : Le challenge du jour
+813	Désactiver
+814	Couverture
+815	Couverture des secteurs cette semaine
+816	Couverture mensuelle
+817	Couverture par secteur
+818	Tous
+819	Tous les secteurs
+820	Toutes les visites
+821	Toute la commande
+822	Bravo
+823	Tous les clients du secteur passent à
+824	Tous les clients des secteurs sélectionnés passeront au commercial choisi. Un commercial peut couvrir plusieurs secteurs – sélectionnez-en autant que nécessaire
+825	Tous les clients ont été visités récemment et il n'y a pas de créance ouverte
+826	Tous les clients actifs ont été visités
+827	Tous les clients du mois ont été visités
+828	Tous les produits sont classés
+829	Itinéraire complet
+830	Toutes les analyses sur la période de votre choix
+831	Toutes les analyses – sur n'importe quelle période
+832	Toutes les données ont été envoyées
+833	Tous les commerciaux
+834	Tous les arrêts du jour ont été traités
+835	Toutes les actions commerciales · touchez pour les détails
+836	Tous les articles de
+837	toute l'équipe
+838	Visite tous les combien de jours
+839	Chaque client selon sa fréquence : vert 14 · jaune 21 · orange/nouveau 30 · prospect 45 · gris 56 jours
+840	Tout ce que le responsable a envoyé
+841	Chaque paiement enregistré sur le terrain
+842	Inclure
+843	c'est-à-dire
+844	Combien de temps attendre avant de vous le rappeler
+845	Combien d'arrêts par jour
+846	Quantités en temps réel · réception marchandise · inventaire
+847	Quantité
+848	Quantité reçue
+849	En tant que responsable, vous pouvez modifier le type de document, les dates, la remise globale et les notes – et les modifications sont enregistrées dans la commande
+850	Presque aucune chance
+851	Oui – ouvre droit à commission
+852	Se connecter
+853	maintenant
+854	Doublon dans le fichier
+855	Doublons dans le fichier
+856	Rend compte au responsable
+857	actuellement
+858	Actuellement dans le système
+859	Carte bancaire
+860	Fiche client
+861	Fiche commercial
+862	Dès que vous dépassez le seuil, toutes les ventes éligibles rapporteront
+863	Écrire une note
+864	Écrivez d'abord un message
+865	Adresse
+866	Orange
+867	pas
+868	Non visité
+869	Jamais visité
+870	Non visité sur la période
+871	Non visité ce mois-ci
+872	Vous n'êtes pas passé depuis
+873	Non suivi
+874	N'a pas commandé
+875	N'a pas commandé
+876	Impossible d'obtenir la position – affichage du point de départ
+877	Impossible de le déplacer – réessayez
+878	Chargement impossible – réessayez
+879	Enregistrement impossible – réessayez
+880	Non identifié
+881	Non identifié
+882	Aucun code produit détecté dans le catalogue
+883	Aucune ligne identifiée
+884	Deux produits ne peuvent pas avoir la même référence. Vous pouvez modifier le produit existant et mettre à jour ses données
+885	N'a pas commencé
+886	Non éligible
+887	pas assez de temps
+888	non affecté à une facture
+889	L'autorisation de notification n'a pas été accordée sur l'appareil
+890	Impossible d'obtenir la position
+891	Impossible de vérifier la classification du produit
+892	Impossible d'ajouter
+893	Impossible de s'abonner aux notifications
+894	Impossible de copier
+895	Impossible de copier sur cet appareil
+896	Impossible de démarrer l'enregistrement
+897	Impossible de démarrer l'enregistrement
+898	Impossible de charger le module PDF – internet requis
+899	Impossible de charger le module Excel – internet requis
+900	Impossible de planifier à une date passée
+901	Absent
+902	Absent lors de la visite
+903	ne sont pas sur l'itinéraire. Construire quand même
+904	Introuvable
+905	Aucun jour adapté trouvé dans les 21 prochains jours
+906	Introuvable
+907	Aucun arrêt urgent trouvé dans aucun secteur pour le moment
+908	Aucun client trouvé
+909	Aucun produit trouvé
+910	Aucun produit trouvé dans cette catégorie
+911	Aucune ligne trouvée dans le fichier
+912	Aucune voix détectée – essayez de parler à nouveau
+913	Non enregistré – réessayez
+914	Pas maintenant
+915	N'a pas pointé aujourd'hui
+916	Inactif
+917	Non pertinent
+918	Non pertinent pour l'instant
+919	Non payé
+920	Non, archiver
+921	être affecté au secteur
+922	à encaisser
+923	À visiter dans les prochains jours
+924	À visiter ce mois-ci
+925	À encaisser
+926	Encaisser à la livraison
+927	À encaisser
+928	À encaisser – créance de plus de 90 jours
+929	pour le géocodage de l'itinéraire
+930	Refuser la commande ? La commande sera annulée et le commercial le verra
+931	Ajouter quand même
+932	Remplacer la proposition par une nouvelle ? (les jours dont l'itinéraire est déjà construit ne changeront pas
+933	Remplacer le panier actuel
+934	À aujourd'hui
+935	Continuer sur tablette/téléphone
+936	Déplacer
+937	Déplacer le rendez-vous avec
+938	Appeler
+939	Logistique
+940	Tableau mensuel – planifier chaque date
+941	Tableau de gestion
+942	Tableau d'expédition
+943	Tableau d'expédition (toutes les commandes ouvertes
+944	Calendrier
+945	Préparé
+946	Préparé
+947	Repasser dans deux semaines
+948	En compte / créance
+949	touchez pour envoyer depuis votre propre compte
+950	Touchez une action pour voir les détails
+951	Touchez 💬 pour chaque client pour envoyer
+952	Traiter le rappel
+953	Liberty
+954	Près
+955	Près de ma position
+956	par jour
+957	par jour ouvré
+958	par unité en réalité
+959	par unité
+960	Préparation
+961	Préparation des commandes
+962	Préparation de commande
+963	Préparation en entrepôt
+964	Préparation groupée
+965	pour chaque produit à remiser
+966	Inclure dans le partage
+967	pour se connecter
+968	Aucun
+969	Sans secteur
+970	Pas de visite depuis
+971	Sans limite
+972	Sans commande
+973	Sans adresse
+974	Sans client
+975	Sans position
+976	Pas de position sur la carte
+977	sans montants
+978	Sans canal
+979	Non planifié
+980	Aucun changement
+981	Aucun changement
+982	sans plafond
+983	À préparer
+984	Supprimer
+985	Supprimer la commande de
+986	À qui
+987	Vers l'itinéraire
+988	Vers l'itinéraire du jour
+989	à passer
+990	Vers le camion
+991	pour le camion le
+992	ex.
+993	ex. : c'était fermé à 11h30, pas de réponse au téléphone
+994	ex. : c'était fermé, repasser demain à dix heures avec un devis
+995	ex. : 2 cartons manquants
+996	ex. : repasser avec un devis
+997	ex. : demain à seize heures appeler la Pharmacie du Centre pour la créance
+998	ex. : passage au camion en novembre
+999	Effacer la sélection
+1000	Synchroniser les commandes du mois dernier et de ce mois selon la classification actuelle ? La base de commission de ces commandes sera recalculée
+1001	vs
+1002	à la commission
+1003	Un rendez-vous nécessite une date – remplissez «Prochaine visite
+1004	au minimum, et cela augmente à chaque vente supplémentaire
+1005	par
+1006	Par secteur
+1007	Par visites dues, clients délaissés et créances anciennes
+1008	Avec l'ordre actuel, vous n'arriverez pas à temps
+1009	dû
+1010	avant l'import
+1011	il y a moins d'un jour
+1012	avant tout enregistrement – rien n'est écrit automatiquement
+1013	Planifier quand même
+1014	Programmer un rappel
+1015	Client
+1016	Nouveau client
+1017	Bon client
+1018	Client vert
+1019	Client lié (facultatif
+1020	Client jaune
+1021	Client existant
+1022	Clients
+1023	clients · plus de jours ouvrés ce mois-ci
+1024	clients · sur
+1025	Clients gris
+1026	Clients du secteur
+1027	clients sans secteur
+1028	Clients urgents d'autres secteurs à moins de 15 km du point de départ ou de vos arrêts sélectionnés
+1029	clients déplacés
+1030	clients déplacés vers
+1031	Nouveaux clients
+1032	clients vers
+1033	clients de
+1034	clients du secteur
+1035	clients ajoutés
+1036	clients avec une créance ouverte dans le secteur
+1037	Clients avec une créance ouverte à ne pas manquer – ajoutez-les pour encaissement
+1038	clients avec un téléphone
+1039	Prospects à proximité hors itinéraire – ajoutez-les d'un geste
+1040	Clients actifs
+1041	Clients visités
+1042	clients visités ces 14 derniers jours
+1043	Clients dont la première commande date de la période
+1044	clients affectés à
+1045	Clients distincts
+1046	Clients non identifiés (la ligne sera enregistrée avec le nom du fichier
+1047	n'a aucun client en attente de visite ce mois-ci
+1048	Clients avec une prochaine visite fixée – par urgence. Ajoutez-les à l'itinéraire
+1049	clients – qui doit les reprendre
+1050	Vers la semaine en cours
+1051	Envoyer au client une confirmation de rendez-vous
+1052	Enregistrer quand même
+1053	Fixer un rendez-vous
+1054	Planifier pour
+1055	Dû dans
+1056	Dû aujourd'hui
+1057	Dû avant le
+1058	de
+1059	les perd
+1060	Approbation en cours
+1061	Localisation
+1062	Localisation
+1063	Vue d'ensemble de l'équipe et de l'activité
+1064	Annulation en cours
+1065	Indicateur
+1066	Paliers de commission : en dessous de 75 000 ₪ pas de commission · à partir de 75 000 ₪ → 2 % · au-delà de 85 000 ₪ → 3 %. La commission est calculée uniquement sur les produits maison (Fresh Gum, MO, Watts, etc.) – pas Schwartz/Dorcas
+1067	Ce qui vaut la peine maintenant
+1068	Ce qui n'a pas été livré / pourquoi
+1069	Quoi livrer
+1070	Quoi envoyer
+1071	Ce qui doit changer dans le plan
+1072	Envoyés récemment
+1073	Ce qui a été convenu, quoi apporter la prochaine fois
+1074	Ce qui compte
+1075	Ce qui s'est passé
+1076	Ce qui s'est passé avec le client
+1077	de l'objectif
+1078	dont plus de 90 jours
+1079	depuis le cache
+1080	Suppression en cours
+1081	prêt
+1082	Prêt à expédier
+1083	Prêt à démarrer
+1084	prêt à expédier
+1085	Vs
+1086	Recommandé
+1087	Un rendez-vous sur place est recommandé
+1088	Contact téléphonique recommandé
+1089	Ajout comme client
+1090	Masqué
+1091	masqué/retiré
+1092	Origine
+1093	Affiché
+1094	Affiché dans le catalogue commercial
+1095	Affichage
+1096	Affichage des rendez-vous enregistrés sur l'appareil
+1097	Affichage
+1098	Affichage des 250 premiers – recherchez pour affiner
+1099	Produit
+1100	Un produit non classé se comporte comme s'il l'était
+1101	Nouveau produit
+1102	Produit, référence, client, marque, secteur
+1103	Produits clés – ce que le client achète le plus
+1104	Produits
+1105	produits · « disponible » = en entrepôt moins les commandes pas encore préparées
+1106	produits · touchez pour modifier
+1107	produits · triés par marque
+1108	produits non classés
+1109	produits sans classification de commission
+1110	produits de
+1111	Produits sélectionnés
+1112	produits créés/mis à jour avec succès
+1113	produits marqués comme
+1114	produits mis à jour · annulable depuis l'écran d'import
+1115	produits restaurés
+1116	Produits laissés vides – pas de remise
+1117	Désactivé
+1118	Récupération depuis la carte… (jusqu'à une minute
+1119	Personnalisé
+1120	Marque
+1121	Ancienneté
+1122	Espèces
+1123	Éligible à commission
+1124	ouvrent droit à commission – mais personne ne l'a décidé. Déjà vendu :
+1125	Éligible à commission
+1126	Connecté
+1127	hors secteur
+1128	Calculé à partir des coordonnées clients – les clients les plus proches entre deux secteurs
+1129	Supprimer
+1130	Supprimer
+1131	Supprimer l'employé
+1132	Supprimer le client
+1133	Supprimer l'employé
+1134	Prix
+1135	Prix invalide
+1136	Prix commercial
+1137	Prix public
+1138	Tarif
+1139	remplace
+1140	Entrepôt
+1141	Demain
+1142	Calcul en cours
+1143	Qui a reçu
+1144	Qui a reçu la marchandise
+1145	Visible uniquement par vous
+1146	Plus d'infos
+1147	Import en cours
+1148	Import en cours
+1149	Immédiat
+1150	La commande minimum est de 600 ₪ (HT). Il manque encore
+1151	focus sur les secteurs
+1152	Focus commercial · 🚚 Jour camion · toucher une cellule active/désactive le focus (enregistré dans la fiche secteur
+1153	Position GPS (pour les villages sans adresse
+1154	Position actuelle
+1155	Préparation
+1156	Préparation de l'Excel
+1157	Préparation d'une proposition pour la semaine
+1158	Préparation du lien
+1159	Ventes
+1160	Ventes sur la période
+1161	Ventes éligibles
+1162	Ventes éligibles ce mois-ci (produits maison
+1163	Peu de ventes
+1164	Couvre le secteur et développe de nouveaux clients · les existants restent avec
+1165	appareils
+1166	Stock
+1167	Stock bas
+1168	moyenne
+1169	Moyenne par commande
+1170	Moyenne par secteur (jours entre commande et livraison
+1171	de produits maison
+1172	En attente
+1173	En attente d'approbation
+1174	En attente d'envoi
+1175	en attente
+1176	Responsable
+1177	Administrateur système
+1178	Trié par urgence et proximité avec ce jour
+1179	sont marqués à ne pas importer
+1180	servis par coursier
+1181	Retrait en cours
+1182	Livraison partielle
+1183	un écran des différences
+1184	Synthèse en cours
+1185	Itinéraire
+1186	Itinéraire long – peut-être à répartir sur un autre jour
+1187	Tournée de livraison
+1188	Itinéraire du jour
+1189	Itinéraire prévu
+1190	Itinéraire construit
+1191	Itinéraire quotidien
+1192	Itinéraire précédent non terminé
+1193	Document
+1194	Bon de commande
+1195	Document client
+1196	Synchronisation
+1197	Synchronisation
+1198	Numéro
+1199	Chiffre dans la cellule = arrêts prévus · touchez une date pour planifier
+1200	Notre numéro de commande
+1201	Numéro de la facture d'origine
+1202	Numéro invalide
+1203	Numéro de suivi (facultatif
+1204	Les numéros de téléphone seront ajoutés aux contacts des clients
+1205	N°
+1206	N° de commande
+1207	N° d'envoi / de suivi
+1208	Traitement de la page
+1209	Déplacement
+1210	Déplacement
+1211	Passage prévu (date
+1212	Mise à jour
+1213	plus de 60 jours
+1214	Au-delà de ce montant, vous recevrez une alerte
+1215	Au-delà du montant défini
+1216	Suivi
+1217	Suivi après une visite sans vente
+1218	Suivi entrepôt – ce qui attend, ce qui est en préparation et ce qui est prêt à expédier
+1219	Suivi des ventes
+1220	Suivi ouvert pour
+1221	Suivis du jour
+1222	Système pour commerciaux terrain
+1223	TVA
+1224	Carte
+1225	Génération
+1226	Activation
+1227	Carte de la semaine
+1228	Reçoit
+1229	Maximum pour cette facture
+1230	J'écoute… parlez maintenant
+1231	Référence
+1232	Référence (ou code-barres
+1233	Cette référence existe déjà dans le système
+1234	Référence inconnue
+1235	Références absentes du système (ne seront pas importées – ajoutez-les d'abord dans l'écran Produits
+1236	à l'avance. Touchez une ligne pour modifier
+1237	distance
+1238	Cabinets dentaires
+1239	Cabinets dentaires à proximité
+1240	Cabinet dentaire privé
+1241	Camion
+1242	Camion · jours
+1243	camion le
+1244	Jours camion, coursier et focus pour chaque secteur
+1245	affecté à
+1246	Affectation
+1247	Durée
+1248	Livraison
+1249	Livraison : sur le camion
+1250	Livraison : prévue pour le camion
+1251	Livraison : livrée
+1252	Livraison : remise au coursier
+1253	Bureau
+1254	Utilisateur
+1255	Correspond à un client existant
+1256	À partir du
+1257	sur
+1258	Prévu pour le camion
+1259	On part de zéro
+1260	Commence
+1261	On commence par le secteur qui compte le plus de clients en retard puis on continue vers les secteurs voisins par numéro, pour que chaque semaine ait une charge similaire selon ses jours ouvrés
+1262	Depuis le début de l'année
+1263	Sous le minimum de commande
+1264	Quand envoyer le résumé
+1265	Planification pour
+1266	Déconnexion
+1267	En retard · 31–60 jours
+1268	Veuillez choisir une heure de rendez-vous
+1269	Veuillez choisir une date
+1270	Veuillez indiquer ce qui manque
+1271	Veuillez saisir une référence
+1272	Veuillez saisir un motif
+1273	Veuillez saisir un montant
+1274	Veuillez saisir le code employé et
+1275	Veuillez saisir un nom
+1276	Veuillez saisir un nom ou un téléphone
+1277	Veuillez saisir un nom de produit
+1278	Veuillez saisir une date et une heure
+1279	Veuillez saisir un contenu
+1280	Sélectionné
+1281	sélectionnés pour
+1282	sélectionnés pour l'itinéraire du jour
+1283	Sélectionnés
+1284	Encaissé
+1285	Encaissé (journalier
+1286	Refusé
+1287	Reporté d'une heure
+1288	Chauffeur
+1289	chauffeur · version
+1290	Nahariya
+1291	Reporter (1 heure
+1292	Naviguer sur tout l'itinéraire
+1293	Présence · 30 derniers jours
+1294	Ajouté
+1295	Ajouté comme client
+1296	Ajouté comme prospect
+1297	Ajouté à la commande
+1298	Ajouté à l'itinéraire du jour
+1299	Ajoutés
+1300	créé et enregistré
+1301	Restant
+1302	restants sur
+1303	Restant :
+1304	sont considérés comme le même client
+1305	Gestion
+1306	Gestion des secteurs
+1307	Gestion des produits
+1308	Gestion du stock
+1309	Gestion des employés
+1310	Naviguer
+1311	Naviguer avec
+1312	Naviguer vers l'arrêt
+1313	Tentative de relance – non visité depuis 90+ jours
+1314	tentatives
+1315	Vous pouvez enregistrer une commande – elle sera livrée au retour du produit en stock
+1316	Échec
+1317	Faible
+1318	est sous le minimum de 600 ₪ (HT). Il manque encore
+1319	Faible
+1320	Supprimé
+1321	Vendu
+1322	Vendu (TTC
+1323	Livré
+1324	Partiellement livré
+1325	Remis au coursier
+1326	Livré
+1327	est dans le secteur
+1328	Trouvé
+1329	fermé
+1330	Réessayer
+1331	Suivi fixé au
+1332	Un rendez-vous a été fixé avec le client
+1333	Effacer la sélection
+1334	Point de départ
+1335	Point de départ
+1336	Point de départ
+1337	Point de départ de l'itinéraire
+1338	Point de départ, synchronisation et déconnexion
+1339	Lu par
+1340	Il semble qu'il n'y ait pas de réseau pour le moment. Voici vos recommandations en attendant
+1341	Paiement enregistré
+1342	Il reste encore
+1343	Envoyé
+1344	Envoyé au responsable · en attente
+1345	Notification envoyée à
+1346	Enregistré
+1347	Enregistré sur l'appareil · sera envoyé à la connexion
+1348	Enregistré : tous les
+1349	Enregistré
+1350	conservés en raison d'une activité existante
+1351	Données de créances issues de la balance âgée · mise à jour
+1352	Les données de créances sont importées depuis une balance âgée – aucun import pour l'instant
+1353	Fermer
+1354	Tout fermer
+1355	Fermé actuellement
+1356	Fermer
+1357	Clôturer le suivi
+1358	Ordre des arrêts inversé – le dernier passe en premier
+1359	Inverser l'ordre
+1360	Total
+1361	Total des commandes des nouveaux clients
+1362	Créance totale
+1363	Total à payer
+1364	Total des ventes ce mois-ci
+1365	Total ouvert
+1366	Total des heures
+1367	Type
+1368	Type de remise
+1369	Type de client
+1370	Type de document
+1371	Type d'action inconnu
+1372	Type : encaissement
+1373	Ferme à
+1374	Commercial
+1375	Autre commercial
+1376	Nouveau commercial
+1377	Commercial cible
+1378	Commercial introuvable
+1379	Commercial actif
+1380	Commercial qui n'a pas commencé
+1381	Commercial terrain
+1382	Commerciaux
+1383	Commerciaux ce mois-ci
+1384	Marqué non pertinent
+1385	Marqué comme livré
+1386	Marqué non pertinent dans le suivi
+1387	Marqué non pertinent – n'apparaîtra plus (restaurable depuis la fiche client
+1388	Marqué : j'ai pris contact
+1389	Week-end
+1390	Statut
+1391	Statistiques de livraison (30 jours
+1392	Motif du retour
+1393	Motif du refus
+1394	séquentiel et automatique. Si une facture a déjà été émise dans le système de l'entreprise, saisissez son numéro ici et le document le portera
+1395	Classification de commission du produit
+1396	Terminé
+1397	Terminer le chargement → vers l'itinéraire
+1398	Terminer et analyser
+1399	Clôturer la journée
+1400	Clôturer la journée et créer le rapport
+1401	Terminer la journée de travail
+1402	Tournée / prospection
+1403	Compte rendu de visite
+1404	Compte rendu vocal de visite
+1405	Bilan de votre mois · sans montants
+1406	Bilan de la semaine
+1407	Bilan de la journée
+1408	Bilan de fin de journée
+1409	Marquer
+1410	Marquer comme livré
+1411	Cocher pour ajouter à l'itinéraire
+1412	Enregistrer un paiement
+1413	Enregistrer un paiement · créance
+1414	Filtre libre
+1415	Filtrer par commercial
+1416	Filtrer par nom/ville
+1417	A refusé
+1418	Montant
+1419	Sous-total
+1420	Le montant de la commande
+1421	Total affecté
+1422	Montant de grosse commande invalide
+1423	Montant d'avoir demandé
+1424	Montant des ventes
+1425	Montant payé
+1426	Cochez chaque commande montée dans le camion
+1427	Marquer comme livré
+1428	Cochez toutes les lignes pour terminer
+1429	Cochez «Oui» ou «Non» pour chaque famille
+1430	Sélectionnez des secteurs. Si un secteur est déjà affecté à un autre commercial, on vous demandera s'il faut le remplacer ou s'y joindre
+1431	Sélectionnez les factures que le paiement solde (partiel possible
+1432	Sélectionnez les commerciaux qui couvrent le secteur. Si le secteur est déjà affecté, on vous demandera comment l'affecter
+1433	Sélectionnez les clients à déplacer vers
+1434	Sélectionnez les clients à déplacer vers l'itinéraire de
+1435	Cochez les clients que vous allez visiter, puis touchez
+1436	Sélectionnez au moins un secteur
+1437	Synchroniser
+1438	Synchroniser les commandes existantes
+1439	Seuils
+1440	Inventaire
+1441	Inventaire – définir la quantité
+1442	Inventaire / correction
+1443	Vue d'ensemble
+1444	Vue d'ensemble des performances
+1445	Vue d'ensemble de l'équipe
+1446	vue-equipe
+1447	SIRET / n° d'entreprise
+1448	Travail partagé
+1449	passé
+1450	Fréquence de visite dépassée
+1451	Dépassé
+1452	Seulement
+1453	Vous avez dépassé l'objectif de 3 % ! Commission complète sur toutes les ventes éligibles
+1454	Panier de l'autre appareil
+1455	jusqu'à
+1456	À cette heure, un commercial devrait être en route
+1457	Jusqu'à la fin du mois
+1458	Jusqu'à la fin de la semaine
+1459	À ce jour
+1460	Encore
+1461	Pas encore de commandes pour ce client – les produits clés apparaîtront après quelques commandes
+1462	Pas encore de commandes. Créez votre première commande
+1463	Pas encore de prospects – touchez «🔄 Actualiser depuis la carte
+1464	pas encore visité
+1465	Aucun client sélectionné pour l'instant – cochez dans la liste (vous pouvez combiner plusieurs secteurs
+1466	Aucune alerte envoyée pour l'instant
+1467	Aucun plan envoyé pour l'instant
+1468	Aucun itinéraire prévu pour aujourd'hui pour l'instant
+1469	Priorité
+1470	Priorité haute
+1471	La priorité manuelle remplace le score automatique
+1472	Priorité basse
+1473	Priorité mise à jour
+1474	Mettre à jour
+1475	Mise à jour de commande
+1476	Mettre à jour les commandes déjà enregistrées
+1477	Mise à jour client
+1478	Mettre à jour prix et bonus par référence
+1479	Mise à jour du stock en masse
+1480	Mise à jour en masse
+1481	Mise à jour de livraison
+1482	Mise à jour des données client
+1483	Mise à jour des données
+1484	Mettre à jour la position
+1485	Employé
+1486	employés · touchez pour modifier. Les secteurs s'affectent depuis la fiche employé (rôle commercial
+1487	Encore
+1488	Aucun message envoyé pour l'instant. Touchez « + Nouveau » pour envoyer un bonus ou un challenge du jour aux commerciaux
+1489	Mis à jour
+1490	Une nouvelle version a été installée – fermez et rouvrez l'appli
+1491	mis à jour
+1492	Traiter le catalogue
+1493	Ville
+1494	Ville / secteur
+1495	Maintenant
+1496	sur
+1497	sur tout
+1498	Pour chaque
+1499	Sur toute la commande
+1500	Objet du rendez-vous
+1501	Ce sur quoi porte la remise
+1502	à
+1503	Chargé dans le camion
+1504	Pointé
+1505	Pointé aujourd'hui
+1506	avec
+1507	Colonne
+1508	colonnes sur
+1509	Pages du catalogue
+1510	pages. Vérifiez et corrigez, cochez ce qu'il faut inclure, puis confirmez
+1511	Commission
+1512	Commission éligible · objectif mensuel
+1513	Commission active
+1514	Commission prévue à ce jour
+1515	Commissions & paliers · ce mois-ci
+1516	commerces sur l'itinéraire sont fermés actuellement
+1517	Commerces de la carte pas encore dans la base
+1518	Commerces de la carte pas encore dans la base, à moins de 2 km d'un arrêt – «Ajouter» crée un prospect
+1519	Commerces potentiels près de l'itinéraire
+1520	Arrêt en cours
+1521	Arrêts
+1522	autres arrêts. Que faisons-nous
+1523	Arrêts du jour
+1524	arrêts vous attendent aujourd'hui
+1525	arrêts prévus aujourd'hui
+1526	arrêts ouverts. Clôturer la journée
+1527	arrêts non marqués comme terminés. Les déplacer vers l'itinéraire du jour
+1528	Modifier le produit existant
+1529	Modifier la sélection de clients
+1530	Canal de commande
+1531	Modifier
+1532	Modifier
+1533	Modifier la commande
+1534	Modifier le client
+1535	Modifier le produit
+1536	Modifier le rendez-vous
+1537	Modifier les données
+1538	Villes du secteur
+1539	Valeur
+1540	Valeur de la remise
+1541	Valeur de la remise sur toute la commande
+1542	Valeurs
+1543	par
+1544	Parapharmacie
+1545	Endommagé
+1546	Endommagé / périmé / surstock
+1547	Rendez-vous
+1548	Rendez-vous à
+1549	Rendez-vous ce jour-là
+1550	Rendez-vous aujourd'hui
+1551	Un rendez-vous entre automatiquement dans le plan d'itinéraire du jour – même si le client est dans un autre secteur, et vous recevrez alors une alerte
+1552	Un rendez-vous entre automatiquement dans le plan d'itinéraire du jour et reçoit un rappel une heure avant
+1553	Rendez-vous à venir
+1554	Un rendez-vous dont le client est dans le secteur sélectionné entre automatiquement dans l'itinéraire
+1555	Rendez-vous
+1556	rendez-vous cette année · point rouge = conflit
+1557	autres rendez-vous prévus
+1558	rendez-vous ajoutés automatiquement à l'itinéraire
+1559	rendez-vous programmés
+1560	rendez-vous fixes sur l'itinéraire
+1561	Rendez-vous à venir
+1562	Rendez-vous éloignés / qui se chevauchent
+1563	Rendez-vous éloignés le même jour
+1564	Fort potentiel
+1565	Potentiel
+1566	potentiel
+1567	Prospects
+1568	Prospects de la carte sur le trajet
+1569	Manqué
+1570	manqués · prévus
+1571	Manqué la dernière fois
+1572	Manqués
+1573	populaire dans le secteur
+1574	Moins
+1575	Sur place
+1576	sur place
+1577	Ventilation libre par produit, commercial, client et plus
+1578	Ventiler par
+1579	Ventilation par canal
+1580	Détails
+1581	Détails de la visite
+1582	Détails de l'encaissement
+1583	Détails de la commande
+1584	Détail des objectifs et commissions
+1585	Gratuit
+1586	Action
+1587	action non envoyée
+1588	actions
+1589	actions non envoyées
+1590	actions en attente d'envoi
+1591	actions pas encore envoyées
+1592	actions non envoyées – vérifiez l'écran « En attente » et réessayez
+1593	actions n'ont pas été envoyées. Déconnectez-vous une fois la connexion revenue
+1594	Actif
+1595	Activité
+1596	Activité de l'équipe
+1597	Détails
+1598	Détails (facultatif
+1599	Articles
+1600	Ouvert
+1601	Ouvert maintenant
+1602	Ouvrir
+1603	Ouvrir le client existant
+1604	Ouvrir la fiche client
+1605	Commande ouverte
+1606	Ouvrir la carte
+1607	Ouvrir
+1608	Ouvrir le rapport
+1609	Ouvrir la journée
+1610	Ouvrir la fiche client
+1611	Jaune
+1612	Équipe · ventes · activité – période et filtre communs
+1613	Score
+1614	Score gris – presque aucune chance de vente. Pas proposé automatiquement ; vous pouvez l'ajouter manuellement
+1615	Photo justificative (reçu/chèque) – facultative
+1616	réduisez la période ou utilisez un filtre
+1617	Arrivée prévue
+1618	Livraison prévue
+1619	Arrivée prévue
+1620	Voir le rapport du jour
+1621	Voir l'historique des rapports
+1622	Vue semaine – planifier chaque jour
+1623	Un titre est obligatoire
+1624	Vous devez choisir un client
+1625	Vous devez vous connecter
+1626	Vérifier
+1627	km
+1628	km du point de départ
+1629	fixe
+1630	Planifier un rendez-vous
+1631	Recevez gratuitement
+1632	Réception marchandise
+1633	Réception marchandise – ajouter
+1634	Définir selon ma position
+1635	Fichier PDF à partager
+1636	Code
+1637	Code personnel
+1638	Code personnel (PIN) – au moins 4 chiffres
+1639	Code employé
+1640	Code employé ou code personnel incorrect
+1641	précédent
+1642	Lecture du fichier
+1643	Catégorie
+1644	Catégorie forte
+1645	Catalogue
+1646	reçu par
+1647	Compris
+1648	Lien (catalogue/promotion) – facultatif
+1649	Lier au client
+1650	Lien en lecture seule. Le responsable n'a rien à installer – et la page se met à jour au fil de votre journée
+1651	Rythme
+1652	Rythme mensuel
+1653	Rythme hebdomadaire
+1654	le plus proche
+1655	Critique
+1656	Critique · 60 jours et plus
+1657	Critique · plus de 60 jours
+1658	Contact mixte
+1659	km
+1660	km · centres
+1661	km de
+1662	km du départ
+1663	km de l'itinéraire
+1664	km d'ici
+1665	km du point de départ
+1666	Principal
+1667	Normal
+1668	Rayon (km
+1669	Loin
+1670	Enregistrer une visite
+1671	Enregistrer un retour
+1672	Enregistrer un paiement
+1673	Enregistrer un paiement pour cette commande
+1674	Niveau de potentiel
+1675	Actualiser
+1676	Actualiser depuis la carte
+1677	Seulement
+1678	Encaissements uniquement
+1679	Un instant
+1680	La liste des factures est disponible avec du réseau
+1681	La liste des factures est disponible avec du réseau · le paiement sera enregistré sans affectation
+1682	La liste des clients n'est pas encore chargée
+1683	La liste des commerciaux n'est disponible qu'avec du réseau
+1684	Liste de préparation groupée
+1685	h
+1686	Requêtes de ventes
+1687	Semaine
+1688	Semaine prochaine
+1689	Semaine précédente
+1690	dernières semaines
+1691	Hebdomadaire
+1692	Planifier
+1693	Planifier sur le camion
+1694	Erreur
+1695	Erreur lors de l'annulation
+1696	Erreur lors de l'ajout
+1697	Erreur lors du déplacement
+1698	Erreur d'enregistrement
+1699	Erreur de chargement
+1700	Erreur de chargement des secteurs
+1701	Erreur de chargement du rapport
+1702	Erreur de chargement des commandes
+1703	Erreur de chargement des données
+1704	Erreur de chargement des clients
+1705	Erreur de chargement du module PDF (internet requis
+1706	Erreur lors de la création du document
+1707	Erreur lors de la création du lien
+1708	Erreur dans le produit
+1709	Erreur lors de la suppression
+1710	Erreur lors de la récupération depuis la carte
+1711	Erreur de lecture du fichier
+1712	Erreur d'enregistrement
+1713	Erreur d'enregistrement de l'abonnement
+1714	Erreur réseau
+1715	Laissez le système vous prévenir – au lieu de vérifier vous-même
+1716	Prévu sur le camion le
+1717	À proposer – produits maison qui rapportent une commission
+1718	restauré
+1719	Net
+1720	Courant · jusqu'à 30 jours
+1721	Affecté automatiquement à
+1722	Affecté automatiquement au secteur
+1723	affecté à
+1724	Envoi
+1725	Payé
+1726	Payé sur place
+1727	Payé en partie
+1728	Enregistrement
+1729	Enregistrement
+1730	une ligne par produit
+1731	Lignes
+1732	lignes (importées selon la sélection
+1733	lignes · généré dans l'appli JaSale · Liberty
+1734	lignes · total
+1735	lignes dans
+1736	lignes de créances
+1737	Lignes inchangées et doublons
+1738	lignes à cocher
+1739	lignes sur
+1740	lignes mises à jour
+1741	lignes restaurées
+1742	Planifier
+1743	Planifier pour le camion
+1744	Affecter des secteurs au commercial
+1745	Affecter aux factures
+1746	Affecter des clients
+1747	Remarque
+1748	Remarque avant la planification
+1749	Modifier
+1750	Modifier l'avantage commercial
+1751	Changer la classification n'affecte que les nouvelles commandes
+1752	Changements de bonus
+1753	Changements de prix
+1754	modifications
+1755	Dentaire
+1756	Vérifier
+1757	Vendredi – jusqu'à
+1758	Partager
+1759	Partager sur WhatsApp
+1760	Partager l'itinéraire
+1761	Le partage direct n'est pas pris en charge sur cet appareil – envoyez via WhatsApp ou copiez
+1762	Partager avec le responsable
+1763	Code oublié ? Contactez le bureau
+1764	Voisinage des secteurs (calculé depuis la carte
+1765	Voisins
+1766	Bonjour
+1767	Envoyer
+1768	Envoyer maintenant
+1769	Coursier
+1770	Envoyer via WhatsApp
+1771	Envoyer et pousser sur les téléphones
+1772	Envoyer pour approbation
+1773	Envoyer au responsable
+1774	Envoyer au commercial
+1775	Coursier
+1776	Tout envoyer maintenant
+1777	Envoyer un WhatsApp
+1778	Envoyer un e-mail (2 destinataires
+1779	Envoyer le récapitulatif de commande
+1780	Nom
+1781	Nom ou ville
+1782	Nom du secteur
+1783	Nom du secteur
+1784	Nom du destinataire
+1785	Raison sociale
+1786	Nom de la société de messagerie
+1787	Nom du client
+1788	Nom du produit
+1789	Nom du produit ou référence
+1790	Nom complet
+1791	réservé
+1792	Réservé pour commandes
+1793	Enregistrer
+1794	Enregistrer · secteur
+1795	Enregistrer quand même
+1796	Enregistrer comme partiel
+1797	Enregistrer – fermé
+1798	Enregistrer la visite
+1799	Enregistrer les réglages
+1800	Enregistrer la commande
+1801	Enregistrer le numéro
+1802	Enregistrer la semaine
+1803	Enregistrer les corrections
+1804	Enregistrer l'exception
+1805	Enregistrer le client
+1806	Enregistrer le refus
+1807	Enregistrer les modifications
+1808	Enregistrer le rappel
+1809	Année
+1810	Année prochaine
+1811	Changer la référence
+1812	Année précédente
+1813	Les deux commerciaux sur les mêmes commerces · les clients sont partagés, ils ne sont pas déplacés
+1814	Heure
+1815	Heure (facultatif
+1816	Horaires d'ouverture
+1817	Horaires d'ouverture connus
+1818	Horaires d'ouverture enregistrés
+1819	Horaires d'ouverture, interlocuteur, ce qui a été convenu
+1820	Horaires, interlocuteur, potentiel
+1821	Heure de départ au plus tard
+1822	Heure du résumé quotidien
+1823	Langue
+1824	diapositives
+1825	Sam
+1826	Date
+1827	Date de livraison estimée
+1828	Date de facture
+1829	Date du document
+1830	Date précise
+1831	Dates
+1832	Meilleures dates
+1833	Fréquence de visite
+1834	Texte du rappel
+1835	Plans hebdomadaires
+1836	Plan mensuel
+1837	Plan hebdomadaire
+1838	Prévu
+1839	Résultat
+1840	Résultat de la visite
+1841	Valide
+1842	Visite due avant le
+1843	Rappels
+1844	Rappels & notes
+1845	rappels terminés · archives
+1846	Rappel
+1847	Rappel vocal
+1848	Rappel d'encaissement
+1849	Nouveau rappel
+1850	Rappel ouvert
+1851	arrêt
+1852	Arrêts
+1853	Arrêts par jour
+1854	arrêts par jour · encaissements et clients délaissés d'abord
+1855	arrêts sur l'itinéraire
+1856	arrêts par jour · encaissements et clients délaissés d'abord · envoyé au responsable
+1857	Challenge commercial
+1858	sous
+1859	La boîte de réception des plans n'est pas encore activée dans le système. En attendant, les plans arrivent via WhatsApp
+1860	Un rappel sera créé après l'enregistrement
+1861	Correction
+1862	Planifier la semaine prochaine
+1863	Planification mensuelle
+1864	Planification d'itinéraire
+1865	Planifier l'itinéraire du jour
+1866	Planifier l'itinéraire de la journée
+1867	Planifier l'itinéraire de demain
+1868	Planification hebdomadaire
+1869	Planifier une journée pour un secteur
+1870	Photo (facultatif
+1871	photos
+1872	Photos du produit (facultatif
+1873	Image du produit
+1874	Photo du justificatif de paiement (facultatif
+1875	Conditions de paiement
+1876	Mouvements récents
+1877	Bon de livraison
+1878	Diffusion
+1879	Diffusion aux clients
+1880	Rôle
+1881	Aperçu
+1882	Aperçu e-mail – références et quantités uniquement
+1883	Aperçu WhatsApp – récapitulatif complet
+1884	Période
+1885	plafond
+1886	Votre plafond de remise
+1887	Plafond de remise
+1888	Le plafond de remise doit être entre 0 et 100 (ou vide
+1889	plafond commercial
+1890	Paiement

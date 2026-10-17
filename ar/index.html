@@ -357,6 +357,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
  @keyframes roadDrift2{from{transform:translate(-50%,-50%) scale(1) rotate(0)}to{transform:translate(-50%,-50%) scale(1.07) rotate(4deg)}}
  @keyframes roadFar{from{transform:translate(-50%,-50%) scale(1.04) rotate(2deg)}to{transform:translate(-50%,-50%) scale(.97) rotate(-3deg)}}
 }
+
+/* Flow (2026-10-17): light streaks drive along the roads so the map is visibly alive */
+.stop .flow{position:absolute;left:50%;top:50%;width:1400px;height:1100px;transform:translate(-50%,-50%);background:url(/assets/roads-flow.svg) center/contain no-repeat}
+@media (prefers-reduced-motion:no-preference){.stop .flow{animation:roadDrift2 34s ease-in-out infinite alternate}}
+@media (prefers-reduced-motion:reduce){.stop .flow{display:none}}
 </style>
 </head>
 <body>
@@ -379,7 +384,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
   <circle class="pin" style="animation-delay:3.2s" cx="1100" cy="520" r="7"/>
   <circle class="pin" style="animation-delay:4.2s" cx="1340" cy="330" r="7"/>
  </svg>
- <div class="stopbox" aria-hidden="true"><div class="stop"><i class="far"></i><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
+ <div class="stopbox" aria-hidden="true"><div class="stop"><i class="far"></i><i class="flow"></i><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
  <div class="fx" id="fx" aria-hidden="true"></div>
  <div class="wrap">
   <div class="hero-copy">
