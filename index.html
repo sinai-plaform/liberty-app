@@ -348,10 +348,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
 }
 
 /* Flow (2026-10-17): light streaks drive along the roads so the map is visibly alive */
-.stop .flow{position:absolute;left:50%;top:50%;width:1400px;height:1100px;transform:translate(-50%,-50%);background:url(/assets/roads-flow.svg) center/contain no-repeat}
+.stop .flow{position:absolute;left:50%;top:50%;width:1400px;height:1100px;transform:translate(-50%,-50%)}
 @media (prefers-reduced-motion:no-preference){.stop .flow{animation:roadDrift2 34s ease-in-out infinite alternate}}
 @media (prefers-reduced-motion:reduce){.stop .flow{display:none}}
 </style>
+<script src="/assets/flow.js?v=20261018" defer></script>
 </head>
 <body>
 <style id="jsi-css">#jsi{position:fixed;inset:0;z-index:99999;background:#1B2B3B;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;animation:jsiOut .35s ease 1.05s forwards}#jsi .jsi-w{display:flex;flex-direction:column;align-items:center;opacity:0;transform:scale(.86);animation:jsiIn .6s cubic-bezier(.22,1,.36,1) .08s forwards}#jsi img{width:92px;height:92px;border-radius:22px;filter:drop-shadow(0 0 32px rgba(108,143,176,.45))}#jsi .jsi-n{margin-top:14px;font:700 26px/1 Outfit,"IBM Plex Sans Hebrew",system-ui,sans-serif;color:#fff;letter-spacing:.02em}#jsi .jsi-b{margin-top:14px;height:2px;width:0;background:linear-gradient(90deg,#6C8FB0,#BCCCDB,#6C8FB0);border-radius:2px;animation:jsiBar .5s cubic-bezier(.22,1,.36,1) .45s forwards}@keyframes jsiIn{to{opacity:1;transform:scale(1)}}@keyframes jsiBar{to{width:150px}}@keyframes jsiOut{to{opacity:0;visibility:hidden}}@media (prefers-reduced-motion:reduce){#jsi{display:none!important}}</style>
@@ -373,7 +374,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
   <circle class="pin" style="animation-delay:3.2s" cx="1100" cy="520" r="7"/>
   <circle class="pin" style="animation-delay:4.2s" cx="1340" cy="330" r="7"/>
  </svg>
- <div class="stopbox" aria-hidden="true"><div class="stop"><i class="far"></i><i class="flow"></i><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
+ <div class="stopbox" aria-hidden="true"><div class="stop"><i class="far"></i><i class="flow" data-flow="/assets/roads-flow.svg"></i><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
  <div class="fx" id="fx" aria-hidden="true"></div>
  <div class="wrap">
   <div class="hero-copy">
