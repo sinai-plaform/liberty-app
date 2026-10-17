@@ -335,6 +335,17 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
  .stop .dot{animation:stopPing 3s ease-out infinite}
  @keyframes stopPing{0%{box-shadow:0 0 0 0 var(--stop-soft),0 0 0 5px var(--stop-soft)}100%{box-shadow:0 0 0 26px transparent,0 0 0 5px var(--stop-soft)}}
 }
+
+/* Signature depth (2026-10-17): a far road layer in the stop's tint drifting the other way */
+.stop .far{position:absolute;left:50%;top:50%;width:2100px;height:1650px;transform:translate(-50%,-50%);
+ background:rgba(166,138,91,.075);-webkit-mask:url(/assets/roads.svg) center/contain no-repeat;mask:url(/assets/roads.svg) center/contain no-repeat;z-index:-1}
+@media (max-width:980px){.stop .dot{display:block}}
+@media (prefers-reduced-motion:no-preference){
+ .stop::before{animation:roadDrift2 34s ease-in-out infinite alternate}
+ .stop .far{animation:roadFar 52s ease-in-out -10s infinite alternate}
+ @keyframes roadDrift2{from{transform:translate(-50%,-50%) scale(1) rotate(0)}to{transform:translate(-50%,-50%) scale(1.07) rotate(4deg)}}
+ @keyframes roadFar{from{transform:translate(-50%,-50%) scale(1.04) rotate(2deg)}to{transform:translate(-50%,-50%) scale(.97) rotate(-3deg)}}
+}
 </style>
 </head>
 <body>
@@ -357,7 +368,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
   <circle class="pin" style="animation-delay:3.2s" cx="1100" cy="520" r="7"/>
   <circle class="pin" style="animation-delay:4.2s" cx="1340" cy="330" r="7"/>
  </svg>
- <div class="stopbox" aria-hidden="true"><div class="stop"><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
+ <div class="stopbox" aria-hidden="true"><div class="stop"><i class="far"></i><i class="dot"></i><span class="lbl">4/12 · 09:40</span></div></div>
  <div class="fx" id="fx" aria-hidden="true"></div>
  <div class="wrap">
   <div class="hero-copy">
